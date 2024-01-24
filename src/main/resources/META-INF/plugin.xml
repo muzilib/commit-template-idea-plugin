@@ -1,0 +1,36 @@
+<idea-plugin>
+    <id>commit-template-plugin</id>
+    <name>Git Commit Template</name>
+    <version>1.0.0</version>
+
+    <vendor email="muzi@muzilib.com"/>
+
+
+    <description>
+        <![CDATA[
+        <p>Create a commit message with the following template:</p>
+
+        <pre>
+        &lt;type&gt;(&lt;scope&gt;): &lt;subject&gt;
+        &lt;BLANK LINE&gt;
+        &lt;body&gt;
+        &lt;BLANK LINE&gt;
+        &lt;footer&gt;
+        </pre>
+        ]]>
+    </description>
+
+    <depends>com.intellij.modules.platform</depends>
+    <extensions defaultExtensionNs="com.intellij">
+
+    </extensions>
+    <actions>
+        <action id="Commit.Button"
+                text="Commit.Button"
+                class="com.c301.plugin.commit.CreateCommitAction"
+                description="Create commit message"
+                icon="/icons/load.png">
+            <add-to-group group-id="Vcs.MessageActionGroup" anchor="first"/>
+        </action>
+    </actions>
+</idea-plugin>
