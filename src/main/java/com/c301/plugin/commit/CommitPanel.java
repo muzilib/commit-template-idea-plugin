@@ -11,6 +11,7 @@ import java.util.Objects;
  * @author Damien Arrachequesne
  */
 public class CommitPanel {
+
     private JPanel mainPanel;
     private JComboBox<String> changeScope;
     private JTextField shortDescription;
@@ -50,7 +51,16 @@ public class CommitPanel {
     }
 
     CommitMessage getCommitMessage() {
-        return new CommitMessage(getSelectedChangeType(), (String) changeScope.getSelectedItem(), shortDescription.getText().trim(), longDescription.getText().trim(), breakingChanges.getText().trim(), closedIssues.getText().trim(), wrapTextCheckBox.isSelected(), skipCICheckBox.isSelected());
+        return new CommitMessage(
+                getSelectedChangeType(),
+                (String) changeScope.getSelectedItem(),
+                shortDescription.getText().trim(),
+                longDescription.getText().trim(),
+                breakingChanges.getText().trim(),
+                closedIssues.getText().trim(),
+                wrapTextCheckBox.isSelected(),
+                skipCICheckBox.isSelected()
+        );
     }
 
     private ChangeType getSelectedChangeType() {

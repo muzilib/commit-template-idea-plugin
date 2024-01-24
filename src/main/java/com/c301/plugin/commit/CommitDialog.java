@@ -7,12 +7,8 @@ import org.jetbrains.annotations.Nullable;
 import javax.swing.*;
 
 /**
- * @Title CommitDialog
- * @ClassName commit.plugin.c301.com.CommitDialog
- * @Author Chenbing
- * @Date 2024/01/24 10:48
- * @Version 1.0
- **/
+ * @author Damien Arrachequesne Chenbing
+ */
 public class CommitDialog extends DialogWrapper {
 
     private final CommitPanel panel;
@@ -26,7 +22,7 @@ public class CommitDialog extends DialogWrapper {
         init();
     }
 
-
+    @Nullable
     @Override
     protected JComponent createCenterPanel() {
         return panel.getMainPanel();
