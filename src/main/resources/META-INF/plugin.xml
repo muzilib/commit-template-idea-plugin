@@ -2,9 +2,7 @@
     <id>commit-template-plugin</id>
     <name>Git Commit Template</name>
     <version>1.0.0</version>
-
     <vendor email="muzi@muzilib.com"/>
-
 
     <description>
         <![CDATA[
@@ -20,17 +18,22 @@
         ]]>
     </description>
 
-    <depends>com.intellij.modules.platform</depends>
-    <extensions defaultExtensionNs="com.intellij">
+    <idea-version since-build="145.0"/>
 
+    <depends>com.intellij.modules.vcs</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <!-- Add your extensions here -->
     </extensions>
+
     <actions>
-        <action id="Commit.Button"
-                text="Commit.Button"
+        <action id="Plugin.Commit.Button"
+                text="Create Commit Message"
                 class="com.c301.plugin.commit.CreateCommitAction"
                 description="Create commit message"
                 icon="/icons/load.png">
             <add-to-group group-id="Vcs.MessageActionGroup" anchor="first"/>
         </action>
     </actions>
+
 </idea-plugin>

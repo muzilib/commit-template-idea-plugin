@@ -11,12 +11,8 @@ import com.intellij.openapi.vcs.ui.Refreshable;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * @Title CreateCommitAction
- * @ClassName com.c301.plugin.commit.CreateCommitAction
- * @Author Chenbing
- * @Date 2024/01/24 10:29
- * @Version 1.0
- **/
+ * @author Damien Arrachequesne Chenbing
+ */
 public class CreateCommitAction extends AnAction implements DumbAware {
 
     @Override
@@ -32,7 +28,6 @@ public class CreateCommitAction extends AnAction implements DumbAware {
             commitPanel.setCommitMessage(dialog.getCommitMessage().toString());
         }
     }
-
 
     private static CommitMessageI getCommitPanel(AnActionEvent e) {
         if (e == null) {

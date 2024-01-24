@@ -8,12 +8,8 @@ import java.util.Enumeration;
 import java.util.Objects;
 
 /**
- * @Title CommitPanel
- * @ClassName com.c301.plugin.commit.CommitPanel
- * @Author Chenbing
- * @Date 2024/01/24 11:39
- * @Version 1.0
- **/
+ * @author Damien Arrachequesne
+ */
 public class CommitPanel {
     private JPanel mainPanel;
     private JComboBox<String> changeScope;
@@ -37,8 +33,8 @@ public class CommitPanel {
     private ButtonGroup changeTypeGroup;
 
     CommitPanel(Project project, CommitMessage commitMessage) {
-        File workingDirectory = new File(Objects.requireNonNull(project.getBasePath()));
-        GitLogQuery.Result result = new GitLogQuery(workingDirectory).execute();
+        var workingDirectory = new File(Objects.requireNonNull(project.getBasePath()));
+        var result = new GitLogQuery(workingDirectory).execute();
         if (result.isSuccess()) {
             changeScope.addItem(""); // no value by default
             result.getScopes().forEach(changeScope::addItem);
@@ -54,16 +50,7 @@ public class CommitPanel {
     }
 
     CommitMessage getCommitMessage() {
-        return new CommitMessage(
-                getSelectedChangeType(),
-                (String) changeScope.getSelectedItem(),
-                shortDescription.getText().trim(),
-                longDescription.getText().trim(),
-                breakingChanges.getText().trim(),
-                closedIssues.getText().trim(),
-                wrapTextCheckBox.isSelected(),
-                skipCICheckBox.isSelected()
-        );
+        return new CommitMessage(getSelectedChangeType(), (String) changeScope.getSelectedItem(), shortDescription.getText().trim(), longDescription.getText().trim(), breakingChanges.getText().trim(), closedIssues.getText().trim(), wrapTextCheckBox.isSelected(), skipCICheckBox.isSelected());
     }
 
     private ChangeType getSelectedChangeType() {

@@ -8,7 +8,7 @@ import javax.swing.*;
 
 /**
  * @Title CommitDialog
- * @ClassName com.c301.plugin.commit.CommitDialog
+ * @ClassName commit.plugin.c301.com.CommitDialog
  * @Author Chenbing
  * @Date 2024/01/24 10:48
  * @Version 1.0
@@ -21,8 +21,8 @@ public class CommitDialog extends DialogWrapper {
         super(project);
         assert project != null;
         panel = new CommitPanel(project, commitMessage);
-        setTitle("Commit By _Chenbing");
-        setOKButtonText("OK Button");
+        setTitle("Commit Message");
+        setOKButtonText("OK");
         init();
     }
 

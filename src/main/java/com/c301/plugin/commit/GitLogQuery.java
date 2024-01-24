@@ -13,6 +13,9 @@ import java.util.regex.Pattern;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 
+/**
+ * @author Arrachequesne Chenbing
+ */
 class GitLogQuery {
     private static final String GIT_LOG_COMMAND = "git log --all --format=%s";
     private static final Pattern COMMIT_FIRST_LINE_FORMAT = Pattern.compile("^[a-z]+\\((.+)\\):.*");

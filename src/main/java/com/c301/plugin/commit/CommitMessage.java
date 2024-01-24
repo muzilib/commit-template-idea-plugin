@@ -9,12 +9,8 @@ import java.util.regex.Pattern;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 
 /**
- * @Title CommitMessage
- * @ClassName com.c301.plugin.commit.CommitMessage
- * @Author Chenbing
- * @Date 2024/01/24 10:45
- * @Version 1.0
- **/
+ * @author Damien Arrachequesne <damien.arrachequesne@gmail.com> Chenbing
+ */
 public class CommitMessage {
     private static final int MAX_LINE_LENGTH = 72; // https://stackoverflow.com/a/2120040/5138796
 
@@ -28,8 +24,11 @@ public class CommitMessage {
 
     private CommitMessage() {
         this.longDescription = "";
+        this.changeScope = "";
+        this.shortDescription = "";
         this.breakingChanges = "";
         this.closedIssues = "";
+        this.changeType = ChangeType.FEAT;
     }
 
     public CommitMessage(ChangeType changeType, String changeScope, String shortDescription, String longDescription, String breakingChanges, String closedIssues, boolean wrapText, boolean skipCI) {
