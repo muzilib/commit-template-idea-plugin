@@ -1,5 +1,9 @@
 # Git commit template Plugin for IntelliJ
 
+I really like using this submission template plug-in, but the original project has stopped being maintained, so I cloned
+it and made modifications. Welcome to use it!
+[Original project link](https://github.com/MobileTribe/commit-template-idea-plugin.git)
+
 This plugin allows to create a commit message with the following template:
 
 ```
