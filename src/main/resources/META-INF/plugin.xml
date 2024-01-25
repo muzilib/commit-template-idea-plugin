@@ -4,10 +4,8 @@
     <version>1.0.0</version>
     <vendor email="muzi@muzilib.com"/>
 
-    <description>
-        <![CDATA[
+    <description><![CDATA[
         <p>Create a commit message with the following template:</p>
-
         <pre>
         &lt;type&gt;(&lt;scope&gt;): &lt;subject&gt;
         &lt;BLANK LINE&gt;
@@ -15,23 +13,32 @@
         &lt;BLANK LINE&gt;
         &lt;footer&gt;
         </pre>
-        ]]>
-    </description>
+
+        <p>我很喜欢使用这个提交模板插件，但原始项目已经停止维护了，于是我fork了一个修改了下<p/>
+        <a href="https://github.com/muzilib/commit-template-idea-plugin.git">项目地址</a><br/>
+        <a href="https://github.com/MobileTribe/commit-template-idea-plugin.git">原始项目地址</a>
+    ]]></description>
+
+    <change-notes><![CDATA[
+        <ul>
+            <li>1.编辑第一个版本</li>
+            <li>2.编辑第一个版本</li>
+            <li>3.编辑第一个版本</li>
+        </ul>
+    ]]></change-notes>
 
     <idea-version since-build="145.0"/>
+    <resource-bundle>i18n.data</resource-bundle>
 
-    <depends>com.intellij.modules.platform</depends>
     <depends>com.intellij.modules.vcs</depends>
 
     <extensions defaultExtensionNs="com.intellij">
         <!-- Add your extensions here -->
     </extensions>
 
-    <actions>
-        <action id="Plugin.Commit.Button"
-                text="Create Commit Message"
+    <actions resource-bundle="i18n.data">
+        <action id="plugin_commit_button"
                 class="com.c301.plugin.commit.CreateCommitAction"
-                description="Create commit message"
                 icon="/icons/load.png">
             <add-to-group group-id="Vcs.MessageActionGroup" anchor="first"/>
         </action>

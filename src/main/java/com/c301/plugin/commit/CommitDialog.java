@@ -1,5 +1,6 @@
 package com.c301.plugin.commit;
 
+import com.c301.plugin.localization.PluginBundle;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.DialogWrapper;
 import org.jetbrains.annotations.Nullable;
@@ -17,8 +18,9 @@ public class CommitDialog extends DialogWrapper {
         super(project);
         assert project != null;
         panel = new CommitPanel(project, commitMessage);
-        setTitle("Commit Message");
-        setOKButtonText("OK");
+        setTitle(PluginBundle.get("plugin.commit.panel.title"));
+        setOKButtonText(PluginBundle.get("plugin.commit.panel.btn.ok"));
+        setCancelButtonText(PluginBundle.get("plugin.commit.panel.btn.cancel"));
         init();
     }
 

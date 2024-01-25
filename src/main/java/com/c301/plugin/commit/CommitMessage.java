@@ -1,11 +1,10 @@
 package com.c301.plugin.commit;
 
+import com.c301.plugin.localization.PluginBundle;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.WordUtils;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
+import static com.c301.plugin.constant.Constant.*;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 
 /**
@@ -14,75 +13,87 @@ import static org.apache.commons.lang.StringUtils.isNotBlank;
 class CommitMessage {
     private static final int MAX_LINE_LENGTH = 72; // https://stackoverflow.com/a/2120040/5138796
 
-    public static final Pattern COMMIT_FIRST_LINE_FORMAT = Pattern.compile("^([a-z]+)(\\((.+)\\))?: (.+)");
-    public static final Pattern COMMIT_CLOSES_FORMAT = Pattern.compile("Closes (.+)");
-
     private ChangeType changeType;
     private String changeScope, shortDescription, longDescription, breakingChanges, closedIssues;
     private boolean wrapText = true;
     private boolean skipCI = false;
 
     private CommitMessage() {
-        this.longDescription = "";
-        this.shortDescription = "";
-        this.breakingChanges = "";
         this.closedIssues = "";
+        this.longDescription = "";
+        this.breakingChanges = "";
+        this.shortDescription = "";
         this.changeType = ChangeType.FEAT;
     }
 
     public CommitMessage(ChangeType changeType, String changeScope, String shortDescription, String longDescription, String breakingChanges, String closedIssues, boolean wrapText, boolean skipCI) {
+        this.skipCI = skipCI;
+        this.wrapText = wrapText;
         this.changeType = changeType;
         this.changeScope = changeScope;
-        this.shortDescription = shortDescription;
+        this.closedIssues = closedIssues;
         this.longDescription = longDescription;
         this.breakingChanges = breakingChanges;
-        this.closedIssues = closedIssues;
-        this.wrapText = wrapText;
-        this.skipCI = skipCI;
+        this.shortDescription = shortDescription;
     }
 
     @Override
     public String toString() {
-        StringBuilder builder = new StringBuilder();
+        var builder = new StringBuilder();
         builder.append(changeType.label());
         if (isNotBlank(changeScope)) {
-            builder.append('(').append(changeScope).append(')');
+            builder.append('(')
+                    .append(changeScope)
+                    .append(')');
         }
-        builder.append(": ").append(shortDescription);
+        builder.append(": ")
+                .append(shortDescription);
 
         if (isNotBlank(longDescription)) {
-            builder.append(System.lineSeparator()).append(System.lineSeparator()).append(wrapText ? WordUtils.wrap(longDescription, MAX_LINE_LENGTH) : longDescription);
+            builder.append(System.lineSeparator())
+                    .append(System.lineSeparator())
+                    .append(wrapText ? WordUtils.wrap(longDescription, MAX_LINE_LENGTH) : longDescription);
         }
 
         if (isNotBlank(breakingChanges)) {
-            String content = "BREAKING CHANGE: " + breakingChanges;
-            builder.append(System.lineSeparator()).append(System.lineSeparator()).append(wrapText ? WordUtils.wrap(content, MAX_LINE_LENGTH) : content);
+            var content = PluginBundle.get("plugin.commit.breaking_change") + ": " + breakingChanges;
+            builder.append(System.lineSeparator())
+                    .append(System.lineSeparator())
+                    .append(wrapText ? WordUtils.wrap(content, MAX_LINE_LENGTH) : content);
         }
 
         if (isNotBlank(closedIssues)) {
             builder.append(System.lineSeparator());
             for (String closedIssue : closedIssues.split(",")) {
-                builder.append(System.lineSeparator()).append("Closes ").append(formatClosedIssue(closedIssue));
+                builder.append(System.lineSeparator())
+                        .append(PluginBundle.get("plugin.commit.closes"))
+                        .append(" ")
+                        .append(formatClosedIssue(closedIssue));
             }
         }
 
         if (skipCI) {
-            builder.append(System.lineSeparator()).append(System.lineSeparator()).append("[skip ci]");
+            builder.append(System.lineSeparator())
+                    .append(System.lineSeparator())
+                    .append(SKIP_CI);
         }
 
         return builder.toString();
     }
 
     private String formatClosedIssue(String closedIssue) {
-        String trimmed = closedIssue.trim();
+        var trimmed = closedIssue.trim();
         return (StringUtils.isNumeric(trimmed) ? "#" : "") + trimmed;
     }
 
     public static CommitMessage parse(String message) {
-        CommitMessage commitMessage = new CommitMessage();
+        var commitMessage = new CommitMessage();
+        var STR_CLOSES = PluginBundle.get("plugin.commit.closes");
+        var STR_BREAKING = PluginBundle.get("plugin.commit.breaking");
+        var STR_BREAKING_CHANGE = PluginBundle.get("plugin.commit.breaking_change");
 
         try {
-            Matcher matcher = COMMIT_FIRST_LINE_FORMAT.matcher(message);
+            var matcher = COMMIT_FIRST_LINE_FORMAT.matcher(message);
             if (!matcher.find()) return commitMessage;
 
             commitMessage.changeType = ChangeType.valueOf(matcher.group(1).toUpperCase());
@@ -92,13 +103,11 @@ class CommitMessage {
             String[] strings = message.split("\n");
             if (strings.length < 2) return commitMessage;
 
-            int pos = 1;
-            StringBuilder stringBuilder;
-
-            stringBuilder = new StringBuilder();
+            var pos = 1;
+            var stringBuilder = new StringBuilder();
             for (; pos < strings.length; pos++) {
                 String lineString = strings[pos];
-                if (lineString.startsWith("BREAKING") || lineString.startsWith("Closes") || lineString.equalsIgnoreCase("[skip ci]"))
+                if (lineString.startsWith(STR_BREAKING) || lineString.startsWith(STR_CLOSES) || lineString.equalsIgnoreCase(SKIP_CI))
                     break;
                 stringBuilder.append(lineString).append('\n');
             }
@@ -107,10 +116,10 @@ class CommitMessage {
             stringBuilder = new StringBuilder();
             for (; pos < strings.length; pos++) {
                 String lineString = strings[pos];
-                if (lineString.startsWith("Closes") || lineString.equalsIgnoreCase("[skip ci]")) break;
+                if (lineString.startsWith(STR_CLOSES) || lineString.equalsIgnoreCase(SKIP_CI)) break;
                 stringBuilder.append(lineString).append('\n');
             }
-            commitMessage.breakingChanges = stringBuilder.toString().trim().replace("BREAKING CHANGE: ", "");
+            commitMessage.breakingChanges = stringBuilder.toString().trim().replace(STR_BREAKING_CHANGE + ": ", "");
 
             matcher = COMMIT_CLOSES_FORMAT.matcher(message);
             stringBuilder = new StringBuilder();
@@ -119,8 +128,7 @@ class CommitMessage {
             }
             if (!stringBuilder.isEmpty()) stringBuilder.delete(stringBuilder.length() - 1, stringBuilder.length());
             commitMessage.closedIssues = stringBuilder.toString();
-
-            commitMessage.skipCI = message.contains("[skip ci]");
+            commitMessage.skipCI = message.contains(SKIP_CI);
         } catch (RuntimeException ignore) {
         }
         return commitMessage;
@@ -153,4 +161,5 @@ class CommitMessage {
     public boolean isSkipCI() {
         return skipCI;
     }
+
 }
