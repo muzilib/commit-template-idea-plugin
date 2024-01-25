@@ -14,17 +14,14 @@
         &lt;footer&gt;
         </pre>
 
-        <p>我很喜欢使用这个提交模板插件，但原始项目已经停止维护了，于是我fork了一个修改了下<p/>
-        <a href="https://github.com/muzilib/commit-template-idea-plugin.git">项目地址</a><br/>
-        <a href="https://github.com/MobileTribe/commit-template-idea-plugin.git">原始项目地址</a>
+        <p>我很喜欢使用这个提交模板插件，但原始项目已经停止维护了，于是我clone下来并做了修改，欢迎使用！<p/>
+        <p>I really like using this submission template plug-in, but the original project has stopped being maintained, so I cloned it and made modifications. Welcome to use it!<p/>
+        <a href="https://github.com/muzilib/commit-template-idea-plugin.git">当前项目链接</a><br/>
+        <a href="https://github.com/MobileTribe/commit-template-idea-plugin.git">原始项目链接</a>
     ]]></description>
 
     <change-notes><![CDATA[
-        <ul>
-            <li>1.编辑第一个版本</li>
-            <li>2.编辑第一个版本</li>
-            <li>3.编辑第一个版本</li>
-        </ul>
+        <p>修复了在IDEA2023.3.2(233)上无法使用的问题，现在让我们愉快的使用吧！</p>
     ]]></change-notes>
 
     <idea-version since-build="145.0"/>
