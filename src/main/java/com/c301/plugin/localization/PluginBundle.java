@@ -1,15 +1,10 @@
 package com.c301.plugin.localization;
 
 import com.intellij.AbstractBundle;
-import com.intellij.DynamicBundle;
-import org.jetbrains.annotations.Nls;
-import org.jetbrains.annotations.NonNls;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.PropertyKey;
 
 import java.lang.invoke.MethodHandles;
 import java.util.ResourceBundle;
-import java.util.function.Supplier;
 
 /**
  * 多语言配置信息
@@ -29,15 +24,6 @@ public class PluginBundle extends AbstractBundle {
 
     public static String get(@PropertyKey(resourceBundle = "i18n.data") String key, Object... params) {
         return INSTANCE.getMessage(key, params);
-    }
-
-    public static Supplier<@Nls String> lazy(@PropertyKey(resourceBundle = "i18n.data") String key, Object... params) {
-        return INSTANCE.getLazyMessage(key, params);
-    }
-
-    @Override
-    protected @NotNull ResourceBundle findBundle(@NotNull @NonNls String pathToBundle, @NotNull ClassLoader loader, ResourceBundle.@NotNull Control control) {
-        return ResourceBundle.getBundle(pathToBundle, DynamicBundle.getLocale(), loader, control);
     }
 
     /**

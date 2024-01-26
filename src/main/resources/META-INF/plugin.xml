@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>commit-template-plugin</id>
     <name>Git Commit Template</name>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
     <vendor email="muzi@muzilib.com" url="https://github.com/muzilib">Chenbing</vendor>
 
     <description><![CDATA[

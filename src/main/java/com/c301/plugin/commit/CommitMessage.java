@@ -126,7 +126,7 @@ class CommitMessage {
             while (matcher.find()) {
                 stringBuilder.append(matcher.group(1)).append(',');
             }
-            if (!stringBuilder.isEmpty()) stringBuilder.delete(stringBuilder.length() - 1, stringBuilder.length());
+            if (stringBuilder.length() != 0) stringBuilder.delete(stringBuilder.length() - 1, stringBuilder.length());
             commitMessage.closedIssues = stringBuilder.toString();
             commitMessage.skipCI = message.contains(SKIP_CI);
         } catch (RuntimeException ignore) {
