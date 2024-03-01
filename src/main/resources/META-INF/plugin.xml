@@ -1,27 +1,33 @@
 <idea-plugin>
     <id>commit-template-plugin</id>
     <name>Git Commit Template</name>
-    <version>1.0.1</version>
+    <version>1.0.2</version>
     <vendor email="muzi@muzilib.com" url="https://github.com/muzilib">Chenbing</vendor>
 
     <description><![CDATA[
-        <p>Create a commit message with the following template:</p>
-        <pre>
-        &lt;type&gt;(&lt;scope&gt;): &lt;subject&gt;
-        &lt;BLANK LINE&gt;
-        &lt;body&gt;
-        &lt;BLANK LINE&gt;
-        &lt;footer&gt;
-        </pre>
+<p>Create a commit message with the following template:</p>
+<pre>
+&lt;type&gt;(&lt;scope&gt;): &lt;subject&gt;
+&lt;BLANK LINE&gt;
+&lt;body&gt;
+&lt;BLANK LINE&gt;
+&lt;footer&gt;
+</pre>
 
-        <p>我很喜欢使用这个提交模板插件，但原始项目已经停止维护了，于是我clone下来并做了修改，欢迎使用！<p/>
         <p>I really like using this submission template plug-in, but the original project has stopped being maintained, so I cloned it and made modifications. Welcome to use it!<p/>
-        <a href="https://github.com/muzilib/commit-template-idea-plugin.git">当前项目链接</a><br/>
-        <a href="https://github.com/MobileTribe/commit-template-idea-plugin.git">原始项目链接</a>
+        <a href="https://github.com/muzilib/commit-template-idea-plugin.git">Current project link</a><br/>
+        <a href="https://github.com/MobileTribe/commit-template-idea-plugin.git">Original project link</a>
     ]]></description>
 
     <change-notes><![CDATA[
-        <p>修复了在IDEA2023.3.2(233)上无法使用的问题，现在让我们愉快的使用吧！</p>
+        <p>
+            <h4>V240125-1229</h4>
+            <p>1. Fixed the problem of not being able to be used on IDEA2023.3.2(233), now let’s use it happily!</p>
+        </p>
+        <p>
+            <h4>V240302-0007</h4>
+            <p>1. Fixed bug regarding character related methods being removed</p>
+        </p>
     ]]></change-notes>
 
     <idea-version since-build="145.0"/>

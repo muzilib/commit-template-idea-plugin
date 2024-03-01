@@ -1,11 +1,9 @@
 package com.c301.plugin.commit;
 
 import com.c301.plugin.localization.PluginBundle;
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.WordUtils;
+import com.c301.plugin.utils.StrUtil;
 
 import static com.c301.plugin.constant.Constant.*;
-import static org.apache.commons.lang.StringUtils.isNotBlank;
 
 /**
  * @author Damien Arrachequesne <damien.arrachequesne@gmail.com> Chenbing
@@ -41,7 +39,7 @@ class CommitMessage {
     public String toString() {
         var builder = new StringBuilder();
         builder.append(changeType.label());
-        if (isNotBlank(changeScope)) {
+        if (StrUtil.isNotBlank(changeScope)) {
             builder.append('(')
                     .append(changeScope)
                     .append(')');
@@ -49,20 +47,20 @@ class CommitMessage {
         builder.append(": ")
                 .append(shortDescription);
 
-        if (isNotBlank(longDescription)) {
+        if (StrUtil.isNotBlank(longDescription)) {
             builder.append(System.lineSeparator())
                     .append(System.lineSeparator())
-                    .append(wrapText ? WordUtils.wrap(longDescription, MAX_LINE_LENGTH) : longDescription);
+                    .append(wrapText ? StrUtil.wrap(longDescription, MAX_LINE_LENGTH) : longDescription);
         }
 
-        if (isNotBlank(breakingChanges)) {
+        if (StrUtil.isNotBlank(breakingChanges)) {
             var content = PluginBundle.get("plugin.commit.breaking_change") + ": " + breakingChanges;
             builder.append(System.lineSeparator())
                     .append(System.lineSeparator())
-                    .append(wrapText ? WordUtils.wrap(content, MAX_LINE_LENGTH) : content);
+                    .append(wrapText ? StrUtil.wrap(content, MAX_LINE_LENGTH) : content);
         }
 
-        if (isNotBlank(closedIssues)) {
+        if (StrUtil.isNotBlank(closedIssues)) {
             builder.append(System.lineSeparator());
             for (String closedIssue : closedIssues.split(",")) {
                 builder.append(System.lineSeparator())
@@ -83,7 +81,7 @@ class CommitMessage {
 
     private String formatClosedIssue(String closedIssue) {
         var trimmed = closedIssue.trim();
-        return (StringUtils.isNumeric(trimmed) ? "#" : "") + trimmed;
+        return (StrUtil.isNumeric(trimmed) ? "#" : "") + trimmed;
     }
 
     public static CommitMessage parse(String message) {
