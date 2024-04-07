@@ -1,6 +1,6 @@
 package com.c301.plugin.localization;
 
-import com.intellij.ide.plugins.PluginManager;
+import com.intellij.ide.plugins.PluginManagerCore;
 import com.intellij.openapi.extensions.PluginId;
 
 import java.util.Locale;
@@ -23,7 +23,7 @@ public class PluginBundle {
         var locale = Locale.ENGLISH;
 
         //判断用户是否安装并启用了官方的中文插件
-        if (PluginManager.getInstance().findEnabledPlugin(INTELLIJ_ZH_PLUGIN) != null) {
+        if (PluginManagerCore.getPlugin(INTELLIJ_ZH_PLUGIN) != null) {
             locale = Locale.CHINA;
         }
         return locale;
