@@ -35,7 +35,7 @@
         </p>
     ]]></change-notes>
 
-    <idea-version since-build="145.0"/>
+    <idea-version since-build="193" until-build="193.*"/>
     <resource-bundle>i18n.data</resource-bundle>
 
     <depends>com.intellij.modules.vcs</depends>
