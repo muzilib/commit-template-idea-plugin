@@ -1,7 +1,5 @@
 package com.c301.plugin.commit;
 
-import com.c301.plugin.localization.PluginBundle;
-
 /**
  * From <a href="https://github.com/commitizen/conventional-commit-types">Github</a>
  *
@@ -9,17 +7,17 @@ import com.c301.plugin.localization.PluginBundle;
  */
 public enum ChangeType {
 
-    FEAT(PluginBundle.get("plugin.commit.feat"), PluginBundle.get("plugin.commit.feat.desc")),
-    FIX(PluginBundle.get("plugin.commit.fix"), PluginBundle.get("plugin.commit.fix.desc")),
-    DOCS(PluginBundle.get("plugin.commit.docs"), PluginBundle.get("plugin.commit.docs.desc")),
-    STYLE(PluginBundle.get("plugin.commit.style"), PluginBundle.get("plugin.commit.style.desc")),
-    REFACTOR(PluginBundle.get("plugin.commit.refactor"), PluginBundle.get("plugin.commit.refactor.desc")),
-    PERF(PluginBundle.get("plugin.commit.perf"), PluginBundle.get("plugin.commit.perf.desc")),
-    TEST(PluginBundle.get("plugin.commit.test"), PluginBundle.get("plugin.commit.test.desc")),
-    BUILD(PluginBundle.get("plugin.commit.build"), PluginBundle.get("plugin.commit.build.desc")),
-    CI(PluginBundle.get("plugin.commit.ci"), PluginBundle.get("plugin.commit.ci.desc")),
-    CHORE(PluginBundle.get("plugin.commit.chore"), PluginBundle.get("plugin.commit.chore.desc")),
-    REVERT(PluginBundle.get("plugin.commit.revert"), PluginBundle.get("plugin.commit.revert.desc"));
+    FEAT("Features", "A new feature"),
+    FIX("Bug Fixes", "A bug fix"),
+    DOCS("Documentation", "Documentation only changes"),
+    STYLE("Styles", "Changes that do not affect the meaning of the code (white-space, formatting, missing semi-colons, etc)"),
+    REFACTOR("Code Refactoring", "A code change that neither fixes a bug nor adds a feature"),
+    PERF("Performance Improvements", "A code change that improves performance"),
+    TEST("Tests", "Adding missing tests or correcting existing tests"),
+    BUILD("Builds", "Changes that affect the build system or external dependencies (example scopes: gulp, broccoli, npm)"),
+    CI("Continuous Integrations", "Changes to our CI configuration files and scripts (example scopes: Travis, Circle, BrowserStack, SauceLabs)"),
+    CHORE("Chores", "Other changes that don't modify src or test files"),
+    REVERT("Reverts", "Reverts a previous commit");
 
     public final String title;
     public final String description;

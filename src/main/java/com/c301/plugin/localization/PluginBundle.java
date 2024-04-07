@@ -1,9 +1,9 @@
 package com.c301.plugin.localization;
 
-import com.intellij.AbstractBundle;
-import org.jetbrains.annotations.PropertyKey;
+import com.intellij.ide.plugins.PluginManager;
+import com.intellij.openapi.extensions.PluginId;
 
-import java.lang.invoke.MethodHandles;
+import java.util.Locale;
 import java.util.ResourceBundle;
 
 /**
@@ -15,27 +15,30 @@ import java.util.ResourceBundle;
  * @Date 2024/01/25 09:53
  * @Version 1.0
  **/
-public class PluginBundle extends AbstractBundle {
-    public static final PluginBundle INSTANCE = new PluginBundle();
+public class PluginBundle {
 
-    private PluginBundle() {
-        super("i18n.data");
-    }
+    private final static PluginId INTELLIJ_ZH_PLUGIN = PluginId.getId("com.intellij.zh");
 
-    public static String get(@PropertyKey(resourceBundle = "i18n.data") String key, Object... params) {
-        return INSTANCE.getMessage(key, params);
+    public static Locale getUserLocale() {
+        var locale = Locale.ENGLISH;
+
+        //判断用户是否安装并启用了官方的中文插件
+        if (PluginManager.getInstance().findEnabledPlugin(INTELLIJ_ZH_PLUGIN) != null) {
+            locale = Locale.CHINA;
+        }
+        return locale;
     }
 
     /**
-     * Borrows code from {@code com.intellij.DynamicBundle} to set the parent bundle using reflection.
+     * 获取多语言信息
+     *
+     * @param key 键
+     * @return 值
      */
-    private static void setParent(ResourceBundle localeBundle, ResourceBundle base) {
-        try {
-            var method = ResourceBundle.class.getDeclaredMethod("setParent", ResourceBundle.class);
-            method.setAccessible(true);
-            MethodHandles.lookup().unreflect(method).bindTo(localeBundle).invoke(base);
-        } catch (Throwable ignored) {
-        }
+    public static String get(String key) {
+        var locale = getUserLocale();
+        var resourceBundle = ResourceBundle.getBundle("i18n.data", locale);
+        return resourceBundle.getString(key);
     }
 
 }
