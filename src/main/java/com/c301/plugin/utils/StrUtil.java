@@ -21,7 +21,7 @@ public class StrUtil {
      * @return true: 不为空
      */
     public static boolean isNotBlank(String str) {
-        return !"".equals(str) && !str.trim().isEmpty();
+        return str != null && !"".equals(str) && !str.trim().isEmpty();
     }
 
     /**
@@ -31,7 +31,7 @@ public class StrUtil {
      * @return true: 为空
      */
     public static boolean isBlank(String str) {
-        return "".equals(str) || str.trim().isEmpty();
+        return str == null || "".equals(str) || str.trim().isEmpty();
     }
 
     /**
