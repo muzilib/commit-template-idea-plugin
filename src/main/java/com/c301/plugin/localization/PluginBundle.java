@@ -22,7 +22,8 @@ public class PluginBundle {
     public static Locale getUserLocale() {
         var locale = Locale.ENGLISH;
         try {
-            if (PluginManagerCore.getPlugin(INTELLIJ_ZH_PLUGIN) != null) {
+            var plugin = PluginManagerCore.getPlugin(INTELLIJ_ZH_PLUGIN);
+            if (plugin != null && plugin.isEnabled()) {
                 locale = Locale.CHINA;
             }
         } catch (Exception ignored) {
