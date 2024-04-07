@@ -16,7 +16,9 @@
 
         <p>I really like using this submission template plug-in, but the original project has stopped being maintained, so I cloned it and made modifications. Welcome to use it!<p/>
         <a href="https://github.com/muzilib/commit-template-idea-plugin.git">Current project link</a><br/>
-        <a href="https://github.com/MobileTribe/commit-template-idea-plugin.git">Original project link</a>
+        <a href="https://github.com/MobileTribe/commit-template-idea-plugin.git">Original project link</a><br/>
+        <a href="https://plugins.jetbrains.com/plugin/23641-git-commit-template/faq">FAQ Page</a><br/>
+        <a href="https://github.com/muzilib/commit-template-idea-plugin/issues">Submit Issue</a><br/>
     ]]></description>
 
     <change-notes><![CDATA[
