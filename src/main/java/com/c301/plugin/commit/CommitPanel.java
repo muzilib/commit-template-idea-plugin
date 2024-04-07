@@ -40,11 +40,6 @@ public class CommitPanel {
     private JLabel breakingChangesLabel;
     private JLabel closedIssuesLabel;
 
-    /**
-     * 文字格式化样式
-     */
-    private final String TEXT_FORMAT = "%s - %s";
-
     CommitPanel(Project project, CommitMessage commitMessage) {
         var workingDirectory = new File(Objects.requireNonNull(project.getBasePath()));
         var result = new GitLogQuery(workingDirectory).execute();
@@ -58,17 +53,18 @@ public class CommitPanel {
         }
 
         //选项信息
-        featRadioButton.setText(String.format(TEXT_FORMAT, PluginBundle.get("plugin.commit.feat"), PluginBundle.get("plugin.commit.feat.desc")));
-        fixRadioButton.setText(String.format(TEXT_FORMAT, PluginBundle.get("plugin.commit.fix"), PluginBundle.get("plugin.commit.fix.desc")));
-        docsRadioButton.setText(String.format(TEXT_FORMAT, PluginBundle.get("plugin.commit.docs"), PluginBundle.get("plugin.commit.docs.desc")));
-        styleRadioButton.setText(String.format(TEXT_FORMAT, PluginBundle.get("plugin.commit.style"), PluginBundle.get("plugin.commit.style.desc")));
-        refactorRadioButton.setText(String.format(TEXT_FORMAT, PluginBundle.get("plugin.commit.refactor"), PluginBundle.get("plugin.commit.refactor.desc")));
-        perfRadioButton.setText(String.format(TEXT_FORMAT, PluginBundle.get("plugin.commit.perf"), PluginBundle.get("plugin.commit.perf.desc")));
-        testRadioButton.setText(String.format(TEXT_FORMAT, PluginBundle.get("plugin.commit.test"), PluginBundle.get("plugin.commit.test.desc")));
-        buildRadioButton.setText(String.format(TEXT_FORMAT, PluginBundle.get("plugin.commit.build"), PluginBundle.get("plugin.commit.build.desc")));
-        ciRadioButton.setText(String.format(TEXT_FORMAT, PluginBundle.get("plugin.commit.ci"), PluginBundle.get("plugin.commit.ci.desc")));
-        choreRadioButton.setText(String.format(TEXT_FORMAT, PluginBundle.get("plugin.commit.chore"), PluginBundle.get("plugin.commit.chore.desc")));
-        revertRadioButton.setText(String.format(TEXT_FORMAT, PluginBundle.get("plugin.commit.revert"), PluginBundle.get("plugin.commit.revert.desc")));
+        var textFormat = "%s - %s";
+        featRadioButton.setText(String.format(textFormat, PluginBundle.get("plugin.commit.feat"), PluginBundle.get("plugin.commit.feat.desc")));
+        fixRadioButton.setText(String.format(textFormat, PluginBundle.get("plugin.commit.fix"), PluginBundle.get("plugin.commit.fix.desc")));
+        docsRadioButton.setText(String.format(textFormat, PluginBundle.get("plugin.commit.docs"), PluginBundle.get("plugin.commit.docs.desc")));
+        styleRadioButton.setText(String.format(textFormat, PluginBundle.get("plugin.commit.style"), PluginBundle.get("plugin.commit.style.desc")));
+        refactorRadioButton.setText(String.format(textFormat, PluginBundle.get("plugin.commit.refactor"), PluginBundle.get("plugin.commit.refactor.desc")));
+        perfRadioButton.setText(String.format(textFormat, PluginBundle.get("plugin.commit.perf"), PluginBundle.get("plugin.commit.perf.desc")));
+        testRadioButton.setText(String.format(textFormat, PluginBundle.get("plugin.commit.test"), PluginBundle.get("plugin.commit.test.desc")));
+        buildRadioButton.setText(String.format(textFormat, PluginBundle.get("plugin.commit.build"), PluginBundle.get("plugin.commit.build.desc")));
+        ciRadioButton.setText(String.format(textFormat, PluginBundle.get("plugin.commit.ci"), PluginBundle.get("plugin.commit.ci.desc")));
+        choreRadioButton.setText(String.format(textFormat, PluginBundle.get("plugin.commit.chore"), PluginBundle.get("plugin.commit.chore.desc")));
+        revertRadioButton.setText(String.format(textFormat, PluginBundle.get("plugin.commit.revert"), PluginBundle.get("plugin.commit.revert.desc")));
 
         //标题信息
         typeOfChangeLabel.setText(PluginBundle.get("plugin.commit.typeofchange"));
