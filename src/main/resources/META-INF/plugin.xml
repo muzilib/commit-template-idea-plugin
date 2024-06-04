@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>commit-template-plugin</id>
     <name>Git Commit Template</name>
-    <version>1.0.3</version>
+    <version>1.0.4</version>
     <vendor email="muzi@muzilib.com" url="https://github.com/muzilib">Chenbing</vendor>
 
     <description><![CDATA[
@@ -23,6 +23,10 @@
 
     <change-notes><![CDATA[
         <p>
+            <h4>V240604-2259</h4>
+            <p>1. Remove the dependency on the com.intellij.modules.vcs module</p>
+        </p>
+        <p>
             <h4>V240407-1343</h4>
             <p>1. Fix the error of failure to generate template if the Scope of this change parameter is empty <a href="https://github.com/muzilib/commit-template-idea-plugin/issues/3">Issue #3</a></p>
             <p>2. To add support for the Chinese language, you can install the plug-in <a href="https://plugins.jetbrains.com/plugin/13710-chinese-simplified-language-pack----">Chinese ​(Simplified)​ Language Pack / 中文语言包</a> to gain support</p>
@@ -40,7 +44,8 @@
     <idea-version since-build="193"/>
     <resource-bundle>i18n.data</resource-bundle>
 
-    <depends>com.intellij.modules.vcs</depends>
+    <depends>com.intellij.modules.platform</depends>
+    <!--<depends>com.intellij.modules.vcs</depends>-->
 
     <extensions defaultExtensionNs="com.intellij">
         <!-- Add your extensions here -->
