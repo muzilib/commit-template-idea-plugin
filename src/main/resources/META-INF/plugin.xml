@@ -5,14 +5,14 @@
     <vendor email="muzi@muzilib.com" url="https://github.com/muzilib">Chenbing</vendor>
 
     <description><![CDATA[
-<p>Create a commit message with the following template:</p>
-<pre>
-&lt;type&gt;(&lt;scope&gt;): &lt;subject&gt;
-&lt;BLANK LINE&gt;
-&lt;body&gt;
-&lt;BLANK LINE&gt;
-&lt;footer&gt;
-</pre>
+        <p>Create a commit message with the following template:</p>
+        <pre>
+        &lt;type&gt;(&lt;scope&gt;): &lt;subject&gt;
+        &lt;BLANK LINE&gt;
+        &lt;body&gt;
+        &lt;BLANK LINE&gt;
+        &lt;footer&gt;
+        </pre>
 
         <p>I really like using this submission template plug-in, but the original project has stopped being maintained, so I cloned it and made modifications. Welcome to use it!<p/>
         <a href="https://github.com/muzilib/commit-template-idea-plugin.git">Current project link</a><br/>
@@ -22,6 +22,10 @@
     ]]></description>
 
     <change-notes><![CDATA[
+        <p>
+            <h4>V240630-2210</h4>
+            <p>1. Add support for gitmoji</p>
+        </p>
         <p>
             <h4>V240604-2259</h4>
             <p>1. Remove the dependency on the com.intellij.modules.vcs module</p>
