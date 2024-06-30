@@ -12,7 +12,7 @@ class CommitMessage {
     private static final int MAX_LINE_LENGTH = 72; // https://stackoverflow.com/a/2120040/5138796
 
     private ChangeType changeType;
-    private String changeScope, shortDescription, longDescription, breakingChanges, closedIssues;
+    private String changeScope, shortDescription, longDescription, breakingChanges, closedIssues, gitmojiCode;
     private boolean wrapText = true;
     private boolean skipCI = false;
 
@@ -21,10 +21,11 @@ class CommitMessage {
         this.longDescription = "";
         this.breakingChanges = "";
         this.shortDescription = "";
+        this.gitmojiCode = "";
         this.changeType = ChangeType.FEAT;
     }
 
-    public CommitMessage(ChangeType changeType, String changeScope, String shortDescription, String longDescription, String breakingChanges, String closedIssues, boolean wrapText, boolean skipCI) {
+    public CommitMessage(ChangeType changeType, String changeScope, String shortDescription, String longDescription, String breakingChanges, String closedIssues, boolean wrapText, boolean skipCI, String gitmojiCode) {
         this.skipCI = skipCI;
         this.wrapText = wrapText;
         this.changeType = changeType;
@@ -33,11 +34,16 @@ class CommitMessage {
         this.longDescription = longDescription;
         this.breakingChanges = breakingChanges;
         this.shortDescription = shortDescription;
+        this.gitmojiCode = gitmojiCode;
     }
 
     @Override
     public String toString() {
         var builder = new StringBuilder();
+        if (StrUtil.isNotBlank(gitmojiCode)) {
+            builder.append(gitmojiCode)
+                    .append(" ");
+        }
         builder.append(changeType.label());
         if (StrUtil.isNotBlank(changeScope)) {
             builder.append('(')
@@ -91,7 +97,17 @@ class CommitMessage {
         var STR_BREAKING_CHANGE = PluginBundle.get("plugin.commit.breaking_change");
 
         try {
-            var matcher = COMMIT_FIRST_LINE_FORMAT.matcher(message);
+            //读取gitmoji信息
+            var matcher = COMMIT_GITMOJI_FORMAT.matcher(message);
+            if (matcher.find()) {
+                var code = matcher.group();
+                if (StrUtil.isNotBlank(code)) {
+                    commitMessage.gitmojiCode = code;
+                    message = message.replace(code, "").trim();
+                }
+            }
+
+            matcher = COMMIT_FIRST_LINE_FORMAT.matcher(message);
             if (!matcher.find()) return commitMessage;
 
             commitMessage.changeType = ChangeType.valueOf(matcher.group(1).toUpperCase());
@@ -158,6 +174,10 @@ class CommitMessage {
 
     public boolean isSkipCI() {
         return skipCI;
+    }
+
+    public String getGitmojiCode() {
+        return gitmojiCode;
     }
 
 }

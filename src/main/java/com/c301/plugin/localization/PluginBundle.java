@@ -28,6 +28,7 @@ public class PluginBundle {
             }
         } catch (Exception ignored) {
         }
+        //locale = Locale.CHINA;
         return locale;
     }
 

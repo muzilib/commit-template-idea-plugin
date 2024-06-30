@@ -1,20 +1,27 @@
 package com.c301.plugin.commit;
 
 import com.c301.plugin.localization.PluginBundle;
+import com.c301.plugin.utils.StrUtil;
 import com.intellij.openapi.project.Project;
 
 import javax.swing.*;
 import java.io.File;
 import java.util.Enumeration;
+import java.util.Map;
 import java.util.Objects;
 
+import static com.c301.plugin.constant.Constant.COMMIT_GITMOJI_FORMAT;
+
 /**
- * @author Damien Arrachequesne
+ * 提交面板
+ *
+ * @author Damien Arrachequesne Chenbing
  */
 public class CommitPanel {
 
     private JPanel mainPanel;
     private JComboBox<String> changeScope;
+    private JComboBox<String> gitmojiOption;
     private JTextField shortDescription;
     private JTextArea longDescription;
     private JTextArea breakingChanges;
@@ -34,6 +41,7 @@ public class CommitPanel {
     private JRadioButton revertRadioButton;
     private ButtonGroup changeTypeGroup;
     private JLabel typeOfChangeLabel;
+    private JLabel gitmojiOptionLabel;
     private JLabel scopeOfThisChangeLabel;
     private JLabel shortDescriptionLabel;
     private JLabel longDescriptionLabel;
@@ -47,6 +55,25 @@ public class CommitPanel {
             changeScope.addItem(""); // no value by default
             result.getScopes().forEach(changeScope::addItem);
         }
+
+        //加载gitmoji
+        var selectGitmojiOption = "";
+        gitmojiOption.addItem(""); // no value by default
+        for (Map<String, String> map : GitmojiType.getDataList()) {
+            var data = map.get("name");
+            data = PluginBundle.get("plugin.gitmoji." + data);
+            data = map.get("icon") + " " + data;
+            gitmojiOption.addItem(data);
+
+            //重新设置选中对象
+            if (map.get("code").equalsIgnoreCase(commitMessage.getGitmojiCode())) {
+                selectGitmojiOption = data;
+            }
+        }
+        if (StrUtil.isBlank(selectGitmojiOption)) {
+            selectGitmojiOption = commitMessage.getGitmojiCode();
+        }
+        gitmojiOption.setSelectedItem(selectGitmojiOption);
 
         if (commitMessage != null) {
             restoreValuesFromParsedCommitMessage(commitMessage);
@@ -76,6 +103,10 @@ public class CommitPanel {
         skipCICheckBox.setText(PluginBundle.get("plugin.commit.skipci"));
         closedIssuesLabel.setText(PluginBundle.get("plugin.commit.closedissues"));
         closedIssuesLabel.setToolTipText(PluginBundle.get("plugin.commit.closedissueshover"));
+        closedIssues.setToolTipText(PluginBundle.get("plugin.commit.closedissueshover"));
+        gitmojiOptionLabel.setText(PluginBundle.get("plugin.commit.gitmoji"));
+        gitmojiOptionLabel.setToolTipText(PluginBundle.get("plugin.commit.gitmojihover"));
+        gitmojiOption.setToolTipText(PluginBundle.get("plugin.commit.gitmojihover"));
     }
 
     JPanel getMainPanel() {
@@ -83,6 +114,17 @@ public class CommitPanel {
     }
 
     CommitMessage getCommitMessage() {
+        var gitmoji = "";
+        if (gitmojiOption.getSelectedIndex() > 0) {
+            gitmoji = GitmojiType.getDataList().get(gitmojiOption.getSelectedIndex() - 1).get("code");
+        } else {
+            gitmoji = Objects.requireNonNull(gitmojiOption.getSelectedItem()).toString();
+            var matcher = COMMIT_GITMOJI_FORMAT.matcher(gitmoji);
+            if (matcher.find()) {
+                gitmoji = gitmoji.trim();
+            }
+        }
+
         return new CommitMessage(
                 getSelectedChangeType(),
                 (String) changeScope.getSelectedItem(),
@@ -91,7 +133,8 @@ public class CommitPanel {
                 breakingChanges.getText().trim(),
                 closedIssues.getText().trim(),
                 wrapTextCheckBox.isSelected(),
-                skipCICheckBox.isSelected()
+                skipCICheckBox.isSelected(),
+                gitmoji
         );
     }
 
