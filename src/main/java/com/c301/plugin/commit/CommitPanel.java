@@ -20,7 +20,6 @@ import static com.c301.plugin.constant.Constant.COMMIT_GITMOJI_FORMAT;
 public class CommitPanel {
 
     private JPanel mainPanel;
-    private JComboBox<String> changeScope;
     private JComboBox<String> gitmojiOption;
     private JTextField shortDescription;
     private JTextArea longDescription;
@@ -47,6 +46,7 @@ public class CommitPanel {
     private JLabel longDescriptionLabel;
     private JLabel breakingChangesLabel;
     private JLabel closedIssuesLabel;
+    private JComboBox<String> changeScope;
 
     CommitPanel(Project project, CommitMessage commitMessage) {
         var workingDirectory = new File(Objects.requireNonNull(project.getBasePath()));
@@ -166,4 +166,5 @@ public class CommitPanel {
         closedIssues.setText(commitMessage.getClosedIssues());
         skipCICheckBox.setSelected(commitMessage.isSkipCI());
     }
+
 }

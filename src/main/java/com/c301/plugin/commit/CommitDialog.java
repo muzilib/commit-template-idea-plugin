@@ -3,7 +3,6 @@ package com.c301.plugin.commit;
 import com.c301.plugin.localization.PluginBundle;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.DialogWrapper;
-import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 
@@ -14,7 +13,7 @@ public class CommitDialog extends DialogWrapper {
 
     private final CommitPanel panel;
 
-    CommitDialog(@Nullable Project project, CommitMessage commitMessage) {
+    CommitDialog(Project project, CommitMessage commitMessage) {
         super(project);
         assert project != null;
         panel = new CommitPanel(project, commitMessage);
@@ -24,7 +23,6 @@ public class CommitDialog extends DialogWrapper {
         init();
     }
 
-    @Nullable
     @Override
     protected JComponent createCenterPanel() {
         return panel.getMainPanel();
