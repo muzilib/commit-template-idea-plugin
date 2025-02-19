@@ -48,7 +48,7 @@ public class CommitPanel {
     private JLabel closedIssuesLabel;
     private JComboBox<String> changeScope;
 
-    CommitPanel(Project project, CommitMessage commitMessage) {
+    CommitPanel(Project project, CommitMessageOld commitMessage) {
         var workingDirectory = new File(Objects.requireNonNull(project.getBasePath()));
         var result = new GitLogQuery(workingDirectory).execute();
         if (result.isSuccess()) {
@@ -113,7 +113,7 @@ public class CommitPanel {
         return mainPanel;
     }
 
-    CommitMessage getCommitMessage() {
+    CommitMessageOld getCommitMessage() {
         var gitmoji = "";
         if (gitmojiOption.getSelectedIndex() > 0) {
             gitmoji = GitmojiType.getDataList().get(gitmojiOption.getSelectedIndex() - 1).get("code");
@@ -125,7 +125,7 @@ public class CommitPanel {
             }
         }
 
-        return new CommitMessage(
+        return new CommitMessageOld(
                 getSelectedChangeType(),
                 (String) changeScope.getSelectedItem(),
                 shortDescription.getText().trim(),
@@ -149,7 +149,7 @@ public class CommitPanel {
         return null;
     }
 
-    private void restoreValuesFromParsedCommitMessage(CommitMessage commitMessage) {
+    private void restoreValuesFromParsedCommitMessage(CommitMessageOld commitMessage) {
         if (commitMessage.getChangeType() != null) {
             for (Enumeration<AbstractButton> buttons = changeTypeGroup.getElements(); buttons.hasMoreElements(); ) {
                 AbstractButton button = buttons.nextElement();

@@ -1,6 +1,7 @@
 package com.c301.plugin.commit;
 
 import com.c301.plugin.dialog.CommitTemplateDialog;
+import com.c301.plugin.model.CommitMessage;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.project.DumbAware;
@@ -19,33 +20,33 @@ public class CreateCommitAction extends AnAction implements DumbAware {
 
     @Override
     public void actionPerformed(@NotNull AnActionEvent actionEvent) {
-        var commitPanel = getCommitPanel(actionEvent);
-        if (commitPanel == null) return;
+        var commitMessage = new CommitMessage();
+        var commitMessageI = getCommitMessagePanel(actionEvent);
+        if (commitMessageI instanceof CheckinProjectPanel) {
+            var content = ((CheckinProjectPanel) commitMessageI).getCommitMessage();
+            commitMessage = CommitMessage.parseRawMessage(content);
+        }
 
-        var commitMessage = parseExistingCommitMessage(commitPanel);
-        //var dialog = new CommitDialog(actionEvent.getProject(), commitMessage);
-        var dialog = new CommitTemplateDialog(actionEvent.getProject());
-        dialog.pack();
-        dialog.setVisible(true);
+        var dialog = new CommitTemplateDialog();
+        dialog.init(actionEvent.getProject(), commitMessage);
     }
 
-    private static CommitMessageI getCommitPanel(AnActionEvent e) {
-        if (e == null) {
-            return null;
-        }
-        var data = Refreshable.PANEL_KEY.getData(e.getDataContext());
-        if (data instanceof CommitMessageI) {
-            return (CommitMessageI) data;
-        }
-        return VcsDataKeys.COMMIT_MESSAGE_CONTROL.getData(e.getDataContext());
-    }
+    /**
+     * 获取CommitMessageI
+     *
+     * @param event AnActionEvent
+     * @return CommitMessageI
+     */
+    private static CommitMessageI getCommitMessagePanel(AnActionEvent event) {
+        if (event == null) return null;
+        var dataContext = event.getDataContext();
 
-    private CommitMessage parseExistingCommitMessage(CommitMessageI commitPanel) {
-        if (commitPanel instanceof CheckinProjectPanel) {
-            var commitMessageString = ((CheckinProjectPanel) commitPanel).getCommitMessage();
-            return CommitMessage.parse(commitMessageString);
+        var refreshable = Refreshable.PANEL_KEY.getData(dataContext);
+        if (refreshable instanceof CommitMessageI) {
+            return (CommitMessageI) refreshable;
         }
-        return null;
+
+        return VcsDataKeys.COMMIT_MESSAGE_CONTROL.getData(dataContext);
     }
 
 }

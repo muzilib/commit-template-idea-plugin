@@ -8,7 +8,7 @@ import static com.c301.plugin.constant.Constant.*;
 /**
  * @author Damien Arrachequesne <damien.arrachequesne@gmail.com> Chenbing
  */
-class CommitMessage {
+class CommitMessageOld {
     private static final int MAX_LINE_LENGTH = 72; // https://stackoverflow.com/a/2120040/5138796
 
     private ChangeType changeType;
@@ -16,7 +16,7 @@ class CommitMessage {
     private boolean wrapText = true;
     private boolean skipCI = false;
 
-    private CommitMessage() {
+    private CommitMessageOld() {
         this.closedIssues = "";
         this.longDescription = "";
         this.breakingChanges = "";
@@ -25,7 +25,7 @@ class CommitMessage {
         this.changeType = ChangeType.FEAT;
     }
 
-    public CommitMessage(ChangeType changeType, String changeScope, String shortDescription, String longDescription, String breakingChanges, String closedIssues, boolean wrapText, boolean skipCI, String gitmojiCode) {
+    public CommitMessageOld(ChangeType changeType, String changeScope, String shortDescription, String longDescription, String breakingChanges, String closedIssues, boolean wrapText, boolean skipCI, String gitmojiCode) {
         this.skipCI = skipCI;
         this.wrapText = wrapText;
         this.changeType = changeType;
@@ -90,8 +90,8 @@ class CommitMessage {
         return (StrUtil.isNumeric(trimmed) ? "#" : "") + trimmed;
     }
 
-    public static CommitMessage parse(String message) {
-        var commitMessage = new CommitMessage();
+    public static CommitMessageOld parse(String message) {
+        var commitMessage = new CommitMessageOld();
         var STR_CLOSES = PluginBundle.get("plugin.commit.closes");
         var STR_BREAKING = PluginBundle.get("plugin.commit.breaking");
         var STR_BREAKING_CHANGE = PluginBundle.get("plugin.commit.breaking_change");

@@ -13,7 +13,7 @@ public class CommitDialog extends DialogWrapper {
 
     private final CommitPanel panel;
 
-    CommitDialog(Project project, CommitMessage commitMessage) {
+    CommitDialog(Project project, CommitMessageOld commitMessage) {
         super(project);
         assert project != null;
         panel = new CommitPanel(project, commitMessage);
@@ -28,7 +28,7 @@ public class CommitDialog extends DialogWrapper {
         return panel.getMainPanel();
     }
 
-    CommitMessage getCommitMessage() {
+    CommitMessageOld getCommitMessage() {
         return panel.getCommitMessage();
     }
 

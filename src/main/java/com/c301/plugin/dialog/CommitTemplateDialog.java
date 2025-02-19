@@ -1,5 +1,9 @@
 package com.c301.plugin.dialog;
 
+import com.c301.plugin.dialog.render.LanguageListCellRendererRender;
+import com.c301.plugin.model.ChangeTypeEnum;
+import com.c301.plugin.model.CommitMessage;
+import com.c301.plugin.model.LanguageDomain;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.wm.WindowManager;
 
@@ -8,6 +12,10 @@ import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.util.Locale;
+import java.util.ResourceBundle;
+
+import static com.c301.plugin.constant.Constant.OPTINS_LANGUAGE_LIST;
 
 /**
  * 提交模板对话框
@@ -23,25 +31,38 @@ public class CommitTemplateDialog extends JDialog {
     private JPanel contentPane;
     private JButton buttonOK;
     private JButton buttonCancel;
-    private JComboBox comboBox1;
-    private JCheckBox wrapTextCheckBox;
-    private JCheckBox skipCICheckBox;
-    private JTextField shortDescription;
-    private JLabel typeOfChangeLabel;
-    private JRadioButton featRadioButton;
-    private JRadioButton fixRadioButton;
-    private JRadioButton docsRadioButton;
-    private JRadioButton styleRadioButton;
-    private JRadioButton refactorRadioButton;
-    private JRadioButton perfRadioButton;
-    private JRadioButton testRadioButton;
-    private JRadioButton buildRadioButton;
-    private JRadioButton ciRadioButton;
-    private JRadioButton choreRadioButton;
-    private JRadioButton revertRadioButton;
+    private JComboBox<String> optionScopeChange;
+    private JCheckBox checkBoxWrapText;
+    private JCheckBox checkBoxSkipCI;
+    private JTextField inputClosedIssues;
+    private JLabel labelTypeOfChange;
+    private JRadioButton radioButtonFeat;
+    private JRadioButton radioButtonFix;
+    private JRadioButton radioButtonDocs;
+    private JRadioButton radioButtonStyle;
+    private JRadioButton radioButtonRefactor;
+    private JRadioButton radioButtonPerf;
+    private JRadioButton radioButtonTest;
+    private JRadioButton radioButtonBuild;
+    private JRadioButton radioButtonCi;
+    private JRadioButton radioButtonChore;
+    private JRadioButton radioButtonRevert;
+    private JLabel labelLanguage;
+    private JComboBox<LanguageDomain> optionLanguage;
+    private JLabel labelScopeChang;
+    private JLabel labelShortDescription;
+    private JLabel labelLongDescription;
+    private JLabel labelBreakingChange;
+    private JLabel labelClosedIssues;
+    private JTextArea inputLongDescription;
+    private JTextArea inputBreakingChanges;
+    private JTextField inputShortDescription;
+    private ButtonGroup typeChangeGroup;
 
-    public CommitTemplateDialog(Project project) {
-        setTitle("提交模板");
+    /**
+     * 创建弹窗信息
+     */
+    public CommitTemplateDialog() {
         setModal(true);
         setContentPane(contentPane);
         getRootPane().setDefaultButton(buttonOK);
@@ -50,14 +71,10 @@ public class CommitTemplateDialog extends JDialog {
         pack();
         setMinimumSize(new Dimension(700, 600));
 
-        //设置窗口打开位置为屏幕中心
-        setLocationRelativeTo(null);
-        var parentWindow = WindowManager.getInstance().getFrame(project);
-        if (parentWindow != null) setLocationRelativeTo(parentWindow);
-
-
         buttonOK.addActionListener(e -> handleOKEvent());
         buttonCancel.addActionListener(e -> handleCancelEvent());
+        optionLanguage.addActionListener(e -> handleLanguageChange());
+        optionLanguage.setRenderer(new LanguageListCellRendererRender());
 
         // call onCancel() when cross is clicked
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
@@ -75,7 +92,29 @@ public class CommitTemplateDialog extends JDialog {
      * 处理确定事件
      */
     private void handleOKEvent() {
-        // add your code here
+        //获取选中的对象
+        var changeTypeEnum = ChangeTypeEnum.FEAT;
+        var buttonElements = typeChangeGroup.getElements();
+        while (buttonElements.hasMoreElements()) {
+            var button = buttonElements.nextElement();
+
+            if (button.isSelected()) {
+                changeTypeEnum = ChangeTypeEnum.valueOf(button.getActionCommand().toUpperCase());
+                break;
+            }
+        }
+
+        //获取用户提交的数据
+        var commitMessage = new CommitMessage();
+        commitMessage.setChangeType(changeTypeEnum);
+        commitMessage.setChangeScope((String) optionScopeChange.getSelectedItem());
+        commitMessage.setShortDescription(inputShortDescription.getText().trim());
+        commitMessage.setLongDescription(inputLongDescription.getText().trim());
+        commitMessage.setBreakingChanges(inputBreakingChanges.getText().trim());
+        commitMessage.setClosedIssues(inputClosedIssues.getText().trim());
+        commitMessage.setWrapText(checkBoxWrapText.isSelected());
+        commitMessage.setSkipCI(checkBoxSkipCI.isSelected());
+        System.out.println("处理结果：\n" + commitMessage.toRwaString());
         dispose();
     }
 
@@ -85,6 +124,95 @@ public class CommitTemplateDialog extends JDialog {
     private void handleCancelEvent() {
         // add your code here if necessary
         dispose();
+    }
+
+    /**
+     * 初始化弹窗配置
+     */
+    public void init(Project project, CommitMessage commitMessage) {
+        for (LanguageDomain item : OPTINS_LANGUAGE_LIST) {
+            optionLanguage.addItem(item);
+        }
+
+        //设置窗口打开位置为屏幕中心
+        setLocationRelativeTo(null);
+        var parentWindow = WindowManager.getInstance().getFrame(project);
+        if (parentWindow != null) setLocationRelativeTo(parentWindow);
+
+        //回显数据
+        if (commitMessage.getChangeType() != null) {
+            var changeTypeCode = commitMessage.getChangeType().getCode();
+            var buttonElements = typeChangeGroup.getElements();
+
+            while (buttonElements.hasMoreElements()) {
+                var button = buttonElements.nextElement();
+
+                if (button.getActionCommand().equalsIgnoreCase(changeTypeCode)) {
+                    button.setSelected(true);
+                    break;
+                }
+            }
+        }
+        optionScopeChange.setSelectedItem(commitMessage.getChangeScope());
+        inputShortDescription.setText(commitMessage.getShortDescription());
+        inputLongDescription.setText(commitMessage.getLongDescription());
+        inputClosedIssues.setText(commitMessage.getClosedIssues());
+        checkBoxSkipCI.setSelected(commitMessage.isSkipCI());
+        checkBoxWrapText.setSelected(commitMessage.isWrapText());
+
+        //显示窗口
+        handleDisplayLanguageEvent("en_US");
+        setVisible(true);
+    }
+
+    /**
+     * 处理显示语言变化
+     */
+    public void handleLanguageChange() {
+        var language = (LanguageDomain) optionLanguage.getSelectedItem();
+
+        if (language != null) handleDisplayLanguageEvent(language.getKey());
+        else handleDisplayLanguageEvent("en_US");
+    }
+
+    private void handleDisplayLanguageEvent(String languageKey) {
+        Locale locale;
+        switch (languageKey) {
+            case "en_US":
+                locale = Locale.US;
+                break;
+            case "zh_CN":
+                locale = Locale.SIMPLIFIED_CHINESE;
+                break;
+            case "zh_TW":
+                locale = Locale.TRADITIONAL_CHINESE;
+                break;
+            default:
+                locale = Locale.US;
+                break;
+        }
+
+        //获取多语言配置
+        var resourceBundle = ResourceBundle.getBundle("i18n.data", locale);
+
+        //页面显示配置
+        setTitle(resourceBundle.getString("plugin.commit.panel.title"));
+        buttonOK.setText(resourceBundle.getString("plugin.commit.panel.btn.ok"));
+        buttonCancel.setText(resourceBundle.getString("plugin.commit.panel.btn.cancel"));
+
+        //标题信息
+        labelTypeOfChange.setText(resourceBundle.getString("plugin.commit.typeofchange"));
+        labelScopeChang.setText(resourceBundle.getString("plugin.commit.scopeofchange"));
+        labelShortDescription.setText(resourceBundle.getString("plugin.commit.shortdescription"));
+        labelLongDescription.setText(resourceBundle.getString("plugin.commit.longdescription"));
+        labelBreakingChange.setText(resourceBundle.getString("plugin.commit.breakingchanges"));
+        checkBoxWrapText.setText(resourceBundle.getString("plugin.commit.wrapat72"));
+        checkBoxSkipCI.setText(resourceBundle.getString("plugin.commit.skipci"));
+        labelClosedIssues.setText(resourceBundle.getString("plugin.commit.closedissues"));
+        labelClosedIssues.setToolTipText(resourceBundle.getString("plugin.commit.closedissueshover"));
+
+        //语言信息
+        labelTypeOfChange.setText(resourceBundle.getString("plugin.commit.typeofchange"));
     }
 
 }
