@@ -1,5 +1,6 @@
 package com.c301.plugin.commit;
 
+import com.c301.plugin.dialog.CommitTemplateDialog;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.project.DumbAware;
@@ -18,16 +19,14 @@ public class CreateCommitAction extends AnAction implements DumbAware {
 
     @Override
     public void actionPerformed(@NotNull AnActionEvent actionEvent) {
-        synchronized (CreateCommitAction.class) {
-            var commitPanel = getCommitPanel(actionEvent);
-            if (commitPanel == null) return;
+        var commitPanel = getCommitPanel(actionEvent);
+        if (commitPanel == null) return;
 
-            var commitMessage = parseExistingCommitMessage(commitPanel);
-            //var dialog = new CommitDialog(actionEvent.getProject(), commitMessage);
-            var dialog = new CommitDialog2();
-            dialog.pack();
-            dialog.setVisible(true);
-        }
+        var commitMessage = parseExistingCommitMessage(commitPanel);
+        //var dialog = new CommitDialog(actionEvent.getProject(), commitMessage);
+        var dialog = new CommitTemplateDialog(actionEvent.getProject());
+        dialog.pack();
+        dialog.setVisible(true);
     }
 
     private static CommitMessageI getCommitPanel(AnActionEvent e) {
