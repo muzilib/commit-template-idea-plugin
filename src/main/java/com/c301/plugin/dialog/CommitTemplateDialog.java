@@ -69,7 +69,7 @@ public class CommitTemplateDialog extends JDialog {
 
         //设置显示窗口大小
         pack();
-        setMinimumSize(new Dimension(700, 600));
+        setMinimumSize(new Dimension(890, 700));
 
         buttonOK.addActionListener(e -> handleOKEvent());
         buttonCancel.addActionListener(e -> handleCancelEvent());
