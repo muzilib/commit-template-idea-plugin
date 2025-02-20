@@ -1,10 +1,12 @@
 package com.c301.plugin.dialog;
 
+import com.c301.plugin.dialog.render.GitCommitLogRender;
 import com.c301.plugin.dialog.render.LanguageListCellRendererRender;
 import com.c301.plugin.model.ChangeTypeEnum;
 import com.c301.plugin.model.CommitMessage;
 import com.c301.plugin.model.LanguageDomain;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.vcs.CommitMessageI;
 import com.intellij.openapi.wm.WindowManager;
 
 import javax.swing.*;
@@ -12,9 +14,11 @@ import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.util.HashSet;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
+import static com.c301.plugin.constant.Constant.COMMIT_FIRST_LINE_FORMAT;
 import static com.c301.plugin.constant.Constant.OPTINS_LANGUAGE_LIST;
 
 /**
@@ -59,17 +63,20 @@ public class CommitTemplateDialog extends JDialog {
     private JTextField inputShortDescription;
     private ButtonGroup typeChangeGroup;
 
+    private final CommitMessageI commitMessageI;
+
     /**
      * 创建弹窗信息
      */
-    public CommitTemplateDialog() {
-        setModal(true);
+    public CommitTemplateDialog(CommitMessageI commitMessageI) {
         setContentPane(contentPane);
+        setModal(true);
         getRootPane().setDefaultButton(buttonOK);
 
         //设置显示窗口大小
+        this.commitMessageI = commitMessageI;
         pack();
-        setMinimumSize(new Dimension(700, 600));
+        setMinimumSize(new Dimension(700, 895));
 
         buttonOK.addActionListener(e -> handleOKEvent());
         buttonCancel.addActionListener(e -> handleCancelEvent());
@@ -114,7 +121,9 @@ public class CommitTemplateDialog extends JDialog {
         commitMessage.setClosedIssues(inputClosedIssues.getText().trim());
         commitMessage.setWrapText(checkBoxWrapText.isSelected());
         commitMessage.setSkipCI(checkBoxSkipCI.isSelected());
-        System.out.println("处理结果：\n" + commitMessage.toRwaString());
+
+        //设置信息到提交面板中
+        commitMessageI.setCommitMessage(commitMessage.toRwaString());
         dispose();
     }
 
@@ -130,9 +139,20 @@ public class CommitTemplateDialog extends JDialog {
      * 初始化弹窗配置
      */
     public void init(Project project, CommitMessage commitMessage) {
-        for (LanguageDomain item : OPTINS_LANGUAGE_LIST) {
-            optionLanguage.addItem(item);
+        var result = GitCommitLogRender.handleCommitHistory(project);
+        if (result.isSuccess()) {
+            // 添加默认值
+            optionScopeChange.addItem("");
+
+            //读取提交记录并获取变更范围
+            var scopes = new HashSet<String>();
+            for (String log : result.getLogs()) {
+                var matcher = COMMIT_FIRST_LINE_FORMAT.matcher(log);
+                if (matcher.find()) scopes.add(matcher.group(3));
+            }
+            scopes.forEach(optionScopeChange::addItem);
         }
+        OPTINS_LANGUAGE_LIST.forEach(optionLanguage::addItem);
 
         //设置窗口打开位置为屏幕中心
         setLocationRelativeTo(null);
@@ -157,6 +177,7 @@ public class CommitTemplateDialog extends JDialog {
         inputShortDescription.setText(commitMessage.getShortDescription());
         inputLongDescription.setText(commitMessage.getLongDescription());
         inputClosedIssues.setText(commitMessage.getClosedIssues());
+        inputBreakingChanges.setText(commitMessage.getBreakingChanges());
         checkBoxSkipCI.setSelected(commitMessage.isSkipCI());
         checkBoxWrapText.setSelected(commitMessage.isWrapText());
 

@@ -48,7 +48,7 @@
     <idea-version since-build="193"/>
     <resource-bundle>i18n.data</resource-bundle>
 
-    <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.modules</depends>
     <!--<depends>com.intellij.modules.vcs</depends>-->
 
     <extensions defaultExtensionNs="com.intellij">
