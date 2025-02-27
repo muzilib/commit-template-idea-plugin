@@ -8,6 +8,9 @@ import com.c301.plugin.model.LanguageDomain;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vcs.CommitMessageI;
 import com.intellij.openapi.wm.WindowManager;
+import com.intellij.uiDesigner.core.GridConstraints;
+import com.intellij.uiDesigner.core.GridLayoutManager;
+import com.intellij.uiDesigner.core.Spacer;
 
 import javax.swing.*;
 import java.awt.*;
@@ -76,11 +79,18 @@ public class CommitTemplateDialog extends JDialog {
         //设置显示窗口大小
         this.commitMessageI = commitMessageI;
         pack();
-        setMinimumSize(new Dimension(700, 895));
 
         buttonOK.addActionListener(e -> handleOKEvent());
         buttonCancel.addActionListener(e -> handleCancelEvent());
-        optionLanguage.addActionListener(e -> handleLanguageChange());
+        optionLanguage.addActionListener(e -> {
+            var language = (LanguageDomain) optionLanguage.getSelectedItem();
+            if (language == null) {
+                handleDisplayLanguageEvent("en_US");
+                return;
+            }
+
+            handleDisplayLanguageEvent(language.getKey());
+        });
         optionLanguage.setRenderer(new LanguageListCellRendererRender());
 
         // call onCancel() when cross is clicked
@@ -187,53 +197,213 @@ public class CommitTemplateDialog extends JDialog {
     }
 
     /**
-     * 处理显示语言变化
+     * 处理显示语言切换
+     *
+     * @param languageKey 语言标识
      */
-    public void handleLanguageChange() {
-        var language = (LanguageDomain) optionLanguage.getSelectedItem();
-
-        if (language != null) handleDisplayLanguageEvent(language.getKey());
-        else handleDisplayLanguageEvent("en_US");
-    }
-
     private void handleDisplayLanguageEvent(String languageKey) {
-        Locale locale;
-        switch (languageKey) {
-            case "en_US":
-                locale = Locale.US;
-                break;
-            case "zh_CN":
-                locale = Locale.SIMPLIFIED_CHINESE;
-                break;
-            case "zh_TW":
-                locale = Locale.TRADITIONAL_CHINESE;
-                break;
-            default:
-                locale = Locale.US;
-                break;
-        }
-
         //获取多语言配置
+        var locale = switch (languageKey) {
+            case "zh_CN" -> Locale.SIMPLIFIED_CHINESE;
+            case "zh_TW" -> Locale.TRADITIONAL_CHINESE;
+            case "fr_FR" -> Locale.FRANCE;
+            case "de_DE" -> Locale.GERMANY;
+            case "it_IT" -> Locale.ITALY;
+            case "ja_JP" -> Locale.JAPAN;
+            case "ko_KR" -> Locale.KOREA;
+            case "en_GB" -> Locale.UK;
+            case "en_CA" -> Locale.CANADA;
+            case "fr_CA" -> Locale.CANADA_FRENCH;
+            default -> Locale.US;
+        };
         var resourceBundle = ResourceBundle.getBundle("i18n.data", locale);
 
         //页面显示配置
-        setTitle(resourceBundle.getString("plugin.commit.panel.title"));
-        buttonOK.setText(resourceBundle.getString("plugin.commit.panel.btn.ok"));
-        buttonCancel.setText(resourceBundle.getString("plugin.commit.panel.btn.cancel"));
+        setTitle(resourceBundle.getString("plugin.name"));
+        buttonOK.setText(resourceBundle.getString("plugin.button.ok"));
+        buttonCancel.setText(resourceBundle.getString("plugin.button.cancel"));
 
         //标题信息
-        labelTypeOfChange.setText(resourceBundle.getString("plugin.commit.typeofchange"));
-        labelScopeChang.setText(resourceBundle.getString("plugin.commit.scopeofchange"));
-        labelShortDescription.setText(resourceBundle.getString("plugin.commit.shortdescription"));
-        labelLongDescription.setText(resourceBundle.getString("plugin.commit.longdescription"));
-        labelBreakingChange.setText(resourceBundle.getString("plugin.commit.breakingchanges"));
-        checkBoxWrapText.setText(resourceBundle.getString("plugin.commit.wrapat72"));
-        checkBoxSkipCI.setText(resourceBundle.getString("plugin.commit.skipci"));
-        labelClosedIssues.setText(resourceBundle.getString("plugin.commit.closedissues"));
-        labelClosedIssues.setToolTipText(resourceBundle.getString("plugin.commit.closedissueshover"));
+        labelLanguage.setText(resourceBundle.getString("plugin.label.language"));
+        labelTypeOfChange.setText(resourceBundle.getString("plugin.label.typeOfChange"));
+        labelScopeChang.setText(resourceBundle.getString("plugin.label.scopeOfThisChange"));
+        labelShortDescription.setText(resourceBundle.getString("plugin.label.shortDescription"));
+        labelLongDescription.setText(resourceBundle.getString("plugin.label.longDescription"));
+        labelBreakingChange.setText(resourceBundle.getString("plugin.label.breakingChanges"));
+        labelClosedIssues.setText(resourceBundle.getString("plugin.label.closedIssues"));
+
+        //复选框信息
+        checkBoxWrapText.setText(resourceBundle.getString("plugin.checkbox.wrapAt72Characters"));
+        checkBoxSkipCI.setText(resourceBundle.getString("plugin.checkbox.skipCI"));
 
         //语言信息
-        labelTypeOfChange.setText(resourceBundle.getString("plugin.commit.typeofchange"));
+        radioButtonFeat.setText(resourceBundle.getString("plugin.radio.feat"));
+        radioButtonFix.setText(resourceBundle.getString("plugin.radio.fix"));
+        radioButtonDocs.setText(resourceBundle.getString("plugin.radio.docs"));
+        radioButtonStyle.setText(resourceBundle.getString("plugin.radio.style"));
+        radioButtonRefactor.setText(resourceBundle.getString("plugin.radio.refactor"));
+        radioButtonPerf.setText(resourceBundle.getString("plugin.radio.perf"));
+        radioButtonTest.setText(resourceBundle.getString("plugin.radio.test"));
+        radioButtonBuild.setText(resourceBundle.getString("plugin.radio.build"));
+        radioButtonCi.setText(resourceBundle.getString("plugin.radio.ci"));
+        radioButtonChore.setText(resourceBundle.getString("plugin.radio.chore"));
+        radioButtonRevert.setText(resourceBundle.getString("plugin.radio.revert"));
+    }
+
+    {
+// GUI initializer generated by IntelliJ IDEA GUI Designer
+// >>> IMPORTANT!! <<<
+// DO NOT EDIT OR ADD ANY CODE HERE!
+        $$$setupUI$$$();
+    }
+
+    /**
+     * Method generated by IntelliJ IDEA GUI Designer
+     * >>> IMPORTANT!! <<<
+     * DO NOT edit this method OR call it in your code!
+     *
+     * @noinspection ALL
+     */
+    private void $$$setupUI$$$() {
+        contentPane = new JPanel();
+        contentPane.setLayout(new GridLayoutManager(2, 1, new Insets(10, 10, 10, 10), -1, -1));
+        contentPane.setMinimumSize(new Dimension(-1, -1));
+        contentPane.setPreferredSize(new Dimension(-1, -1));
+        final JPanel panel1 = new JPanel();
+        panel1.setLayout(new GridLayoutManager(1, 2, new Insets(0, 0, 0, 0), -1, -1));
+        contentPane.add(panel1, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, 1, null, null, null, 0, false));
+        final JPanel panel2 = new JPanel();
+        panel2.setLayout(new GridLayoutManager(1, 2, new Insets(0, 0, 0, 0), -1, -1, true, false));
+        panel1.add(panel2, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
+        buttonOK = new JButton();
+        buttonOK.setText("OK");
+        panel2.add(buttonOK, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        buttonCancel = new JButton();
+        buttonCancel.setText("Cancel");
+        panel2.add(buttonCancel, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final Spacer spacer1 = new Spacer();
+        panel1.add(spacer1, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
+        final JPanel panel3 = new JPanel();
+        panel3.setLayout(new GridLayoutManager(9, 3, new Insets(0, 0, 0, 0), -1, -1));
+        contentPane.add(panel3, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
+        labelScopeChang = new JLabel();
+        labelScopeChang.setText("Scope of this chang");
+        panel3.add(labelScopeChang, new GridConstraints(2, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        optionScopeChange = new JComboBox();
+        optionScopeChange.setEditable(true);
+        panel3.add(optionScopeChange, new GridConstraints(2, 1, 1, 2, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        labelShortDescription = new JLabel();
+        labelShortDescription.setText("Short description");
+        panel3.add(labelShortDescription, new GridConstraints(3, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        labelLongDescription = new JLabel();
+        labelLongDescription.setText("Long description");
+        panel3.add(labelLongDescription, new GridConstraints(4, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JScrollPane scrollPane1 = new JScrollPane();
+        panel3.add(scrollPane1, new GridConstraints(4, 1, 1, 2, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        inputLongDescription = new JTextArea();
+        scrollPane1.setViewportView(inputLongDescription);
+        labelBreakingChange = new JLabel();
+        labelBreakingChange.setText("Breaking changes");
+        panel3.add(labelBreakingChange, new GridConstraints(6, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JScrollPane scrollPane2 = new JScrollPane();
+        panel3.add(scrollPane2, new GridConstraints(6, 1, 1, 2, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        inputBreakingChanges = new JTextArea();
+        scrollPane2.setViewportView(inputBreakingChanges);
+        checkBoxWrapText = new JCheckBox();
+        checkBoxWrapText.setActionCommand("Wrap text at 72 characters?");
+        checkBoxWrapText.setAutoscrolls(false);
+        checkBoxWrapText.setSelected(true);
+        checkBoxWrapText.setText("Wrap at 72 characters?");
+        panel3.add(checkBoxWrapText, new GridConstraints(5, 1, 1, 2, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        labelClosedIssues = new JLabel();
+        labelClosedIssues.setText("Closed issues");
+        panel3.add(labelClosedIssues, new GridConstraints(7, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        inputClosedIssues = new JTextField();
+        panel3.add(inputClosedIssues, new GridConstraints(7, 1, 1, 2, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
+        inputShortDescription = new JTextField();
+        panel3.add(inputShortDescription, new GridConstraints(3, 1, 1, 2, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
+        checkBoxSkipCI = new JCheckBox();
+        checkBoxSkipCI.setSelected(false);
+        checkBoxSkipCI.setText("Skip CI?");
+        panel3.add(checkBoxSkipCI, new GridConstraints(8, 1, 1, 2, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        labelTypeOfChange = new JLabel();
+        labelTypeOfChange.setText("Type of change");
+        panel3.add(labelTypeOfChange, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JPanel panel4 = new JPanel();
+        panel4.setLayout(new GridLayoutManager(11, 1, new Insets(0, 0, 0, 0), -1, -1));
+        panel3.add(panel4, new GridConstraints(1, 1, 1, 2, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
+        radioButtonFeat = new JRadioButton();
+        radioButtonFeat.setActionCommand("feat");
+        radioButtonFeat.setSelected(true);
+        radioButtonFeat.setText("feat - A new feature");
+        panel4.add(radioButtonFeat, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        radioButtonFix = new JRadioButton();
+        radioButtonFix.setActionCommand("fix");
+        radioButtonFix.setSelected(false);
+        radioButtonFix.setText("fix - A bug fix");
+        panel4.add(radioButtonFix, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        radioButtonDocs = new JRadioButton();
+        radioButtonDocs.setActionCommand("docs");
+        radioButtonDocs.setText("docs - Documentation only changes");
+        panel4.add(radioButtonDocs, new GridConstraints(2, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        radioButtonStyle = new JRadioButton();
+        radioButtonStyle.setActionCommand("style");
+        radioButtonStyle.setText("style - Changes that do not affect the meaning of the code (white-space, formatting, missing semi-colons, etc)");
+        panel4.add(radioButtonStyle, new GridConstraints(3, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        radioButtonRefactor = new JRadioButton();
+        radioButtonRefactor.setActionCommand("refactor");
+        radioButtonRefactor.setText("refactor - A code change that neither fixes a bug nor adds a feature");
+        panel4.add(radioButtonRefactor, new GridConstraints(4, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        radioButtonPerf = new JRadioButton();
+        radioButtonPerf.setActionCommand("perf");
+        radioButtonPerf.setSelected(false);
+        radioButtonPerf.setText("perf - A code change that improves performance");
+        panel4.add(radioButtonPerf, new GridConstraints(5, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        radioButtonTest = new JRadioButton();
+        radioButtonTest.setActionCommand("test");
+        radioButtonTest.setText("test - Adding missing tests or correcting existing tests");
+        panel4.add(radioButtonTest, new GridConstraints(6, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        radioButtonBuild = new JRadioButton();
+        radioButtonBuild.setActionCommand("build");
+        radioButtonBuild.setText("build - Changes that affect the build system or external dependencies (example scopes: gulp, broccoli, npm)");
+        panel4.add(radioButtonBuild, new GridConstraints(7, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        radioButtonCi = new JRadioButton();
+        radioButtonCi.setActionCommand("ci");
+        radioButtonCi.setText("ci - Changes to our CI configuration files and scripts (example scopes: Travis, Circle, BrowserStack, SauceLabs)");
+        panel4.add(radioButtonCi, new GridConstraints(8, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        radioButtonChore = new JRadioButton();
+        radioButtonChore.setActionCommand("chore");
+        radioButtonChore.setText("chore - Other changes that don't modify src or test files");
+        panel4.add(radioButtonChore, new GridConstraints(9, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        radioButtonRevert = new JRadioButton();
+        radioButtonRevert.setActionCommand("revert");
+        radioButtonRevert.setText("revert - Reverts a previous commit");
+        panel4.add(radioButtonRevert, new GridConstraints(10, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        labelLanguage = new JLabel();
+        labelLanguage.setText("Language");
+        panel3.add(labelLanguage, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        optionLanguage = new JComboBox();
+        panel3.add(optionLanguage, new GridConstraints(0, 1, 1, 2, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        typeChangeGroup = new ButtonGroup();
+        typeChangeGroup.add(radioButtonFeat);
+        typeChangeGroup.add(radioButtonFeat);
+        typeChangeGroup.add(radioButtonFix);
+        typeChangeGroup.add(radioButtonDocs);
+        typeChangeGroup.add(radioButtonStyle);
+        typeChangeGroup.add(radioButtonRefactor);
+        typeChangeGroup.add(radioButtonPerf);
+        typeChangeGroup.add(radioButtonTest);
+        typeChangeGroup.add(radioButtonBuild);
+        typeChangeGroup.add(radioButtonCi);
+        typeChangeGroup.add(radioButtonChore);
+        typeChangeGroup.add(radioButtonRevert);
+    }
+
+    /**
+     * @noinspection ALL
+     */
+    public JComponent $$$getRootComponent$$$() {
+        return contentPane;
     }
 
 }

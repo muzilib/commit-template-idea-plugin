@@ -35,29 +35,26 @@ public interface Constant {
     Pattern COMMIT_GITMOJI_FORMAT = Pattern.compile("^:[A-Za-z0-9_]+:");
     Pattern COMMIT_FIRST_LINE_FORMAT = Pattern.compile("^([a-z]+)(\\((.+)\\))?: (.+)");
 
+    //语言选项列表
     List<LanguageDomain> OPTINS_LANGUAGE_LIST = new LinkedList<>() {{
+        //US 美国
+        add(new LanguageDomain("en_US", "English"));
         //SIMPLIFIED_CHINESE 简体中文
         add(new LanguageDomain("zh_CN", "简体中文"));
         //TRADITIONAL_CHINESE 繁体中文
-        add(new LanguageDomain("zh_TW", "繁体中文"));
+        add(new LanguageDomain("zh_TW", "繁體中文"));
         //FRANCE 法国
-        add(new LanguageDomain("fr_FR", "法国"));
-        //GERMANY 德国
-        add(new LanguageDomain("de_DE", "德国"));
-        //ITALY 意大利
-        add(new LanguageDomain("it_IT", "意大利"));
-        //JAPAN 日本
-        add(new LanguageDomain("ja_JP", "日本"));
-        //KOREA 韩国
-        add(new LanguageDomain("ko_KR", "韩国"));
-        //UK 英国
-        add(new LanguageDomain("en_GB", "英国"));
-        //US 美国
-        add(new LanguageDomain("en_US", "美国"));
-        //CANADA 加拿大
-        add(new LanguageDomain("en_CA", "加拿大"));
+        add(new LanguageDomain("fr_FR", "Français"));
         //CANADA_FRENCH 加拿大法语
-        add(new LanguageDomain("fr_CA", "加拿大法语"));
+        add(new LanguageDomain("fr_CA", "Français canadien"));
+        //GERMANY 德国
+        add(new LanguageDomain("de_DE", "Deutsch"));
+        //ITALY 意大利
+        add(new LanguageDomain("it_IT", "Italiano"));
+        //JAPAN 日本
+        add(new LanguageDomain("ja_JP", "日本語"));
+        //KOREA 韩国
+        add(new LanguageDomain("ko_KR", "조선어"));
     }};
 
 }

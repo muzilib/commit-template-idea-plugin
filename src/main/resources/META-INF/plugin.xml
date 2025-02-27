@@ -23,7 +23,8 @@
         ]]>
     </description>
 
-    <change-notes><![CDATA[
+    <change-notes>
+        <![CDATA[
         <p>
             <h4>V240630-2210</h4>
             <p>1. Add support for gitmoji</p>
@@ -45,14 +46,19 @@
             <h4>V240125-1229</h4>
             <p>1. Fixed the problem of not being able to be used on IDEA2023.3.2(233), now let’s use it happily!</p>
         </p>
-    ]]></change-notes>
+        ]]>
+    </change-notes>
 
-    <idea-version since-build="193"/>
+    <idea-version since-build="233"/>
     <resource-bundle>i18n.data</resource-bundle>
 
-    <depends>com.intellij.modules</depends>
+    <!-- Product and plugin compatibility requirements.
+     Read more: https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html -->
+    <depends>com.intellij.modules.platform</depends>
     <depends>com.intellij.modules.vcs</depends>
 
+    <!-- Extension points defined by the plugin.
+     Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
     <extensions defaultExtensionNs="com.intellij">
         <!-- Add your extensions here -->
     </extensions>
