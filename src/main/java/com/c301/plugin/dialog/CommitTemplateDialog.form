@@ -74,6 +74,7 @@
             </constraints>
             <properties>
               <editable value="true"/>
+              <font swing-font="Label.font"/>
             </properties>
           </component>
           <component id="31fa4" class="javax.swing.JLabel" binding="labelShortDescription">
@@ -101,7 +102,9 @@
             <children>
               <component id="dbe6d" class="javax.swing.JTextArea" binding="inputLongDescription">
                 <constraints/>
-                <properties/>
+                <properties>
+                  <font swing-font="Label.font"/>
+                </properties>
               </component>
             </children>
           </scrollpane>
@@ -122,7 +125,9 @@
             <children>
               <component id="829bf" class="javax.swing.JTextArea" binding="inputBreakingChanges">
                 <constraints/>
-                <properties/>
+                <properties>
+                  <font swing-font="Label.font"/>
+                </properties>
               </component>
             </children>
           </scrollpane>
@@ -151,7 +156,9 @@
                 <preferred-size width="150" height="-1"/>
               </grid>
             </constraints>
-            <properties/>
+            <properties>
+              <font swing-font="Label.font"/>
+            </properties>
           </component>
           <component id="4532c" class="javax.swing.JTextField" binding="inputShortDescription">
             <constraints>
@@ -159,7 +166,9 @@
                 <preferred-size width="150" height="-1"/>
               </grid>
             </constraints>
-            <properties/>
+            <properties>
+              <font swing-font="Label.font"/>
+            </properties>
           </component>
           <component id="2be5" class="javax.swing.JCheckBox" binding="checkBoxSkipCI">
             <constraints>

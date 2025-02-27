@@ -328,6 +328,8 @@ public class CommitTemplateDialog extends JDialog {
         panel3.add(labelScopeChang, new GridConstraints(2, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         optionScopeChange = new JComboBox();
         optionScopeChange.setEditable(true);
+        Font optionScopeChangeFont = UIManager.getFont("Label.font");
+        if (optionScopeChangeFont != null) optionScopeChange.setFont(optionScopeChangeFont);
         panel3.add(optionScopeChange, new GridConstraints(2, 1, 1, 2, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         labelShortDescription = new JLabel();
         labelShortDescription.setText("Short description");
@@ -338,6 +340,8 @@ public class CommitTemplateDialog extends JDialog {
         final JScrollPane scrollPane1 = new JScrollPane();
         panel3.add(scrollPane1, new GridConstraints(4, 1, 1, 2, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         inputLongDescription = new JTextArea();
+        Font inputLongDescriptionFont = UIManager.getFont("Label.font");
+        if (inputLongDescriptionFont != null) inputLongDescription.setFont(inputLongDescriptionFont);
         scrollPane1.setViewportView(inputLongDescription);
         labelBreakingChange = new JLabel();
         labelBreakingChange.setText("Breaking changes");
@@ -345,6 +349,8 @@ public class CommitTemplateDialog extends JDialog {
         final JScrollPane scrollPane2 = new JScrollPane();
         panel3.add(scrollPane2, new GridConstraints(6, 1, 1, 2, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         inputBreakingChanges = new JTextArea();
+        Font inputBreakingChangesFont = UIManager.getFont("Label.font");
+        if (inputBreakingChangesFont != null) inputBreakingChanges.setFont(inputBreakingChangesFont);
         scrollPane2.setViewportView(inputBreakingChanges);
         checkBoxWrapText = new JCheckBox();
         checkBoxWrapText.setActionCommand("Wrap text at 72 characters?");
@@ -356,8 +362,12 @@ public class CommitTemplateDialog extends JDialog {
         labelClosedIssues.setText("Closed issues");
         panel3.add(labelClosedIssues, new GridConstraints(7, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         inputClosedIssues = new JTextField();
+        Font inputClosedIssuesFont = UIManager.getFont("Label.font");
+        if (inputClosedIssuesFont != null) inputClosedIssues.setFont(inputClosedIssuesFont);
         panel3.add(inputClosedIssues, new GridConstraints(7, 1, 1, 2, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
         inputShortDescription = new JTextField();
+        Font inputShortDescriptionFont = UIManager.getFont("Label.font");
+        if (inputShortDescriptionFont != null) inputShortDescription.setFont(inputShortDescriptionFont);
         panel3.add(inputShortDescription, new GridConstraints(3, 1, 1, 2, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
         checkBoxSkipCI = new JCheckBox();
         checkBoxSkipCI.setSelected(false);
