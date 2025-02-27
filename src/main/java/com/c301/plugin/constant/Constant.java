@@ -1,5 +1,9 @@
 package com.c301.plugin.constant;
 
+import com.c301.plugin.model.LanguageDomain;
+
+import java.util.LinkedList;
+import java.util.List;
 import java.util.regex.Pattern;
 
 /**
@@ -13,11 +17,47 @@ import java.util.regex.Pattern;
  **/
 public interface Constant {
 
+    /**
+     * 字段长度过长进行换行<br/>
+     * <a href="https://stackoverflow.com/a/2120040/5138796">参考</a>
+     */
+    int MAX_LINE_LENGTH = 72;
+    /**
+     * 存储语言的key
+     */
+    String STORE_LANGUAGE_KEY = "ctip_language_key";
+
+    String CHAR_LINE = "\n";
+    String STR_CLOSES = "Closes";
+    String STR_BREAKING = "BREAKING";
+    String STR_BREAKING_CHANGE = "BREAKING CHANGE: ";
+
     String SKIP_CI = "[skip ci]";
     String GIT_LOG_COMMAND = "git log --all --format=%s";
 
     Pattern COMMIT_CLOSES_FORMAT = Pattern.compile("Closes (.+)");
-    Pattern COMMIT_GITMOJI_FORMAT = Pattern.compile("^:[A-Za-z0-9_]+:");
     Pattern COMMIT_FIRST_LINE_FORMAT = Pattern.compile("^([a-z]+)(\\((.+)\\))?: (.+)");
+
+    //语言选项列表
+    List<LanguageDomain> OPTINS_LANGUAGE_LIST = new LinkedList<>() {{
+        //US 美国
+        add(new LanguageDomain("en_US", "English"));
+        //SIMPLIFIED_CHINESE 简体中文
+        add(new LanguageDomain("zh_CN", "简体中文"));
+        //TRADITIONAL_CHINESE 繁体中文
+        add(new LanguageDomain("zh_TW", "繁體中文"));
+        //FRANCE 法国
+        add(new LanguageDomain("fr_FR", "Français"));
+        //CANADA_FRENCH 加拿大法语
+        add(new LanguageDomain("fr_CA", "Français canadien"));
+        //GERMANY 德国
+        add(new LanguageDomain("de_DE", "Deutsch"));
+        //ITALY 意大利
+        add(new LanguageDomain("it_IT", "Italiano"));
+        //JAPAN 日本
+        add(new LanguageDomain("ja_JP", "日本語"));
+        //KOREA 韩国
+        add(new LanguageDomain("ko_KR", "조선어"));
+    }};
 
 }

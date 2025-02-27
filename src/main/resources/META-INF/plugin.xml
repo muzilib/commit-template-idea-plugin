@@ -1,10 +1,11 @@
 <idea-plugin>
     <id>commit-template-plugin</id>
     <name>Git Commit Template</name>
-    <version>1.0.4</version>
+    <version>1.0.6</version>
     <vendor email="muzi@muzilib.com" url="https://github.com/muzilib">Chenbing</vendor>
 
-    <description><![CDATA[
+    <description>
+        <![CDATA[
         <p>Create a commit message with the following template:</p>
         <pre>
         &lt;type&gt;(&lt;scope&gt;): &lt;subject&gt;
@@ -19,9 +20,17 @@
         <a href="https://github.com/MobileTribe/commit-template-idea-plugin.git">Original project link</a><br/>
         <a href="https://plugins.jetbrains.com/plugin/23641-git-commit-template/faq">FAQ Page</a><br/>
         <a href="https://github.com/muzilib/commit-template-idea-plugin/issues">Submit Issue</a><br/>
-    ]]></description>
+        ]]>
+    </description>
 
-    <change-notes><![CDATA[
+    <change-notes>
+        <![CDATA[
+        <p>
+            <h4>V250227-1438</h4>
+            <p>1. Refactored the project pop-up window business to provide support for English, Simplified Chinese, Traditional Chinese, French, Canadian French, German, Italian, Japanese, and Korean. (Note: Language translation is processed using Google Translate, there may be grammatical errors, translation errors, etc. If you encounter any problems, please contact me (email: muzi@muzilib.com))</p>
+            <p>2. Fix the Chinese garbled error in the multi-line text input box <a href="https://github.com/muzilib/commit-template-idea-plugin/issues/7">Issue #7</a></p>
+            <p>3. Stop supporting gitmoji input <a href="https://github.com/muzilib/commit-template-idea-plugin/issues/4">Issue #4</a></p>
+        </p>
         <p>
             <h4>V240630-2210</h4>
             <p>1. Add support for gitmoji</p>
@@ -43,21 +52,26 @@
             <h4>V240125-1229</h4>
             <p>1. Fixed the problem of not being able to be used on IDEA2023.3.2(233), now let’s use it happily!</p>
         </p>
-    ]]></change-notes>
+        ]]>
+    </change-notes>
 
-    <idea-version since-build="193"/>
+    <idea-version since-build="233"/>
     <resource-bundle>i18n.data</resource-bundle>
 
+    <!-- Product and plugin compatibility requirements.
+     Read more: https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html -->
     <depends>com.intellij.modules.platform</depends>
-    <!--<depends>com.intellij.modules.vcs</depends>-->
+    <depends>com.intellij.modules.vcs</depends>
 
+    <!-- Extension points defined by the plugin.
+     Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
     <extensions defaultExtensionNs="com.intellij">
         <!-- Add your extensions here -->
     </extensions>
 
     <actions resource-bundle="i18n.data">
         <action id="plugin_commit_button"
-                class="com.c301.plugin.commit.CreateCommitAction"
+                class="com.c301.plugin.action.CreateCommitAction"
                 icon="/icons/load.png">
             <add-to-group group-id="Vcs.MessageActionGroup" anchor="first"/>
         </action>
