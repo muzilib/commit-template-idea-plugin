@@ -218,39 +218,39 @@ public class CommitTemplateDialog extends JDialog {
         switch (languageKey) {
             case "zh_CN":
                 locale = Locale.SIMPLIFIED_CHINESE;
-                setMinimumSize(new Dimension(880, 650));
+                setMinimumSize(new Dimension(880, 700));
                 break;
             case "zh_TW":
                 locale = Locale.TRADITIONAL_CHINESE;
-                setMinimumSize(new Dimension(880, 650));
+                setMinimumSize(new Dimension(880, 700));
                 break;
             case "fr_FR":
                 locale = Locale.FRANCE;
-                setMinimumSize(new Dimension(1100, 650));
+                setMinimumSize(new Dimension(1100, 700));
                 break;
             case "fr_CA":
                 locale = Locale.CANADA_FRENCH;
-                setMinimumSize(new Dimension(1100, 650));
+                setMinimumSize(new Dimension(1100, 700));
                 break;
             case "de_DE":
                 locale = Locale.GERMANY;
-                setMinimumSize(new Dimension(950, 650));
+                setMinimumSize(new Dimension(950, 700));
                 break;
             case "it_IT":
                 locale = Locale.ITALY;
-                setMinimumSize(new Dimension(960, 650));
+                setMinimumSize(new Dimension(960, 700));
                 break;
             case "ja_JP":
                 locale = Locale.JAPAN;
-                setMinimumSize(new Dimension(880, 650));
+                setMinimumSize(new Dimension(880, 700));
                 break;
             case "ko_KR":
                 locale = Locale.KOREA;
-                setMinimumSize(new Dimension(880, 650));
+                setMinimumSize(new Dimension(880, 700));
                 break;
             default:
                 locale = Locale.US;
-                setMinimumSize(new Dimension(880, 650));
+                setMinimumSize(new Dimension(880, 700));
                 break;
         }
         var resourceBundle = ResourceBundle.getBundle("i18n.data", locale);
