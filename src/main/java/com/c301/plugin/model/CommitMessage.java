@@ -31,6 +31,9 @@ public class CommitMessage {
      * 详细说明
      */
     private String longDescription;
+    /**
+     * 重大变化
+     */
     private String breakingChanges;
     /**
      * 关闭问题，例如#1234
@@ -99,7 +102,7 @@ public class CommitMessage {
             while (matcher.find()) {
                 stringBuilder.append(matcher.group(1)).append(',');
             }
-            if (stringBuilder.length() != 0) {
+            if (!stringBuilder.isEmpty()) {
                 stringBuilder.delete(stringBuilder.length() - 1, stringBuilder.length());
             }
             commitMessage.setClosedIssues(stringBuilder.toString());

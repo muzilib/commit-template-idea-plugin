@@ -22,6 +22,10 @@ public interface Constant {
      * <a href="https://stackoverflow.com/a/2120040/5138796">参考</a>
      */
     int MAX_LINE_LENGTH = 72;
+    /**
+     * 存储语言的key
+     */
+    String STORE_LANGUAGE_KEY = "ctip_language_key";
 
     String CHAR_LINE = "\n";
     String STR_CLOSES = "Closes";

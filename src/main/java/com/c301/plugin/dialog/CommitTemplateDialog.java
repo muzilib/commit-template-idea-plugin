@@ -1,10 +1,12 @@
 package com.c301.plugin.dialog;
 
+import com.c301.plugin.constant.Constant;
 import com.c301.plugin.dialog.render.GitCommitLogRender;
 import com.c301.plugin.dialog.render.LanguageListCellRendererRender;
 import com.c301.plugin.model.ChangeTypeEnum;
 import com.c301.plugin.model.CommitMessage;
 import com.c301.plugin.model.LanguageDomain;
+import com.intellij.ide.util.PropertiesComponent;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vcs.CommitMessageI;
 import com.intellij.openapi.wm.WindowManager;
@@ -79,15 +81,13 @@ public class CommitTemplateDialog extends JDialog {
         //设置显示窗口大小
         this.commitMessageI = commitMessageI;
         pack();
+        setMinimumSize(new Dimension(880, 650));
 
         buttonOK.addActionListener(e -> handleOKEvent());
         buttonCancel.addActionListener(e -> handleCancelEvent());
         optionLanguage.addActionListener(e -> {
             var language = (LanguageDomain) optionLanguage.getSelectedItem();
-            if (language == null) {
-                handleDisplayLanguageEvent("en_US");
-                return;
-            }
+            if (language == null) language = OPTINS_LANGUAGE_LIST.get(0);
 
             handleDisplayLanguageEvent(language.getKey());
         });
@@ -134,14 +134,19 @@ public class CommitTemplateDialog extends JDialog {
 
         //设置信息到提交面板中
         commitMessageI.setCommitMessage(commitMessage.toRwaString());
-        dispose();
+        handleCancelEvent();
     }
 
     /**
      * 处理取消事件
      */
     private void handleCancelEvent() {
-        // add your code here if necessary
+        //设置语言配置
+        var language = (LanguageDomain) optionLanguage.getSelectedItem();
+        if (language != null) {
+            PropertiesComponent.getInstance().setValue(Constant.STORE_LANGUAGE_KEY, language.getKey());
+        }
+
         dispose();
     }
 
@@ -191,8 +196,14 @@ public class CommitTemplateDialog extends JDialog {
         checkBoxSkipCI.setSelected(commitMessage.isSkipCI());
         checkBoxWrapText.setSelected(commitMessage.isWrapText());
 
-        //显示窗口
-        handleDisplayLanguageEvent("en_US");
+        //读取默认的语言配置，显示窗口
+        var languageKey = PropertiesComponent.getInstance().getValue(Constant.STORE_LANGUAGE_KEY, "en_US");
+        var languageDomain = OPTINS_LANGUAGE_LIST.stream()
+                .filter(item -> item.getKey().equals(languageKey))
+                .findFirst()
+                .orElse(OPTINS_LANGUAGE_LIST.get(0));
+        optionLanguage.setSelectedItem(languageDomain);
+        handleDisplayLanguageEvent(languageKey);
         setVisible(true);
     }
 
@@ -202,20 +213,46 @@ public class CommitTemplateDialog extends JDialog {
      * @param languageKey 语言标识
      */
     private void handleDisplayLanguageEvent(String languageKey) {
-        //获取多语言配置
-        var locale = switch (languageKey) {
-            case "zh_CN" -> Locale.SIMPLIFIED_CHINESE;
-            case "zh_TW" -> Locale.TRADITIONAL_CHINESE;
-            case "fr_FR" -> Locale.FRANCE;
-            case "de_DE" -> Locale.GERMANY;
-            case "it_IT" -> Locale.ITALY;
-            case "ja_JP" -> Locale.JAPAN;
-            case "ko_KR" -> Locale.KOREA;
-            case "en_GB" -> Locale.UK;
-            case "en_CA" -> Locale.CANADA;
-            case "fr_CA" -> Locale.CANADA_FRENCH;
-            default -> Locale.US;
-        };
+        //获取多语言配置和窗口宽度
+        Locale locale = null;
+        switch (languageKey) {
+            case "zh_CN":
+                locale = Locale.SIMPLIFIED_CHINESE;
+                setMinimumSize(new Dimension(880, 650));
+                break;
+            case "zh_TW":
+                locale = Locale.TRADITIONAL_CHINESE;
+                setMinimumSize(new Dimension(880, 650));
+                break;
+            case "fr_FR":
+                locale = Locale.FRANCE;
+                setMinimumSize(new Dimension(1100, 650));
+                break;
+            case "fr_CA":
+                locale = Locale.CANADA_FRENCH;
+                setMinimumSize(new Dimension(1100, 650));
+                break;
+            case "de_DE":
+                locale = Locale.GERMANY;
+                setMinimumSize(new Dimension(950, 650));
+                break;
+            case "it_IT":
+                locale = Locale.ITALY;
+                setMinimumSize(new Dimension(960, 650));
+                break;
+            case "ja_JP":
+                locale = Locale.JAPAN;
+                setMinimumSize(new Dimension(880, 650));
+                break;
+            case "ko_KR":
+                locale = Locale.KOREA;
+                setMinimumSize(new Dimension(880, 650));
+                break;
+            default:
+                locale = Locale.US;
+                setMinimumSize(new Dimension(880, 650));
+                break;
+        }
         var resourceBundle = ResourceBundle.getBundle("i18n.data", locale);
 
         //页面显示配置
