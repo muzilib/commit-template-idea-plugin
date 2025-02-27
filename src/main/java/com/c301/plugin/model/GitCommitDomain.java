@@ -26,7 +26,7 @@ public class GitCommitDomain {
     }
 
     /**
-     * Instantiates a new Git commit domain.
+     * Instantiates a new Git action domain.
      *
      * @param exitValue the exit value
      * @param logs      the logs

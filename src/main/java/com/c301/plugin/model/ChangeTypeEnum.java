@@ -53,7 +53,7 @@ public enum ChangeTypeEnum {
      */
     CHORE("Chores"),
     /**
-     * Reverts a previous commit
+     * Reverts a previous action
      */
     REVERT("Reverts");
 

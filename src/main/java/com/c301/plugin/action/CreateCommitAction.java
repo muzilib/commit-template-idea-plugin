@@ -1,11 +1,18 @@
-package com.c301.plugin.commit;
+package com.c301.plugin.action;
 
 import com.c301.plugin.dialog.CommitTemplateDialog;
 import com.c301.plugin.model.CommitMessage;
+import com.intellij.openapi.actionSystem.AnAction;
+import com.intellij.openapi.actionSystem.AnActionEvent;
+import com.intellij.openapi.project.DumbAware;
+import com.intellij.openapi.vcs.CheckinProjectPanel;
+import com.intellij.openapi.vcs.CommitMessageI;
+import com.intellij.openapi.vcs.VcsDataKeys;
+import com.intellij.openapi.vcs.ui.Refreshable;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * 创建提交行动事件
+ * 提交事件
  *
  * @author Damien Arrachequesne Chenbing
  */
@@ -36,7 +43,7 @@ public class CreateCommitAction extends AnAction implements DumbAware {
 
         var refreshable = Refreshable.PANEL_KEY.getData(dataContext);
         if (refreshable instanceof CommitMessageI) {
-            return refreshable;
+            return (CommitMessageI) refreshable;
         }
 
         return VcsDataKeys.COMMIT_MESSAGE_CONTROL.getData(dataContext);

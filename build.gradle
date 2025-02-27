@@ -1,42 +1,30 @@
 plugins {
     id("java")
     id("org.jetbrains.kotlin.jvm") version "1.9.25"
-    id('org.jetbrains.intellij.platform') version "2.2.1"
-}
-
-intellijPlatform {
-    version = project.platformVersion
-
-    pluginConfiguration {
-        id = project.pluginId
-        name = project.pluginName
-        version = project.pluginVersion
-
-        ideaVersion {
-            sinceBuild = "193"
-            untilBuild = "193.*"
-        }
-
-        vendor {
-            name = "Chenbing"
-            email = "muzi@muzilib.com"
-        }
-    }
+    id("org.jetbrains.intellij") version "1.17.4"
 }
 
 group = project.pluginGroup
 version = project.pluginVersion
 
 repositories {
-    maven { url 'https://maven.aliyun.com/repository/public/' }
-    maven { url 'https://maven.aliyun.com/repository/spring/' }
-    maven { url "https://packages.jetbrains.team/maven/p/ij/intellij-dependencies" }
+    maven {
+        url 'https://maven.aliyun.com/repository/public/'
+    }
+    maven {
+        url 'https://maven.aliyun.com/repository/spring/'
+    }
     mavenLocal()
     mavenCentral()
 }
 
-dependencies {
-    implementation("com.intellij.platform:platform-actions:${platformVersion}")
+intellij {
+    version = project.platformVersion
+    type = project.platformType
+
+    downloadSources = true
+    updateSinceUntilBuild = false
+    buildSearchableOptions.enabled = false
 }
 
 tasks.withType(JavaCompile).configureEach {
