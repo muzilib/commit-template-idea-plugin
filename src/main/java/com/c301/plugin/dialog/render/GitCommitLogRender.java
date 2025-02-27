@@ -8,7 +8,6 @@ import java.io.File;
 import java.io.InputStreamReader;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Pattern;
 
 import static com.c301.plugin.constant.Constant.GIT_LOG_COMMAND;
 import static java.util.stream.Collectors.toList;
@@ -23,8 +22,13 @@ import static java.util.stream.Collectors.toList;
  * @Version 1.0
  **/
 public class GitCommitLogRender {
-    private static final Pattern COMMIT_FIRST_LINE_FORMAT = Pattern.compile("^[a-z]+\\((.+)\\):.*");
 
+    /**
+     * 查询git提交日志
+     *
+     * @param project 项目对象
+     * @return 查询结果
+     */
     public static GitCommitDomain handleCommitHistory(Project project) {
         try {
             ProcessBuilder processBuilder;

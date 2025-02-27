@@ -36,7 +36,6 @@ public interface Constant {
     String GIT_LOG_COMMAND = "git log --all --format=%s";
 
     Pattern COMMIT_CLOSES_FORMAT = Pattern.compile("Closes (.+)");
-    Pattern COMMIT_GITMOJI_FORMAT = Pattern.compile("^:[A-Za-z0-9_]+:");
     Pattern COMMIT_FIRST_LINE_FORMAT = Pattern.compile("^([a-z]+)(\\((.+)\\))?: (.+)");
 
     //语言选项列表
