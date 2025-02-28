@@ -27,9 +27,10 @@
         <![CDATA[
         <p>
             <h4>V250227-1438</h4>
-            <p>1. Refactored the project pop-up window business to provide support for English, Simplified Chinese, Traditional Chinese, French, Canadian French, German, Italian, Japanese, and Korean. (Note: Language translation is processed using Google Translate, there may be grammatical errors, translation errors, etc. If you encounter any problems, please contact me (email: muzi@muzilib.com))</p>
-            <p>2. Fix the Chinese garbled error in the multi-line text input box <a href="https://github.com/muzilib/commit-template-idea-plugin/issues/7">Issue #7</a></p>
-            <p>3. Stop supporting gitmoji input <a href="https://github.com/muzilib/commit-template-idea-plugin/issues/4">Issue #4</a></p>
+            <p>1. Breaking update: Refactored the project pop-up window business to provide support for English, Simplified Chinese, Traditional Chinese, French, Canadian French, German, Italian, Japanese, and Korean. (Note: Language translation is processed using Google Translate, there may be grammatical errors, translation errors, etc. If you encounter any problems, please contact me (email: muzi@muzilib.com))</p>
+            <p>2. Highlights: Supports recording window position and size, which is more in line with user habits</p>
+            <p>3. Fix the Chinese garbled error in the multi-line text input box <a href="https://github.com/muzilib/commit-template-idea-plugin/issues/7">Issue #7</a></p>
+            <p>4. Stop supporting gitmoji input <a href="https://github.com/muzilib/commit-template-idea-plugin/issues/4">Issue #4</a></p>
         </p>
         <p>
             <h4>V240630-2210</h4>

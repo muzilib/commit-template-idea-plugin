@@ -6,6 +6,7 @@ import com.c301.plugin.dialog.render.LanguageListCellRendererRender;
 import com.c301.plugin.model.ChangeTypeEnum;
 import com.c301.plugin.model.CommitMessage;
 import com.c301.plugin.model.LanguageDomain;
+import com.c301.plugin.utils.StrUtil;
 import com.intellij.ide.util.PropertiesComponent;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vcs.CommitMessageI;
@@ -16,9 +17,7 @@ import com.intellij.uiDesigner.core.Spacer;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.KeyEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import java.awt.event.*;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.ResourceBundle;
@@ -92,6 +91,31 @@ public class CommitTemplateDialog extends JDialog {
             handleDisplayLanguageEvent(language.getKey());
         });
         optionLanguage.setRenderer(new LanguageListCellRendererRender());
+
+        //窗口大小发生变化监听事件
+        addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentMoved(ComponentEvent e) {
+                super.componentMoved(e);
+                var x = String.valueOf(getX());
+                var y = String.valueOf(getY());
+
+                //记录窗口位置并记录
+                PropertiesComponent.getInstance().setValue(Constant.STORE_WINDOW_X_KEY, x);
+                PropertiesComponent.getInstance().setValue(Constant.STORE_WINDOW_Y_KEY, y);
+            }
+
+            @Override
+            public void componentResized(ComponentEvent e) {
+                super.componentResized(e);
+                var width = String.valueOf(getWidth());
+                var height = String.valueOf(getHeight());
+
+                //记录窗口大小并记录
+                PropertiesComponent.getInstance().setValue(Constant.STORE_WINDOW_WIDTH_KEY, width);
+                PropertiesComponent.getInstance().setValue(Constant.STORE_WINDOW_HEIGHT_KEY, height);
+            }
+        });
 
         // call onCancel() when cross is clicked
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
@@ -214,45 +238,18 @@ public class CommitTemplateDialog extends JDialog {
      */
     private void handleDisplayLanguageEvent(String languageKey) {
         //获取多语言配置和窗口宽度
-        Locale locale = null;
-        switch (languageKey) {
-            case "zh_CN":
-                locale = Locale.SIMPLIFIED_CHINESE;
-                setMinimumSize(new Dimension(880, 700));
-                break;
-            case "zh_TW":
-                locale = Locale.TRADITIONAL_CHINESE;
-                setMinimumSize(new Dimension(880, 700));
-                break;
-            case "fr_FR":
-                locale = Locale.FRANCE;
-                setMinimumSize(new Dimension(1100, 700));
-                break;
-            case "fr_CA":
-                locale = Locale.CANADA_FRENCH;
-                setMinimumSize(new Dimension(1100, 700));
-                break;
-            case "de_DE":
-                locale = Locale.GERMANY;
-                setMinimumSize(new Dimension(950, 700));
-                break;
-            case "it_IT":
-                locale = Locale.ITALY;
-                setMinimumSize(new Dimension(960, 700));
-                break;
-            case "ja_JP":
-                locale = Locale.JAPAN;
-                setMinimumSize(new Dimension(880, 700));
-                break;
-            case "ko_KR":
-                locale = Locale.KOREA;
-                setMinimumSize(new Dimension(880, 700));
-                break;
-            default:
-                locale = Locale.US;
-                setMinimumSize(new Dimension(880, 700));
-                break;
-        }
+        handleWindowSizeChangeEvent(languageKey);
+        Locale locale = switch (languageKey) {
+            case "zh_CN" -> Locale.SIMPLIFIED_CHINESE;
+            case "zh_TW" -> Locale.TRADITIONAL_CHINESE;
+            case "fr_FR" -> Locale.FRANCE;
+            case "fr_CA" -> Locale.CANADA_FRENCH;
+            case "de_DE" -> Locale.GERMANY;
+            case "it_IT" -> Locale.ITALY;
+            case "ja_JP" -> Locale.JAPAN;
+            case "ko_KR" -> Locale.KOREA;
+            default -> Locale.US;
+        };
         var resourceBundle = ResourceBundle.getBundle("i18n.data", locale);
 
         //页面显示配置
@@ -285,6 +282,41 @@ public class CommitTemplateDialog extends JDialog {
         radioButtonCi.setText(resourceBundle.getString("plugin.radio.ci"));
         radioButtonChore.setText(resourceBundle.getString("plugin.radio.chore"));
         radioButtonRevert.setText(resourceBundle.getString("plugin.radio.revert"));
+    }
+
+    /**
+     * 处理窗口大小变化事件
+     */
+    private void handleWindowSizeChangeEvent(String languageKey) {
+        var width = 880;
+        var height = 700;
+        width = switch (languageKey) {
+            case "de_DE" -> 950;
+            case "it_IT" -> 960;
+            case "fr_FR", "fr_CA" -> 1100;
+            default -> 880;
+        };
+
+        //比对存储的窗口大小
+        var storeWidth = PropertiesComponent.getInstance().getInt(Constant.STORE_WINDOW_WIDTH_KEY, width);
+        if (storeWidth < width) {
+            storeWidth = width;
+            PropertiesComponent.getInstance().setValue(Constant.STORE_WINDOW_WIDTH_KEY, String.valueOf(storeWidth));
+        }
+        var storeHeight = PropertiesComponent.getInstance().getInt(Constant.STORE_WINDOW_HEIGHT_KEY, height);
+        if (storeHeight < height) {
+            storeHeight = height;
+            PropertiesComponent.getInstance().setValue(Constant.STORE_WINDOW_HEIGHT_KEY, String.valueOf(storeHeight));
+        }
+        setSize(new Dimension(storeWidth, storeHeight));
+        setMinimumSize(new Dimension(width, height));
+
+        //读取窗口X、Y坐标
+        var x = PropertiesComponent.getInstance().getValue(Constant.STORE_WINDOW_X_KEY, "");
+        var y = PropertiesComponent.getInstance().getValue(Constant.STORE_WINDOW_Y_KEY, "");
+        if (StrUtil.isNotBlank(x) && StrUtil.isNotBlank(y)) {
+            setBounds(Integer.parseInt(x), Integer.parseInt(y), storeWidth, storeHeight);
+        }
     }
 
     {

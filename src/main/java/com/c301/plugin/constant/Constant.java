@@ -26,6 +26,22 @@ public interface Constant {
      * 存储语言的key
      */
     String STORE_LANGUAGE_KEY = "ctip_language_key";
+    /**
+     * 存储 窗口打开宽度 key
+     */
+    String STORE_WINDOW_WIDTH_KEY = "ctip_window_width_key";
+    /**
+     * 存储 窗口打开高度 key
+     */
+    String STORE_WINDOW_HEIGHT_KEY = "ctip_window_height_key";
+    /**
+     * 存储 窗口打开X坐标 key
+     */
+    String STORE_WINDOW_X_KEY = "ctip_window_x_key";
+    /**
+     * 存储 窗口打开Y坐标 key
+     */
+    String STORE_WINDOW_Y_KEY = "ctip_window_y_key";
 
     String CHAR_LINE = "\n";
     String STR_CLOSES = "Closes";
