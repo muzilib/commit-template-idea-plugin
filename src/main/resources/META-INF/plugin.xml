@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>commit-template-plugin</id>
     <name>Git Commit Template</name>
-    <version>1.0.6</version>
+    <version>1.0.7</version>
     <vendor email="muzi@muzilib.com" url="https://github.com/muzilib">Chenbing</vendor>
 
     <description>
@@ -74,6 +74,9 @@
         <action id="plugin_commit_button"
                 class="com.c301.plugin.action.CreateCommitAction"
                 icon="/icons/load.png">
+            <keyboard-shortcut keymap="$default" first-keystroke="alt shift Q"/>
+            <keyboard-shortcut keymap="Mac OS X" first-keystroke="alt shift Q"/>
+            <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="alt shift Q"/>
             <add-to-group group-id="Vcs.MessageActionGroup" anchor="first"/>
         </action>
     </actions>

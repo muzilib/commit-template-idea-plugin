@@ -6,6 +6,7 @@ import com.c301.plugin.dialog.render.LanguageListCellRendererRender;
 import com.c301.plugin.model.ChangeTypeEnum;
 import com.c301.plugin.model.CommitMessage;
 import com.c301.plugin.model.LanguageDomain;
+import com.c301.plugin.utils.CommUtil;
 import com.c301.plugin.utils.StrUtil;
 import com.intellij.ide.util.PropertiesComponent;
 import com.intellij.openapi.project.Project;
@@ -19,8 +20,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.HashSet;
-import java.util.Locale;
-import java.util.ResourceBundle;
 
 import static com.c301.plugin.constant.Constant.COMMIT_FIRST_LINE_FORMAT;
 import static com.c301.plugin.constant.Constant.OPTINS_LANGUAGE_LIST;
@@ -157,7 +156,9 @@ public class CommitTemplateDialog extends JDialog {
         commitMessage.setSkipCI(checkBoxSkipCI.isSelected());
 
         //设置信息到提交面板中
-        commitMessageI.setCommitMessage(commitMessage.toRwaString());
+        if (commitMessageI != null) {
+            commitMessageI.setCommitMessage(commitMessage.toRwaString());
+        }
         handleCancelEvent();
     }
 
@@ -239,18 +240,7 @@ public class CommitTemplateDialog extends JDialog {
     private void handleDisplayLanguageEvent(String languageKey) {
         //获取多语言配置和窗口宽度
         handleWindowSizeChangeEvent(languageKey);
-        Locale locale = switch (languageKey) {
-            case "zh_CN" -> Locale.SIMPLIFIED_CHINESE;
-            case "zh_TW" -> Locale.TRADITIONAL_CHINESE;
-            case "fr_FR" -> Locale.FRANCE;
-            case "fr_CA" -> Locale.CANADA_FRENCH;
-            case "de_DE" -> Locale.GERMANY;
-            case "it_IT" -> Locale.ITALY;
-            case "ja_JP" -> Locale.JAPAN;
-            case "ko_KR" -> Locale.KOREA;
-            default -> Locale.US;
-        };
-        var resourceBundle = ResourceBundle.getBundle("i18n.data", locale);
+        var resourceBundle = CommUtil.i18nResourceBundle(languageKey);
 
         //页面显示配置
         setTitle(resourceBundle.getString("plugin.name"));
