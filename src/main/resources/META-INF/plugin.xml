@@ -68,6 +68,10 @@
      Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
     <extensions defaultExtensionNs="com.intellij">
         <!-- Add your extensions here -->
+        <applicationConfigurable groupId="tools"
+                                 id="plugins.muzilib.commit.template"
+                                 displayName="Commit Template Idea Plugin"
+                                 instance="com.c301.plugin.setting.GitCommitSettingConfigurable"/>
     </extensions>
 
     <actions resource-bundle="i18n.data">

@@ -17,6 +17,12 @@ import java.util.ResourceBundle;
  **/
 public class CommUtil {
 
+    /**
+     * 获取国际化资源
+     *
+     * @param languageKey 语言key
+     * @return ResourceBundle
+     */
     public static ResourceBundle i18nResourceBundle(String languageKey) {
         if (StrUtil.isBlank(languageKey)) {
             languageKey = PropertiesComponent.getInstance().getValue(Constant.STORE_LANGUAGE_KEY, "en_US");

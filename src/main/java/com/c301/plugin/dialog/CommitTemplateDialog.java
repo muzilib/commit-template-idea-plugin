@@ -232,6 +232,10 @@ public class CommitTemplateDialog extends JDialog {
         setVisible(true);
     }
 
+    public JPanel getManPanel() {
+        return contentPane;
+    }
+
     /**
      * 处理显示语言切换
      *
