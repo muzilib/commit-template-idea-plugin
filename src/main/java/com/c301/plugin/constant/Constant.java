@@ -1,5 +1,6 @@
 package com.c301.plugin.constant;
 
+import com.c301.plugin.model.ChangeTypeDomain;
 import com.c301.plugin.model.LanguageDomain;
 
 import java.util.LinkedList;
@@ -16,6 +17,11 @@ import java.util.regex.Pattern;
  * @Version 1.0
  **/
 public interface Constant {
+
+    /**
+     * 存储配置文件前缀
+     */
+    String ACTION_PREFIX = "$APP_CONFIG$/StoreCommitTemplateState";
 
     /**
      * 字段长度过长进行换行<br/>
@@ -42,6 +48,10 @@ public interface Constant {
      * 存储 窗口打开Y坐标 key
      */
     String STORE_WINDOW_Y_KEY = "ctip_window_y_key";
+    /**
+     * 存储 自定义模板弃用状态
+     */
+    String STORE_TEMPLATE_ENABLE_KEY = "ctip_template_enable_key";
 
     String CHAR_LINE = "\n";
     String STR_CLOSES = "Closes";
@@ -54,7 +64,9 @@ public interface Constant {
     Pattern COMMIT_CLOSES_FORMAT = Pattern.compile("Closes (.+)");
     Pattern COMMIT_FIRST_LINE_FORMAT = Pattern.compile("^([a-z]+)(\\((.+)\\))?: (.+)");
 
-    //语言选项列表
+    /**
+     * 语言选项列表
+     */
     List<LanguageDomain> OPTINS_LANGUAGE_LIST = new LinkedList<>() {{
         //US 美国
         add(new LanguageDomain("en_US", "English"));
@@ -75,5 +87,13 @@ public interface Constant {
         //KOREA 韩国
         add(new LanguageDomain("ko_KR", "조선어"));
     }};
+    /**
+     * 最大提交类型数量
+     */
+    int MAX_COMMIT_TYPE_LENGTH = 11;
+    /**
+     * 设置自定义的提交列表
+     */
+    List<ChangeTypeDomain> SETTING_COMMIT_TYPE_LIST = new LinkedList<>();
 
 }

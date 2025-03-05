@@ -1,6 +1,6 @@
 package com.c301.plugin.setting;
 
-import com.c301.plugin.dialog.CommitTemplateDialog;
+import com.c301.plugin.utils.CommUtil;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.options.SearchableConfigurable;
 import com.intellij.openapi.util.NlsContexts;
@@ -21,6 +21,8 @@ import javax.swing.*;
  **/
 public class GitCommitSettingConfigurable implements SearchableConfigurable {
 
+    private GitCommitSettingUI gitCommitSettingUI = null;
+
     @Override
     public @NotNull @NonNls String getId() {
         return "plugins.muzilib.commit.template";
@@ -28,18 +30,24 @@ public class GitCommitSettingConfigurable implements SearchableConfigurable {
 
     @Override
     public @NlsContexts.ConfigurableName String getDisplayName() {
-        return "设置中心";
+        var resourceBundle = CommUtil.i18nResourceBundle(null);
+        return resourceBundle.getString("plugin.setting.label.displayName");
     }
 
     @Override
     public @Nullable JComponent createComponent() {
-        var dialog = new CommitTemplateDialog(null);
-        return dialog.getManPanel();
+        if (gitCommitSettingUI == null) gitCommitSettingUI = new GitCommitSettingUI();
+        return gitCommitSettingUI.getMainPanel();
     }
 
     @Override
     public boolean isModified() {
-        return false;
+        return gitCommitSettingUI.isModified();
+    }
+
+    @Override
+    public void reset() {
+        gitCommitSettingUI.reset();
     }
 
     @Override

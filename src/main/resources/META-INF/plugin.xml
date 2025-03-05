@@ -68,6 +68,9 @@
      Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
     <extensions defaultExtensionNs="com.intellij">
         <!-- Add your extensions here -->
+        <applicationService
+                serviceImplementation="com.c301.plugin.setting.StoreCommitTemplateState"/>
+
         <applicationConfigurable groupId="tools"
                                  id="plugins.muzilib.commit.template"
                                  displayName="Commit Template Idea Plugin"
