@@ -22,8 +22,14 @@ import org.jetbrains.annotations.Nullable;
 @State(name = "StoreCommitTemplateState", storages = {@Storage(value = Constant.ACTION_PREFIX + "-settings.xml")})
 public class StoreCommitTemplateState implements PersistentStateComponent<StoreCommitTemplateState> {
 
-    private StoreConfig defaultConfig = new StoreConfig();
-    private StoreConfig storeConfig = new StoreConfig();
+    /**
+     * 默认值
+     */
+    public StoreConfig defaultValue = new StoreConfig();
+    /**
+     * 存储配置
+     */
+    public StoreConfig storeConfig = new StoreConfig();
 
     /**
      * Instantiates a new Store commit template state.
@@ -48,42 +54,6 @@ public class StoreCommitTemplateState implements PersistentStateComponent<StoreC
     @Override
     public void loadState(@NotNull StoreCommitTemplateState state) {
         XmlSerializerUtil.copyBean(state, this);
-    }
-
-    /**
-     * Gets default config.
-     *
-     * @return the default config
-     */
-    public StoreConfig getDefaultConfig() {
-        return defaultConfig;
-    }
-
-    /**
-     * Sets default config.
-     *
-     * @param defaultConfig the default config
-     */
-    public void setDefaultConfig(StoreConfig defaultConfig) {
-        this.defaultConfig = defaultConfig;
-    }
-
-    /**
-     * Gets store config.
-     *
-     * @return the store config
-     */
-    public StoreConfig getStoreConfig() {
-        return storeConfig;
-    }
-
-    /**
-     * Sets store config.
-     *
-     * @param storeConfig the store config
-     */
-    public void setStoreConfig(StoreConfig storeConfig) {
-        this.storeConfig = storeConfig;
     }
 
 }

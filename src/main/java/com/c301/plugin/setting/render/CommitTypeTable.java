@@ -3,11 +3,13 @@ package com.c301.plugin.setting.render;
 import com.c301.plugin.constant.Constant;
 import com.c301.plugin.model.ChangeTypeDomain;
 import com.c301.plugin.setting.EditCommitTypeDialog;
+import com.c301.plugin.setting.StoreCommitTemplateState;
 import com.c301.plugin.utils.CommUtil;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.ui.table.JBTable;
 
 import javax.swing.*;
+import java.util.List;
 
 /**
  * 提交类型表格渲染组件
@@ -20,7 +22,8 @@ import javax.swing.*;
  **/
 public class CommitTypeTable extends JBTable {
     private static final Logger log = Logger.getInstance(CommitTypeTable.class);
-    private static final CommitTypeTableModel TABLE_MODEL = new CommitTypeTableModel(Constant.SETTING_COMMIT_TYPE_LIST);
+    private static final List<ChangeTypeDomain> commitTypeList = StoreCommitTemplateState.getInstance().storeConfig.commitTypeList;
+    private static final CommitTypeTableModel TABLE_MODEL = new CommitTypeTableModel(commitTypeList);
 
     public CommitTypeTable() {
         setModel(TABLE_MODEL);
@@ -37,10 +40,7 @@ public class CommitTypeTable extends JBTable {
 
         // 设置表头
         var resourceBundle = CommUtil.i18nResourceBundle(null);
-        var title = new String[]{
-                resourceBundle.getString("plugin.setting.label.typeName"),
-                resourceBundle.getString("plugin.setting.label.typeDescribe")
-        };
+        var title = new String[]{resourceBundle.getString("plugin.setting.label.typeName"), resourceBundle.getString("plugin.setting.label.typeDescribe")};
         TABLE_MODEL.setColumnTitles(title);
     }
 
@@ -48,7 +48,7 @@ public class CommitTypeTable extends JBTable {
      * 新增 事件
      */
     public void handlesAddActionEvent() {
-        if (Constant.SETTING_COMMIT_TYPE_LIST.size() >= Constant.MAX_COMMIT_TYPE_LENGTH) {
+        if (commitTypeList.size() >= Constant.MAX_COMMIT_TYPE_LENGTH) {
             JOptionPane.showMessageDialog(this, "模板类型已添加最大上线，请删除或修改已有记录。", "错误", JOptionPane.ERROR_MESSAGE);
             log.warn("提交类型已达到最大值 " + Constant.MAX_COMMIT_TYPE_LENGTH);
             return;
@@ -65,7 +65,7 @@ public class CommitTypeTable extends JBTable {
         var selectRows = getSelectedRows();
         if (selectRows.length != 1) return;
 
-        var data = Constant.SETTING_COMMIT_TYPE_LIST.get(selectRows[0]);
+        var data = commitTypeList.get(selectRows[0]);
         var dialog = new EditCommitTypeDialog(data);
         dialog.setVisible(true);
     }
@@ -78,7 +78,7 @@ public class CommitTypeTable extends JBTable {
         if (selectRows.length != 1) return;
         var index = selectRows[0];
 
-        Constant.SETTING_COMMIT_TYPE_LIST.remove(index);
+        commitTypeList.remove(index);
         TABLE_MODEL.fireTableDataChanged();
     }
 
@@ -91,9 +91,9 @@ public class CommitTypeTable extends JBTable {
         var index = selectRows[0];
         if (index == 0) return;
 
-        var temp = Constant.SETTING_COMMIT_TYPE_LIST.get(index - 1);
-        Constant.SETTING_COMMIT_TYPE_LIST.set(index - 1, Constant.SETTING_COMMIT_TYPE_LIST.get(index));
-        Constant.SETTING_COMMIT_TYPE_LIST.set(index, temp);
+        var temp = commitTypeList.get(index - 1);
+        commitTypeList.set(index - 1, commitTypeList.get(index));
+        commitTypeList.set(index, temp);
         TABLE_MODEL.fireTableDataChanged();
         setRowSelectionInterval(index - 1, index - 1);
     }
@@ -105,11 +105,11 @@ public class CommitTypeTable extends JBTable {
         var selectRows = getSelectedRows();
         if (selectRows.length != 1) return;
         var index = selectRows[0];
-        if (index == Constant.SETTING_COMMIT_TYPE_LIST.size() - 1) return;
+        if (index == commitTypeList.size() - 1) return;
 
-        var temp = Constant.SETTING_COMMIT_TYPE_LIST.get(index + 1);
-        Constant.SETTING_COMMIT_TYPE_LIST.set(index + 1, Constant.SETTING_COMMIT_TYPE_LIST.get(index));
-        Constant.SETTING_COMMIT_TYPE_LIST.set(index, temp);
+        var temp = commitTypeList.get(index + 1);
+        commitTypeList.set(index + 1, commitTypeList.get(index));
+        commitTypeList.set(index, temp);
         TABLE_MODEL.fireTableDataChanged();
         setRowSelectionInterval(index + 1, index + 1);
     }
@@ -121,7 +121,7 @@ public class CommitTypeTable extends JBTable {
      */
     public static void handleCommitTypeDataEvent(ChangeTypeDomain data) {
         ChangeTypeDomain changeTypeDomain = null;
-        for (var item : Constant.SETTING_COMMIT_TYPE_LIST) {
+        for (var item : commitTypeList) {
             if (item.getName().equals(data.getName())) {
                 changeTypeDomain = item;
                 break;
@@ -131,7 +131,7 @@ public class CommitTypeTable extends JBTable {
         if (changeTypeDomain != null) {
             changeTypeDomain.setName(data.getName());
             changeTypeDomain.setDirection(data.getDirection());
-        } else Constant.SETTING_COMMIT_TYPE_LIST.add(data);
+        } else commitTypeList.add(data);
         TABLE_MODEL.fireTableDataChanged();
     }
 

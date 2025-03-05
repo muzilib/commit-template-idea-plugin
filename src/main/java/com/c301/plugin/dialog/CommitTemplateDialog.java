@@ -1,14 +1,13 @@
 package com.c301.plugin.dialog;
 
-import com.c301.plugin.constant.Constant;
 import com.c301.plugin.dialog.render.GitCommitLogRender;
 import com.c301.plugin.dialog.render.LanguageListCellRendererRender;
 import com.c301.plugin.model.ChangeTypeEnum;
 import com.c301.plugin.model.CommitMessage;
 import com.c301.plugin.model.LanguageDomain;
+import com.c301.plugin.model.StoreConfig;
+import com.c301.plugin.setting.StoreCommitTemplateState;
 import com.c301.plugin.utils.CommUtil;
-import com.c301.plugin.utils.StrUtil;
-import com.intellij.ide.util.PropertiesComponent;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vcs.CommitMessageI;
 import com.intellij.openapi.wm.WindowManager;
@@ -67,6 +66,7 @@ public class CommitTemplateDialog extends JDialog {
     private ButtonGroup typeChangeGroup;
 
     private final CommitMessageI commitMessageI;
+    private final StoreConfig storeConfig = StoreCommitTemplateState.getInstance().storeConfig;
 
     /**
      * 创建弹窗信息
@@ -84,10 +84,8 @@ public class CommitTemplateDialog extends JDialog {
         buttonOK.addActionListener(e -> handleOKEvent());
         buttonCancel.addActionListener(e -> handleCancelEvent());
         optionLanguage.addActionListener(e -> {
-            var language = (LanguageDomain) optionLanguage.getSelectedItem();
-            if (language == null) language = OPTINS_LANGUAGE_LIST.get(0);
-
-            handleDisplayLanguageEvent(language.getKey());
+            var languageDomain = CommUtil.convertLanguageDomain(optionLanguage);
+            handleDisplayLanguageEvent(languageDomain.getKey());
         });
         optionLanguage.setRenderer(new LanguageListCellRendererRender());
 
@@ -96,23 +94,17 @@ public class CommitTemplateDialog extends JDialog {
             @Override
             public void componentMoved(ComponentEvent e) {
                 super.componentMoved(e);
-                var x = String.valueOf(getX());
-                var y = String.valueOf(getY());
-
                 //记录窗口位置并记录
-                PropertiesComponent.getInstance().setValue(Constant.STORE_WINDOW_X_KEY, x);
-                PropertiesComponent.getInstance().setValue(Constant.STORE_WINDOW_Y_KEY, y);
+                storeConfig.commitWindowX = getX();
+                storeConfig.commitWindowY = getY();
             }
 
             @Override
             public void componentResized(ComponentEvent e) {
                 super.componentResized(e);
-                var width = String.valueOf(getWidth());
-                var height = String.valueOf(getHeight());
-
                 //记录窗口大小并记录
-                PropertiesComponent.getInstance().setValue(Constant.STORE_WINDOW_WIDTH_KEY, width);
-                PropertiesComponent.getInstance().setValue(Constant.STORE_WINDOW_HEIGHT_KEY, height);
+                storeConfig.commitWindowWidth = getWidth();
+                storeConfig.commitWindowHeight = getHeight();
             }
         });
 
@@ -167,10 +159,8 @@ public class CommitTemplateDialog extends JDialog {
      */
     private void handleCancelEvent() {
         //设置语言配置
-        var language = (LanguageDomain) optionLanguage.getSelectedItem();
-        if (language != null) {
-            PropertiesComponent.getInstance().setValue(Constant.STORE_LANGUAGE_KEY, language.getKey());
-        }
+        var languageDomain = CommUtil.convertLanguageDomain(optionLanguage);
+        if (languageDomain != null) storeConfig.language = languageDomain.getKey();
 
         dispose();
     }
@@ -222,18 +212,10 @@ public class CommitTemplateDialog extends JDialog {
         checkBoxWrapText.setSelected(commitMessage.isWrapText());
 
         //读取默认的语言配置，显示窗口
-        var languageKey = PropertiesComponent.getInstance().getValue(Constant.STORE_LANGUAGE_KEY, "en_US");
-        var languageDomain = OPTINS_LANGUAGE_LIST.stream()
-                .filter(item -> item.getKey().equals(languageKey))
-                .findFirst()
-                .orElse(OPTINS_LANGUAGE_LIST.get(0));
+        var languageDomain = CommUtil.convertLanguageDomain(storeConfig.language);
         optionLanguage.setSelectedItem(languageDomain);
-        handleDisplayLanguageEvent(languageKey);
+        handleDisplayLanguageEvent(storeConfig.language);
         setVisible(true);
-    }
-
-    public JPanel getManPanel() {
-        return contentPane;
     }
 
     /**
@@ -292,25 +274,21 @@ public class CommitTemplateDialog extends JDialog {
         };
 
         //比对存储的窗口大小
-        var storeWidth = PropertiesComponent.getInstance().getInt(Constant.STORE_WINDOW_WIDTH_KEY, width);
+        var storeWidth = storeConfig.commitWindowWidth;
         if (storeWidth < width) {
-            storeWidth = width;
-            PropertiesComponent.getInstance().setValue(Constant.STORE_WINDOW_WIDTH_KEY, String.valueOf(storeWidth));
+            storeConfig.commitWindowWidth = width;
         }
-        var storeHeight = PropertiesComponent.getInstance().getInt(Constant.STORE_WINDOW_HEIGHT_KEY, height);
+        var storeHeight = storeConfig.commitWindowHeight;
         if (storeHeight < height) {
-            storeHeight = height;
-            PropertiesComponent.getInstance().setValue(Constant.STORE_WINDOW_HEIGHT_KEY, String.valueOf(storeHeight));
+            storeConfig.commitWindowHeight = height;
         }
         setSize(new Dimension(storeWidth, storeHeight));
         setMinimumSize(new Dimension(width, height));
 
         //读取窗口X、Y坐标
-        var x = PropertiesComponent.getInstance().getValue(Constant.STORE_WINDOW_X_KEY, "");
-        var y = PropertiesComponent.getInstance().getValue(Constant.STORE_WINDOW_Y_KEY, "");
-        if (StrUtil.isNotBlank(x) && StrUtil.isNotBlank(y)) {
-            setBounds(Integer.parseInt(x), Integer.parseInt(y), storeWidth, storeHeight);
-        }
+        var x = storeConfig.commitWindowX;
+        var y = storeConfig.commitWindowY;
+        if (x != -1 && y != -1) setBounds(x, y, storeWidth, storeHeight);
     }
 
     {

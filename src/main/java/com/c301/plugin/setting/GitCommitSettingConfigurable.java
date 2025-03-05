@@ -1,6 +1,8 @@
 package com.c301.plugin.setting;
 
+import com.c301.plugin.model.StoreConfig;
 import com.c301.plugin.utils.CommUtil;
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.options.SearchableConfigurable;
 import com.intellij.openapi.util.NlsContexts;
@@ -20,9 +22,10 @@ import javax.swing.*;
  * @Version 1.0
  **/
 public class GitCommitSettingConfigurable implements SearchableConfigurable {
+    private static final Logger log = Logger.getInstance(GitCommitSettingConfigurable.class);
 
+    private final StoreConfig storeConfig = StoreCommitTemplateState.getInstance().storeConfig;
     private GitCommitSettingUI gitCommitSettingUI = null;
-
     @Override
     public @NotNull @NonNls String getId() {
         return "plugins.muzilib.commit.template";
@@ -52,7 +55,7 @@ public class GitCommitSettingConfigurable implements SearchableConfigurable {
 
     @Override
     public void apply() throws ConfigurationException {
-
+        log.debug("apply", storeConfig);
     }
 
 }

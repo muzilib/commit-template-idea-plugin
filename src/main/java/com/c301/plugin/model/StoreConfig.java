@@ -15,70 +15,33 @@ import java.util.List;
 public class StoreConfig {
 
     /**
+     * 提交窗口 坐标X
+     */
+    public int commitWindowX = -1;
+    /**
+     * 提交窗口 坐标Y
+     */
+    public int commitWindowY = -1;
+    /**
+     * 提交窗口 宽
+     */
+    public int commitWindowWidth = -1;
+    /**
+     * 提交窗口 高
+     */
+    public int commitWindowHeight = -1;
+
+    /**
      * 语言key
      */
-    private String language = "en_US";
+    public String language = "en_US";
     /**
      * 是否启用模板
      */
-    private boolean templateEnable = false;
+    public boolean templateEnable = false;
     /**
      * 用户存储的模板
      */
-    private List<ChangeTypeDomain> commitTypeList = new LinkedList<>();
-
-    /**
-     * Gets language.
-     *
-     * @return the language
-     */
-    public String getLanguage() {
-        return language;
-    }
-
-    /**
-     * Sets language.
-     *
-     * @param language the language
-     */
-    public void setLanguage(String language) {
-        this.language = language;
-    }
-
-    /**
-     * Gets commit type list.
-     *
-     * @return the commit type list
-     */
-    public List<ChangeTypeDomain> getCommitTypeList() {
-        return commitTypeList;
-    }
-
-    /**
-     * Sets commit type list.
-     *
-     * @param commitTypeList the commit type list
-     */
-    public void setCommitTypeList(List<ChangeTypeDomain> commitTypeList) {
-        this.commitTypeList = commitTypeList;
-    }
-
-    /**
-     * Is template enable boolean.
-     *
-     * @return the boolean
-     */
-    public boolean isTemplateEnable() {
-        return templateEnable;
-    }
-
-    /**
-     * Sets template enable.
-     *
-     * @param templateEnable the template enable
-     */
-    public void setTemplateEnable(boolean templateEnable) {
-        this.templateEnable = templateEnable;
-    }
+    public List<ChangeTypeDomain> commitTypeList = new LinkedList<>();
 
 }
