@@ -4,6 +4,7 @@ import com.c301.plugin.dialog.render.LanguageListCellRendererRender;
 import com.c301.plugin.model.LanguageDomain;
 import com.c301.plugin.model.StoreConfig;
 import com.c301.plugin.setting.render.CommitTypeTable;
+import com.c301.plugin.setting.render.CustomTableCellRenderer;
 import com.c301.plugin.utils.CommUtil;
 import com.intellij.ui.ToolbarDecorator;
 import com.intellij.uiDesigner.core.GridConstraints;
@@ -12,7 +13,9 @@ import com.intellij.uiDesigner.core.Spacer;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ItemEvent;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import static com.c301.plugin.constant.Constant.OPTINS_LANGUAGE_LIST;
 
@@ -41,8 +44,6 @@ public class GitCommitSettingUI {
     private JCheckBox checkBoxCommitType;
     private JComboBox<LanguageDomain> optionLanguage;
 
-    private final StoreConfig storeConfig = StoreCommitTemplateState.getInstance().storeConfig;
-
     public GitCommitSettingUI() {
         //初始化Logo信息
         var url = this.getClass().getResource("/META-INF/pluginIcon.png");
@@ -52,23 +53,27 @@ public class GitCommitSettingUI {
         imageIcon.setIcon(icon);
 
         //设置语言模板
+        optionLanguage.setRenderer(new LanguageListCellRendererRender());
+        OPTINS_LANGUAGE_LIST.forEach(optionLanguage::addItem);
         optionLanguage.addActionListener(e -> {
             var languageDomain = CommUtil.convertLanguageDomain(optionLanguage);
             handleDisplayLanguageEvent(languageDomain.getKey());
         });
-        optionLanguage.setRenderer(new LanguageListCellRendererRender());
-        OPTINS_LANGUAGE_LIST.forEach(optionLanguage::addItem);
 
         //设置自定义模板事件
-        checkBoxCommitType.addChangeListener(e -> {
-            var enable = checkBoxCommitType.isSelected();
+        checkBoxCommitType.addItemListener(e -> {
+            var enable = (e.getStateChange() == ItemEvent.SELECTED);
+
             commitTypeTable.clearSelection();
             typeTablePanel.setEnabled(enable);
             editCommitTypePanel.setEnabled(enable);
         });
 
         //设置主界面
-        if (commitTypeTable == null) commitTypeTable = new CommitTypeTable();
+        if (commitTypeTable == null) {
+            commitTypeTable = new CommitTypeTable();
+            commitTypeTable.setDefaultRenderer(Object.class, new CustomTableCellRenderer());
+        }
         var labelFont = UIManager.getFont("Label.font");
         if (labelFont != null) commitTypeTable.setFont(labelFont);
         if (editCommitTypePanel == null) {
@@ -81,10 +86,6 @@ public class GitCommitSettingUI {
                     .createPanel();
         }
         typeTablePanel.add(editCommitTypePanel, BorderLayout.CENTER);
-
-        //回显设置状态
-        checkBoxCommitType.setSelected(storeConfig.templateEnable);
-        optionLanguage.setSelectedItem(CommUtil.convertLanguageDomain(storeConfig.language));
     }
 
     /**
@@ -112,30 +113,59 @@ public class GitCommitSettingUI {
     /**
      * 数据是否修改
      *
+     * @param defaultStoreConfig 默认配置
      * @return true: 修改
      */
-    public boolean isModified() {
+    public boolean isModified(StoreConfig defaultStoreConfig) {
         //语言是否调整
-        var defaultValue = StoreCommitTemplateState.getInstance().defaultValue;
         var languageDomain = CommUtil.convertLanguageDomain(optionLanguage);
-        if (!defaultValue.language.equalsIgnoreCase(languageDomain.getKey())) {
+        if (!defaultStoreConfig.language.equalsIgnoreCase(languageDomain.getKey())) {
             return true;
         }
 
         //是否开启了模板功能
-        return checkBoxCommitType.isSelected() != defaultValue.templateEnable;
+        if (checkBoxCommitType.isSelected() != defaultStoreConfig.templateEnable) {
+            return true;
+        }
+
+        //比对数据是否进行编辑
+        if (CommitTypeTable.getDataList().size() != defaultStoreConfig.commitTypeList.size()) {
+            return true;
+        }
+        var valueList1 = CommitTypeTable.getDataList().stream()
+                .map(item -> item.getName() + item.getDirection())
+                .collect(Collectors.joining());
+        var valueList2 = defaultStoreConfig.commitTypeList.stream()
+                .map(item -> item.getName() + item.getDirection())
+                .collect(Collectors.joining());
+        return !valueList1.equals(valueList2);
     }
 
     /**
      * 重置数据模板
      */
-    public void reset() {
-        var defaultValue = StoreCommitTemplateState.getInstance().defaultValue;
-        checkBoxCommitType.setSelected(defaultValue.templateEnable);
+    public void reset(StoreConfig storeConfig) {
+        var data = CommUtil.deepCopy(storeConfig);
 
-        storeConfig.language = defaultValue.language;
-        storeConfig.commitTypeList = defaultValue.commitTypeList;
-        storeConfig.templateEnable = defaultValue.templateEnable;
+        var templateEnable = data.templateEnable;
+        typeTablePanel.setEnabled(templateEnable);
+        editCommitTypePanel.setEnabled(templateEnable);
+        checkBoxCommitType.setSelected(templateEnable);
+        CommitTypeTable.setDataList(data.commitTypeList);
+        optionLanguage.setSelectedItem(CommUtil.convertLanguageDomain(data.language));
+    }
+
+    /**
+     * 应用数据模板
+     *
+     * @return 用户新的配置
+     */
+    public StoreConfig applyStoreConfig() {
+        var storeConfig = new StoreConfig();
+        storeConfig.commitTypeList = CommitTypeTable.getDataList();
+        storeConfig.templateEnable = checkBoxCommitType.isSelected();
+        storeConfig.language = CommUtil.convertLanguageDomain(optionLanguage).getKey();
+        return storeConfig;
     }
 
     /**

@@ -2,6 +2,7 @@ package com.c301.plugin.utils;
 
 import com.c301.plugin.model.LanguageDomain;
 import com.c301.plugin.setting.StoreCommitTemplateState;
+import com.google.gson.Gson;
 
 import javax.swing.*;
 import java.util.Locale;
@@ -30,7 +31,7 @@ public class CommUtil {
         if (StrUtil.isBlank(languageKey)) {
             languageKey = StoreCommitTemplateState.getInstance().storeConfig.language;
             if (StrUtil.isBlank(languageKey))
-                languageKey = StoreCommitTemplateState.getInstance().defaultValue.language;
+                languageKey = StoreCommitTemplateState.getInstance().defaultStoreConfig.language;
         }
 
         var locale = switch (languageKey) {
@@ -70,6 +71,18 @@ public class CommUtil {
         var language = (LanguageDomain) optionLanguage.getSelectedItem();
         if (language == null) language = OPTINS_LANGUAGE_LIST.get(0);
         return language;
+    }
+
+    /**
+     * 传入一个类对象并深度拷贝返回一个拷贝对象
+     *
+     * @param obj 传入对象
+     * @return 返回对象
+     */
+    public static <T> T deepCopy(T obj) {
+        var gson = new Gson();
+        var jsonString = gson.toJson(obj);
+        return (T) gson.fromJson(jsonString, obj.getClass());
     }
 
 }

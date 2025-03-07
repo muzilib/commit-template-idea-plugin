@@ -15,6 +15,7 @@ import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.util.Arrays;
 
 /**
  * 编辑commitType 对话框
@@ -60,6 +61,17 @@ public class EditCommitTypeDialog extends JDialog {
 
         //添加默认类型列表
         for (var type : ChangeTypeEnum.values()) inputType.addItem(type.getCode());
+        inputType.addActionListener(e -> {
+            var itemObject = inputType.getSelectedItem();
+            if (itemObject != null) {
+                inputDescribe.setText("");
+
+                Arrays.stream(ChangeTypeEnum.values())
+                        .filter(item -> item.getCode().equals(itemObject.toString()))
+                        .findFirst().
+                        ifPresent(item -> inputDescribe.setText(resourceBundle.getString("plugin.radio." + item.getCode())));
+            }
+        });
 
         //设置窗口打开位置为屏幕中心
         setLocationRelativeTo(null);

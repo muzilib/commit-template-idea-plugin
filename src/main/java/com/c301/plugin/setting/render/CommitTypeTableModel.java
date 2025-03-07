@@ -1,9 +1,8 @@
 package com.c301.plugin.setting.render;
 
-import com.c301.plugin.model.ChangeTypeDomain;
+import org.apache.commons.text.StringEscapeUtils;
 
 import javax.swing.table.AbstractTableModel;
-import java.util.List;
 
 /**
  * 提交类型表格 标题类型
@@ -20,15 +19,9 @@ public class CommitTypeTableModel extends AbstractTableModel {
     public static final int VALUE_COLUMN = 1;
     private static final String[] HEADERS = new String[]{"", ""};
 
-    private final List<ChangeTypeDomain> innerList;
-
-    public CommitTypeTableModel(List<ChangeTypeDomain> innerList) {
-        this.innerList = innerList;
-    }
-
     @Override
     public int getRowCount() {
-        return innerList.size();
+        return CommitTypeTable.getDataList().size();
     }
 
     @Override
@@ -38,9 +31,9 @@ public class CommitTypeTableModel extends AbstractTableModel {
 
     @Override
     public Object getValueAt(int rowIndex, int columnIndex) {
-        var domain = innerList.get(rowIndex);
-        if (columnIndex == NAME_COLUMN) return domain.getName();
-        if (columnIndex == VALUE_COLUMN) return domain.getDirection();
+        var domain = CommitTypeTable.getDataList().get(rowIndex);
+        if (columnIndex == NAME_COLUMN) return StringEscapeUtils.escapeJava(domain.getName());
+        if (columnIndex == VALUE_COLUMN) return StringEscapeUtils.escapeJava(domain.getDirection());
         return "";
     }
 

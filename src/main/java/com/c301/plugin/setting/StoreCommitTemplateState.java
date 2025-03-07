@@ -25,7 +25,7 @@ public class StoreCommitTemplateState implements PersistentStateComponent<StoreC
     /**
      * 默认值
      */
-    public StoreConfig defaultValue = new StoreConfig();
+    public StoreConfig defaultStoreConfig = new StoreConfig();
     /**
      * 存储配置
      */
