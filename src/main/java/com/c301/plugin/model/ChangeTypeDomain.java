@@ -32,6 +32,15 @@ public class ChangeTypeDomain {
     }
 
     /**
+     * Gets raw name.
+     *
+     * @return the raw name
+     */
+    public String getRawName() {
+        return StringEscapeUtils.escapeJava(name);
+    }
+
+    /**
      * Sets name.
      *
      * @param name the name
@@ -47,6 +56,15 @@ public class ChangeTypeDomain {
      */
     public String getDirection() {
         return StringEscapeUtils.escapeJava(direction);
+    }
+
+    /**
+     * Gets raw direction.
+     *
+     * @return the raw direction
+     */
+    public String getRawDirection() {
+        return direction;
     }
 
     /**

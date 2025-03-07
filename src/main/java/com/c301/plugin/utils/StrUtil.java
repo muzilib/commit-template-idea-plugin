@@ -300,4 +300,28 @@ public class StrUtil {
         return wrappedLine.toString();
     }
 
+    public static String unicodeToString(String unicodeStr) {
+        var builder = new StringBuilder();
+        var length = unicodeStr.length();
+        for (var i = 0; i < length; i++) {
+            var currentChar = unicodeStr.charAt(i);
+            if (currentChar == '\\' && i + 1 < length && unicodeStr.charAt(i + 1) == 'u') {
+                // 解析 Unicode 转义序列
+                String hex = unicodeStr.substring(i + 2, i + 6);
+                try {
+                    int codePoint = Integer.parseInt(hex, 16);
+                    builder.append((char) codePoint);
+                    i += 5; // 跳过已处理的6个字符（\ u x x x x）
+                } catch (NumberFormatException | StringIndexOutOfBoundsException e) {
+                    // 处理非法格式
+                    builder.append("\\u").append(hex);
+                    i += hex.length() + 1;
+                }
+            } else {
+                builder.append(currentChar);
+            }
+        }
+        return builder.toString();
+    }
+
 }

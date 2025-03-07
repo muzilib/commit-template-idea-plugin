@@ -32,8 +32,8 @@ public class CommitTypeTableModel extends AbstractTableModel {
     @Override
     public Object getValueAt(int rowIndex, int columnIndex) {
         var domain = CommitTypeTable.getDataList().get(rowIndex);
-        if (columnIndex == NAME_COLUMN) return StringEscapeUtils.escapeJava(domain.getName());
-        if (columnIndex == VALUE_COLUMN) return StringEscapeUtils.escapeJava(domain.getDirection());
+        if (columnIndex == NAME_COLUMN) return StringEscapeUtils.unescapeJava(domain.getName());
+        if (columnIndex == VALUE_COLUMN) return StringEscapeUtils.unescapeJava(domain.getDirection());
         return "";
     }
 
