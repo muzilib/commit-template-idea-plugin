@@ -1,7 +1,5 @@
 package com.c301.plugin.model;
 
-import groovy.json.StringEscapeUtils;
-
 /**
  * 提交类型域
  *
@@ -28,16 +26,7 @@ public class ChangeTypeDomain {
      * @return the name
      */
     public String getName() {
-        return StringEscapeUtils.escapeJava(name);
-    }
-
-    /**
-     * Gets raw name.
-     *
-     * @return the raw name
-     */
-    public String getRawName() {
-        return StringEscapeUtils.escapeJava(name);
+        return name;
     }
 
     /**
@@ -55,15 +44,6 @@ public class ChangeTypeDomain {
      * @return the direction
      */
     public String getDirection() {
-        return StringEscapeUtils.escapeJava(direction);
-    }
-
-    /**
-     * Gets raw direction.
-     *
-     * @return the raw direction
-     */
-    public String getRawDirection() {
         return direction;
     }
 

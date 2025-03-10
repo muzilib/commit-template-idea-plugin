@@ -1,7 +1,5 @@
 package com.c301.plugin.setting.render;
 
-import org.apache.commons.text.StringEscapeUtils;
-
 import javax.swing.table.AbstractTableModel;
 
 /**
@@ -32,8 +30,8 @@ public class CommitTypeTableModel extends AbstractTableModel {
     @Override
     public Object getValueAt(int rowIndex, int columnIndex) {
         var domain = CommitTypeTable.getDataList().get(rowIndex);
-        if (columnIndex == NAME_COLUMN) return StringEscapeUtils.unescapeJava(domain.getName());
-        if (columnIndex == VALUE_COLUMN) return StringEscapeUtils.unescapeJava(domain.getDirection());
+        if (columnIndex == NAME_COLUMN) return domain.getName();
+        if (columnIndex == VALUE_COLUMN) return domain.getDirection();
         return "";
     }
 

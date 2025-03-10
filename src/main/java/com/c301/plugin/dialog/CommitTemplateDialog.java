@@ -8,6 +8,7 @@ import com.c301.plugin.model.LanguageDomain;
 import com.c301.plugin.model.StoreConfig;
 import com.c301.plugin.setting.StoreCommitTemplateState;
 import com.c301.plugin.utils.CommUtil;
+import com.c301.plugin.utils.StrUtil;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vcs.CommitMessageI;
 import com.intellij.openapi.wm.WindowManager;
@@ -198,9 +199,20 @@ public class CommitTemplateDialog extends JDialog {
             while (buttonElements.hasMoreElements()) {
                 var button = buttonElements.nextElement();
 
-                if (button.getActionCommand().equalsIgnoreCase(changeTypeCode)) {
-                    button.setSelected(true);
-                    break;
+                if (storeConfig.templateEnable) {
+                    //自定义模板
+                    var buttonText = button.getText();
+                    buttonText = buttonText.split(" - ")[0];
+                    if (StrUtil.isNotBlank(buttonText) && buttonText.equalsIgnoreCase(changeTypeCode)) {
+                        button.setSelected(true);
+                        break;
+                    }
+                } else {
+                    //基础模板
+                    if (button.getActionCommand().equalsIgnoreCase(changeTypeCode)) {
+                        button.setSelected(true);
+                        break;
+                    }
                 }
             }
         }
@@ -248,6 +260,7 @@ public class CommitTemplateDialog extends JDialog {
         checkBoxSkipCI.setText(resourceBundle.getString("plugin.checkbox.skipCI"));
 
         //默认加载 按钮组件
+        if (storeConfig.templateEnable) labelTypeOfChange.setVisible(!storeConfig.commitTypeList.isEmpty());
         int index = 0;
         var buttonElements = typeChangeGroup.getElements();
         buttonElements.nextElement();
