@@ -8,6 +8,9 @@ import lombok.NoArgsConstructor;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.regex.Pattern;
+
+import static com.c301.plugin.constant.Constant.*;
 
 /**
  * Git提交日志对象
@@ -98,7 +101,51 @@ public class GitCommitDomain {
     public static GitCommitDomain parseRawMessage(String rawMessage) {
         var gitCommit = new GitCommitDomain();
         if (StrUtil.isNotBlank(rawMessage)) {
+            try {
+                var matcher = Pattern.compile("^(.+)(\\((.+)\\))?: (.+)").matcher(rawMessage);
+                if (!matcher.find()) return gitCommit;
 
+                //解析第一行内容
+                gitCommit.setCommitType(CommitTypeDomain.parseCommitType(matcher.group(1)));
+                gitCommit.setChangeScope(matcher.group(3));
+                gitCommit.setShortDescription(matcher.group(4));
+
+                //解析剩余信息
+                var strings = rawMessage.split(CHAR_LINE);
+                if (strings.length < 2) return gitCommit;
+
+                //设置长描述
+                var index = 1;
+                var builder = new StringBuilder();
+                for (; index < strings.length; index++) {
+                    var line = strings[index];
+                    if (line.startsWith("BREAKING") || line.startsWith("Closes") || line.equalsIgnoreCase("[skip ci]")) {
+                        break;
+                    }
+                    builder.append(line).append('\n');
+                }
+                gitCommit.setLongDescription(builder.toString());
+
+                //设置重大变化
+
+                //gitCommit.setBreakingChanges();
+
+                //获取关闭问题列表
+                var closeIssuesList = new LinkedList<Integer>();
+                matcher = COMMIT_CLOSES_FORMAT.matcher(rawMessage);
+                while (matcher.find()) {
+                    var issue = matcher.group(1);
+                    issue = issue.trim().replaceAll("#", "");
+
+                    if (!StrUtil.isNumeric(issue)) continue;
+                    closeIssuesList.add(Integer.parseInt(issue));
+                }
+                gitCommit.setClosedIssues(closeIssuesList);
+
+                gitCommit.setSkipCI(rawMessage.contains(SKIP_CI));
+                gitCommit.setWrapText(false);
+            } catch (Exception ignored) {
+            }
         }
         return gitCommit;
     }
