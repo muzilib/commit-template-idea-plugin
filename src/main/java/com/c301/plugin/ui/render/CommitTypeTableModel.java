@@ -1,4 +1,4 @@
-package com.c301.plugin.setting.render;
+package com.c301.plugin.ui.render;
 
 import javax.swing.table.AbstractTableModel;
 
@@ -6,7 +6,7 @@ import javax.swing.table.AbstractTableModel;
  * 提交类型表格 标题类型
  *
  * @Title CommitTypeTableModel
- * @ClassName com.c301.plugin.setting.render.CommitTypeTableModel
+ * @ClassName com.c301.plugin.ui.render.CommitTypeTableModel
  * @Author Chenbing
  * @Date 25/03/05 10:36
  * @Version 1.0

@@ -1,8 +1,8 @@
-package com.c301.plugin.setting.render;
+package com.c301.plugin.ui.render;
 
 import com.c301.plugin.constant.Constant;
-import com.c301.plugin.model.ChangeTypeDomain;
-import com.c301.plugin.setting.EditCommitTypeDialog;
+import com.c301.plugin.model.old.ChangeTypeDomain;
+import com.c301.plugin.ui.EditCommitTypeDialog;
 import com.c301.plugin.utils.CommUtil;
 import com.intellij.ui.table.JBTable;
 
@@ -14,7 +14,7 @@ import java.util.List;
  * 提交类型表格渲染组件
  *
  * @Title CommitTypeTable
- * @ClassName com.c301.plugin.setting.render.CommitTypeTable
+ * @ClassName com.c301.plugin.ui.render.CommitTypeTable
  * @Author Chenbing
  * @Date 25/03/05 10:34
  * @Version 1.0

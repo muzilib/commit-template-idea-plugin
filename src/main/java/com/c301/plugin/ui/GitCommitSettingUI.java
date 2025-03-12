@@ -1,10 +1,11 @@
-package com.c301.plugin.setting;
+package com.c301.plugin.ui;
 
-import com.c301.plugin.dialog.render.LanguageListCellRendererRender;
+import com.c301.plugin.constant.Constant;
 import com.c301.plugin.model.LanguageDomain;
-import com.c301.plugin.model.StoreConfig;
-import com.c301.plugin.setting.render.CommitTypeTable;
-import com.c301.plugin.setting.render.CustomTableCellRenderer;
+import com.c301.plugin.model.old.StoreConfig;
+import com.c301.plugin.ui.render.CommitTypeTable;
+import com.c301.plugin.ui.render.CustomTableCellRenderer;
+import com.c301.plugin.ui.render.LanguageListCellRendererRender;
 import com.c301.plugin.utils.CommUtil;
 import com.intellij.ui.ToolbarDecorator;
 import com.intellij.uiDesigner.core.GridConstraints;
@@ -17,13 +18,11 @@ import java.awt.event.ItemEvent;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import static com.c301.plugin.constant.Constant.OPTINS_LANGUAGE_LIST;
-
 /**
  * Git提交设置面板
  *
  * @Title GitCommitSettingUI
- * @ClassName com.c301.plugin.setting.GitCommitSettingUI
+ * @ClassName com.c301.plugin.config.GitCommitSettingUI
  * @Author Chenbing
  * @Date 25 /03/05 08:52
  * @Version 1.0
@@ -54,7 +53,7 @@ public class GitCommitSettingUI {
 
         //设置语言模板
         optionLanguage.setRenderer(new LanguageListCellRendererRender());
-        OPTINS_LANGUAGE_LIST.forEach(optionLanguage::addItem);
+        Constant.LANGUAGES.forEach(optionLanguage::addItem);
         optionLanguage.addActionListener(e -> {
             var languageDomain = CommUtil.convertLanguageDomain(optionLanguage);
             handleDisplayLanguageEvent(languageDomain.getKey());

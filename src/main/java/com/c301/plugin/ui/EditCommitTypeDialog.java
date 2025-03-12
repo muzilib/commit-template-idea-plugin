@@ -1,8 +1,8 @@
-package com.c301.plugin.setting;
+package com.c301.plugin.ui;
 
-import com.c301.plugin.model.ChangeTypeDomain;
-import com.c301.plugin.model.ChangeTypeEnum;
-import com.c301.plugin.setting.render.CommitTypeTable;
+import com.c301.plugin.model.old.ChangeTypeDomain;
+import com.c301.plugin.model.old.ChangeTypeEnum;
+import com.c301.plugin.ui.render.CommitTypeTable;
 import com.c301.plugin.utils.CommUtil;
 import com.c301.plugin.utils.StrUtil;
 import com.intellij.openapi.wm.WindowManager;
@@ -21,7 +21,7 @@ import java.util.Arrays;
  * 编辑commitType 对话框
  *
  * @Title EditCommitType
- * @ClassName com.c301.plugin.setting.EditCommitType
+ * @ClassName com.c301.plugin.config.EditCommitType
  * @Author Chenbing
  * @Date 25/03/05 11:55
  * @Version 1.0

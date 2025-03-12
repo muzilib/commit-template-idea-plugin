@@ -1,58 +1,106 @@
 package com.c301.plugin.model;
 
-import java.util.ArrayList;
+import com.c301.plugin.constant.Constant;
+import com.c301.plugin.utils.StrUtil;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Git提交记录对象
+ * Git提交日志对象
  *
  * @Title GitCommitDomain
  * @ClassName com.c301.plugin.model.GitCommitDomain
  * @Author Chenbing
- * @Date 25 /02/19 17:43
+ * @Date 25 /03/11 17:36
  * @Version 1.0
  */
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class GitCommitDomain {
 
     /**
-     * The constant ERROR.
+     * 提交类型
      */
-    public static GitCommitDomain ERROR = new GitCommitDomain();
+    private CommitTypeDomain commitType = null;
+    /**
+     * 变更范围或模块
+     */
+    private String changeScope;
+    /**
+     * 简短说明
+     */
+    private String shortDescription;
+    /**
+     * 详细说明
+     */
+    private String longDescription;
+    /**
+     * 重大变化
+     */
+    private String breakingChanges;
+    /**
+     * 关闭问题，例如#1234
+     */
+    private List<Integer> closedIssues = new LinkedList<>();
+    /**
+     * 文字过长是否换行
+     */
+    private boolean wrapText = false;
+    /**
+     * 跳过CI
+     */
+    private boolean skipCI = false;
 
-    private int exitValue = -1;
-    private List<String> logs = new ArrayList<>();
+    /**
+     * 获取关闭问题Git提交字符串格式
+     *
+     * @return 返回 Closes #1234
+     */
+    public String getClosedIssuesText() {
+        var builder = new StringBuilder();
+        for (Integer issue : closedIssues) {
+            builder.append(Constant.STR_CLOSES)
+                    .append(" #")
+                    .append(issue)
+                    .append(System.lineSeparator());
+        }
 
-    private GitCommitDomain() {
+        if (!builder.isEmpty()) builder.deleteCharAt(builder.length() - 1);
+        return builder.toString();
     }
 
     /**
-     * Instantiates a new Git action domain.
+     * 获取关闭问题数值列表字符串
      *
-     * @param exitValue the exit value
-     * @param logs      the logs
+     * @return 返回14, 134, 34
      */
-    public GitCommitDomain(int exitValue, List<String> logs) {
-        this.exitValue = exitValue;
-        this.logs = logs;
-    }
+    public String getClosedIssuesNumbers() {
+        var builder = new StringBuilder();
+        for (Integer issue : closedIssues) {
+            builder.append(issue).append(", ");
+        }
 
-
-    /**
-     * Is success boolean.
-     *
-     * @return the boolean
-     */
-    public boolean isSuccess() {
-        return exitValue == 0;
+        if (!builder.isEmpty()) builder.deleteCharAt(builder.length() - 1);
+        return builder.toString();
     }
 
     /**
-     * Gets logs.
+     * 解析原始提交信息
      *
-     * @return the logs
+     * @param rawMessage 原始提交信息
+     * @return GitCommitDomain对象
      */
-    public List<String> getLogs() {
-        return logs;
+    public static GitCommitDomain parseRawMessage(String rawMessage) {
+        var gitCommit = new GitCommitDomain();
+        if (StrUtil.isNotBlank(rawMessage)) {
+
+        }
+        return gitCommit;
     }
 
 }

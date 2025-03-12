@@ -1,11 +1,11 @@
-package com.c301.plugin.model;
+package com.c301.plugin.model.old;
 
 /**
  * 提交类型枚举
  * From <a href="https://github.com/commitizen/conventional-commit-types">Github</a>
  *
  * @Title ChangeTypeDomain
- * @ClassName com.c301.plugin.model.ChangeTypeDomain
+ * @ClassName com.c301.plugin.model.old.ChangeTypeDomain
  * @Author Damien Arrachequesne Chenbing
  * @Date 25 /02/19 16:34
  * @Version 1.0

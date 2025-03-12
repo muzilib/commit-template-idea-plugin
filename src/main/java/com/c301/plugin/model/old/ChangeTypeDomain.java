@@ -1,10 +1,10 @@
-package com.c301.plugin.model;
+package com.c301.plugin.model.old;
 
 /**
  * 提交类型域
  *
  * @Title ChangeTypeDomain
- * @ClassName com.c301.plugin.model.ChangeTypeDomain
+ * @ClassName com.c301.plugin.model.old.ChangeTypeDomain
  * @Author Chenbing
  * @Date 25 /03/05 10:38
  * @Version 1.0

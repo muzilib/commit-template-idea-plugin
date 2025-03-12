@@ -1,6 +1,6 @@
-package com.c301.plugin.dialog.render;
+package com.c301.plugin.ui.render;
 
-import com.c301.plugin.model.GitCommitDomain;
+import com.c301.plugin.model.old.GitCommitDomain;
 import com.intellij.openapi.project.Project;
 
 import java.io.BufferedReader;
@@ -16,7 +16,7 @@ import static java.util.stream.Collectors.toList;
  * Git提交日志查询
  *
  * @Title GitCommitLogRender
- * @ClassName com.c301.plugin.dialog.render.GitCommitLogRender
+ * @ClassName com.c301.plugin.ui.render.GitCommitLogRender
  * @Author Chenbing
  * @Date 25/02/19 17:42
  * @Version 1.0

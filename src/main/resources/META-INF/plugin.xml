@@ -69,17 +69,17 @@
     <extensions defaultExtensionNs="com.intellij">
         <!-- Add your extensions here -->
         <applicationService
-                serviceImplementation="com.c301.plugin.setting.StoreCommitTemplateState"/>
+                serviceImplementation="com.c301.plugin.config.StoreCommitTemplateState"/>
 
         <applicationConfigurable groupId="tools"
                                  id="plugins.muzilib.commit.template"
                                  displayName="Commit Template Idea Plugin"
-                                 instance="com.c301.plugin.setting.GitCommitSettingConfigurable"/>
+                                 instance="com.c301.plugin.config.GitCommitSettingConfigurable"/>
     </extensions>
 
     <actions resource-bundle="i18n.data">
         <action id="plugin_commit_button"
-                class="com.c301.plugin.action.CreateCommitAction"
+                class="com.c301.plugin.config.CreateCommitAction"
                 icon="/icons/load.png">
             <keyboard-shortcut keymap="$default" first-keystroke="alt shift Q"/>
             <keyboard-shortcut keymap="Mac OS X" first-keystroke="alt shift Q"/>

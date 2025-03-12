@@ -1,6 +1,7 @@
-package com.c301.plugin.setting;
+package com.c301.plugin.config;
 
-import com.c301.plugin.model.StoreConfig;
+import com.c301.plugin.model.old.StoreConfig;
+import com.c301.plugin.ui.GitCommitSettingUI;
 import com.c301.plugin.utils.CommUtil;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.options.SearchableConfigurable;
@@ -15,13 +16,13 @@ import javax.swing.*;
  * Git模板配置页面
  *
  * @Title GitCommitSettingConfig
- * @ClassName com.c301.plugin.setting.GitCommitSettingConfig
+ * @ClassName com.c301.plugin.config.GitCommitSettingConfig
  * @Author Chenbing
  * @Date 25/03/04 23:38
  * @Version 1.0
  **/
 public class GitCommitSettingConfigurable implements SearchableConfigurable {
-    private final StoreConfig storeConfig = StoreCommitTemplateState.getInstance().storeConfig;
+    private final StoreConfig storeConfig = new StoreConfig();
     private GitCommitSettingUI gitCommitSettingUI = null;
 
     @Override

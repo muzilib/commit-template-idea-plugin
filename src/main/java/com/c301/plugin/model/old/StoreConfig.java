@@ -1,4 +1,4 @@
-package com.c301.plugin.model;
+package com.c301.plugin.model.old;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -7,7 +7,7 @@ import java.util.List;
  * 存储配置类对象
  *
  * @Title StoreConfig
- * @ClassName com.c301.plugin.model.StoreConfig
+ * @ClassName com.c301.plugin.model.old.StoreConfig
  * @Author Chenbing
  * @Date 25 /03/05 16:51
  * @Version 1.0

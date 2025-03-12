@@ -1,6 +1,6 @@
-package com.c301.plugin.dialog.render;
+package com.c301.plugin.ui.render;
 
-import com.c301.plugin.model.LanguageDomain;
+import com.c301.plugin.model.old.LanguageDomain;
 
 import javax.swing.*;
 import java.awt.*;
@@ -9,7 +9,7 @@ import java.awt.*;
  * 自定义渲染语言选项
  *
  * @Title LanguageRender
- * @ClassName com.c301.plugin.dialog.render.LanguageRender
+ * @ClassName com.c301.plugin.ui.render.LanguageRender
  * @Author Chenbing
  * @Date 25/02/19 15:48
  * @Version 1.0

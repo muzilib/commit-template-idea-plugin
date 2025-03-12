@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<form xmlns="http://www.intellij.com/uidesigner/form/" version="1" bind-to-class="com.c301.plugin.dialog.CommitTemplateDialog">
+<form xmlns="http://www.intellij.com/uidesigner/form/" version="1" bind-to-class="com.c301.plugin.ui.CommitTemplateDialog">
   <grid id="cbd77" binding="contentPane" layout-manager="GridLayoutManager" row-count="2" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
     <margin top="10" left="10" bottom="10" right="10"/>
     <constraints>
@@ -195,105 +195,105 @@
             <properties/>
             <border type="none"/>
             <children>
-              <component id="226b4" class="javax.swing.JRadioButton" binding="radioButtonFeat">
+              <component id="226b4" class="javax.swing.JRadioButton" binding="radioButton1">
                 <constraints>
                   <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
-                  <actionCommand value="feat"/>
+                  <actionCommand value="1"/>
                   <selected value="true"/>
                   <text value="feat - A new feature"/>
                 </properties>
               </component>
-              <component id="b26bf" class="javax.swing.JRadioButton" binding="radioButtonFix">
+              <component id="b26bf" class="javax.swing.JRadioButton" binding="radioButton2">
                 <constraints>
                   <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
-                  <actionCommand value="fix"/>
+                  <actionCommand value="2"/>
                   <selected value="false"/>
                   <text value="fix - A bug fix"/>
                 </properties>
               </component>
-              <component id="5d905" class="javax.swing.JRadioButton" binding="radioButtonDocs">
+              <component id="5d905" class="javax.swing.JRadioButton" binding="radioButton3">
                 <constraints>
                   <grid row="2" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
-                  <actionCommand value="docs"/>
+                  <actionCommand value="3"/>
                   <text value="docs - Documentation only changes"/>
                 </properties>
               </component>
-              <component id="e8066" class="javax.swing.JRadioButton" binding="radioButtonStyle">
+              <component id="e8066" class="javax.swing.JRadioButton" binding="radioButton4">
                 <constraints>
                   <grid row="3" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
-                  <actionCommand value="style"/>
+                  <actionCommand value="4"/>
                   <text value="style - Changes that do not affect the meaning of the code (white-space, formatting, missing semi-colons, etc)"/>
                 </properties>
               </component>
-              <component id="1ff40" class="javax.swing.JRadioButton" binding="radioButtonRefactor">
+              <component id="1ff40" class="javax.swing.JRadioButton" binding="radioButton5">
                 <constraints>
                   <grid row="4" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
-                  <actionCommand value="refactor"/>
+                  <actionCommand value="5"/>
                   <text value="refactor - A code change that neither fixes a bug nor adds a feature"/>
                 </properties>
               </component>
-              <component id="6a376" class="javax.swing.JRadioButton" binding="radioButtonPerf">
+              <component id="6a376" class="javax.swing.JRadioButton" binding="radioButton6">
                 <constraints>
                   <grid row="5" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
-                  <actionCommand value="perf"/>
+                  <actionCommand value="6"/>
                   <selected value="false"/>
                   <text value="perf - A code change that improves performance"/>
                 </properties>
               </component>
-              <component id="78469" class="javax.swing.JRadioButton" binding="radioButtonTest">
+              <component id="78469" class="javax.swing.JRadioButton" binding="radioButton7">
                 <constraints>
                   <grid row="6" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
-                  <actionCommand value="test"/>
+                  <actionCommand value="7"/>
                   <text value="test - Adding missing tests or correcting existing tests"/>
                 </properties>
               </component>
-              <component id="7a3c5" class="javax.swing.JRadioButton" binding="radioButtonBuild">
+              <component id="7a3c5" class="javax.swing.JRadioButton" binding="radioButton8">
                 <constraints>
                   <grid row="7" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
-                  <actionCommand value="build"/>
+                  <actionCommand value="8"/>
                   <text value="build - Changes that affect the build system or external dependencies (example scopes: gulp, broccoli, npm)"/>
                 </properties>
               </component>
-              <component id="ef72b" class="javax.swing.JRadioButton" binding="radioButtonCi">
+              <component id="ef72b" class="javax.swing.JRadioButton" binding="radioButton9">
                 <constraints>
                   <grid row="8" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
-                  <actionCommand value="ci"/>
+                  <actionCommand value="9"/>
                   <text value="ci - Changes to our CI configuration files and scripts (example scopes: Travis, Circle, BrowserStack, SauceLabs)"/>
                 </properties>
               </component>
-              <component id="50ff3" class="javax.swing.JRadioButton" binding="radioButtonChore">
+              <component id="50ff3" class="javax.swing.JRadioButton" binding="radioButton10">
                 <constraints>
                   <grid row="9" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
-                  <actionCommand value="chore"/>
+                  <actionCommand value="10"/>
                   <text value="chore - Other changes that don't modify src or test files"/>
                 </properties>
               </component>
-              <component id="2e4c5" class="javax.swing.JRadioButton" binding="radioButtonRevert">
+              <component id="2e4c5" class="javax.swing.JRadioButton" binding="radioButton11">
                 <constraints>
                   <grid row="10" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
-                  <actionCommand value="revert"/>
+                  <actionCommand value="11"/>
                   <text value="revert - Reverts a previous commit"/>
                 </properties>
               </component>

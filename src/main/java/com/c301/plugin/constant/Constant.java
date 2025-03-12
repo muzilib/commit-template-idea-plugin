@@ -42,28 +42,20 @@ public interface Constant {
     Pattern COMMIT_CLOSES_FORMAT = Pattern.compile("Closes (.+)");
     Pattern COMMIT_FIRST_LINE_FORMAT = Pattern.compile("^([a-z]+)(\\((.+)\\))?: (.+)");
 
+
     /**
-     * 语言选项列表
+     * 语言列表
      */
-    List<LanguageDomain> OPTINS_LANGUAGE_LIST = new LinkedList<>() {{
-        //US 美国
-        add(new LanguageDomain("en_US", "English"));
-        //SIMPLIFIED_CHINESE 简体中文
-        add(new LanguageDomain("zh_CN", "简体中文"));
-        //TRADITIONAL_CHINESE 繁体中文
-        add(new LanguageDomain("zh_TW", "繁體中文"));
-        //FRANCE 法国
-        add(new LanguageDomain("fr_FR", "Français"));
-        //CANADA_FRENCH 加拿大法语
-        add(new LanguageDomain("fr_CA", "Français canadien"));
-        //GERMANY 德国
-        add(new LanguageDomain("de_DE", "Deutsch"));
-        //ITALY 意大利
-        add(new LanguageDomain("it_IT", "Italiano"));
-        //JAPAN 日本
-        add(new LanguageDomain("ja_JP", "日本語"));
-        //KOREA 韩国
-        add(new LanguageDomain("ko_KR", "조선어"));
+    List<LanguageDomain> LANGUAGES = new LinkedList<>() {{
+        add(LanguageDomain.EN_US);
+        add(LanguageDomain.ZH_CN);
+        add(LanguageDomain.ZH_TW);
+        add(LanguageDomain.FR_FR);
+        add(LanguageDomain.FR_CA);
+        add(LanguageDomain.DE_DE);
+        add(LanguageDomain.IT_IT);
+        add(LanguageDomain.JA_JP);
+        add(LanguageDomain.KO_KR);
     }};
 
 }

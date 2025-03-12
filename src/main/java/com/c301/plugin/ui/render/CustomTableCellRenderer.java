@@ -1,4 +1,4 @@
-package com.c301.plugin.setting.render;
+package com.c301.plugin.ui.render;
 
 import com.c301.plugin.utils.StrUtil;
 
@@ -10,7 +10,7 @@ import java.awt.*;
  * 自定义表单文字渲染，支持中文
  *
  * @Title CustomTableCellRenderer
- * @ClassName com.c301.plugin.setting.render.CustomTableCellRenderer
+ * @ClassName com.c301.plugin.ui.render.CustomTableCellRenderer
  * @Author Chenbing
  * @Date 25/03/07 16:25
  * @Version 1.0

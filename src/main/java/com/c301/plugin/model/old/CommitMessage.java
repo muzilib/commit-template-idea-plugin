@@ -1,4 +1,4 @@
-package com.c301.plugin.model;
+package com.c301.plugin.model.old;
 
 import com.c301.plugin.utils.StrUtil;
 
@@ -8,7 +8,7 @@ import static com.c301.plugin.constant.Constant.*;
  * 提交信息
  *
  * @Title CommitMessage
- * @ClassName com.c301.plugin.model.CommitMessage
+ * @ClassName com.c301.plugin.model.old.CommitMessage
  * @Author Damien Arrachequesne <damien.arrachequesne@gmail.com> Chenbing
  * @Date 25 /02/19 16:32
  * @Version 1.0
