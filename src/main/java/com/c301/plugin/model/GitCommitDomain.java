@@ -1,6 +1,7 @@
 package com.c301.plugin.model;
 
 import com.c301.plugin.constant.Constant;
+import com.c301.plugin.utils.CommUtil;
 import com.c301.plugin.utils.StrUtil;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -67,10 +68,7 @@ public class GitCommitDomain {
     public String getClosedIssuesText() {
         var builder = new StringBuilder();
         for (Integer issue : closedIssues) {
-            builder.append(Constant.STR_CLOSES)
-                    .append(" #")
-                    .append(issue)
-                    .append(System.lineSeparator());
+            builder.append(Constant.STR_CLOSES).append(" #").append(issue).append(System.lineSeparator());
         }
 
         if (!builder.isEmpty()) builder.deleteCharAt(builder.length() - 1);
@@ -102,13 +100,13 @@ public class GitCommitDomain {
         var gitCommit = new GitCommitDomain();
         if (StrUtil.isNotBlank(rawMessage)) {
             try {
-                var matcher = Pattern.compile("^(.+)(\\((.+)\\))?: (.+)").matcher(rawMessage);
+                var matcher = Pattern.compile("^([a-zA-Z0-9]+)?(?:\\(([^()]+)\\))?:\\s*(.+)$").matcher(rawMessage);
                 if (!matcher.find()) return gitCommit;
 
                 //解析第一行内容
-                gitCommit.setCommitType(CommitTypeDomain.parseCommitType(matcher.group(1)));
-                gitCommit.setChangeScope(matcher.group(3));
-                gitCommit.setShortDescription(matcher.group(4));
+                gitCommit.setCommitType(CommUtil.parseCommitType(matcher.group(1)));
+                gitCommit.setChangeScope(matcher.group(2));
+                gitCommit.setShortDescription(matcher.group(3));
 
                 //解析剩余信息
                 var strings = rawMessage.split(CHAR_LINE);
@@ -127,8 +125,15 @@ public class GitCommitDomain {
                 gitCommit.setLongDescription(builder.toString());
 
                 //设置重大变化
-
-                //gitCommit.setBreakingChanges();
+                builder = new StringBuilder();
+                for (; index < strings.length; index++) {
+                    String lineString = strings[index];
+                    if (lineString.startsWith("Closes") || lineString.equalsIgnoreCase("[skip ci]")) {
+                        break;
+                    }
+                    builder.append(lineString).append('\n');
+                }
+                gitCommit.setBreakingChanges(builder.toString());
 
                 //获取关闭问题列表
                 var closeIssuesList = new LinkedList<Integer>();

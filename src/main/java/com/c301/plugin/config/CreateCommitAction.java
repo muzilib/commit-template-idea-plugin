@@ -1,6 +1,5 @@
 package com.c301.plugin.config;
 
-import com.c301.plugin.model.CommitTypeDomain;
 import com.c301.plugin.model.GitCommitDomain;
 import com.c301.plugin.ui.CommitTemplateDialog;
 import com.c301.plugin.utils.CommUtil;
@@ -30,19 +29,8 @@ public class CreateCommitAction extends AnAction implements DumbAware {
 
     @Override
     public void actionPerformed(@NotNull AnActionEvent actionEvent) {
-        //准备基础数据
-        var resourceBundle = CommUtil.i18nResourceBundle(null);
-        var store = StoreCommitTemplateState.getInstance();
-        if (!store.isCustomEnable()) {
-            for (String type : CommitTypeDomain.TYPES) {
-                var commitTypeDomain = new CommitTypeDomain();
-                commitTypeDomain.setType(type);
-                commitTypeDomain.setDescription(resourceBundle.getString("plugin.radio." + type));
-                store.getSystemCommitTypeList().add(commitTypeDomain);
-            }
-        }
-
         // 设置按钮文本和描述
+        var resourceBundle = CommUtil.i18nResourceBundle(null);
         var templatePresentation = getTemplatePresentation();
         templatePresentation.setText(resourceBundle.getString("action.plugin_commit_button.text"));
         templatePresentation.setDescription(resourceBundle.getString("action.plugin_commit_button.description"));
@@ -71,9 +59,10 @@ public class CreateCommitAction extends AnAction implements DumbAware {
         }
 
         //java传递回调方法
-        var dialog = new CommitTemplateDialog(store);
+        var dialog = new CommitTemplateDialog();
         dialog.handleUIInit();
         dialog.resetUIFrom(gitCommit);
+        dialog.setVisible(true);
     }
 
     /**

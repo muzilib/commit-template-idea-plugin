@@ -73,9 +73,5 @@ public class StoreCommitTemplateState implements PersistentStateComponent<StoreC
      * 用户自定义 提交类型列表
      */
     private List<CommitTypeDomain> customCommitTypeList = new LinkedList<>();
-    /**
-     * 系统默认 提交类型列表
-     */
-    private List<CommitTypeDomain> systemCommitTypeList = new LinkedList<>();
 
 }

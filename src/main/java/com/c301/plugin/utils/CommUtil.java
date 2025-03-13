@@ -2,6 +2,7 @@ package com.c301.plugin.utils;
 
 import com.c301.plugin.config.StoreCommitTemplateState;
 import com.c301.plugin.constant.Constant;
+import com.c301.plugin.model.CommitTypeDomain;
 import com.c301.plugin.model.LanguageDomain;
 import com.google.gson.Gson;
 import com.intellij.openapi.project.Project;
@@ -23,6 +24,8 @@ import java.util.concurrent.TimeUnit;
  * @Version 1.0
  */
 public class CommUtil {
+
+    private static final StoreCommitTemplateState store = StoreCommitTemplateState.getInstance();
 
     /**
      * 获取国际化资源
@@ -72,6 +75,38 @@ public class CommUtil {
         var language = (LanguageDomain) optionLanguage.getSelectedItem();
         if (language == null) language = LanguageDomain.EN_US;
         return language;
+    }
+
+    /**
+     * 获取选择器的提交类型实体
+     *
+     * @param commitTypeButtonGroup 提交类型按钮组选中对象
+     * @return 提交类型对象
+     */
+    public static CommitTypeDomain convertCommitTypeDomain(ButtonGroup commitTypeButtonGroup) {
+        //加载自定义的提交类型
+        if (store.isCustomEnable()) {
+
+
+            return null;
+        }
+
+        //系统默认类型
+        var commitTypeList = getDefaultCommitTypeList();
+        var buttonElements = commitTypeButtonGroup.getElements();
+        while (buttonElements.hasMoreElements()) {
+            var button = buttonElements.nextElement();
+            if (!button.isSelected()) continue;
+
+            //选中对象
+            var command = button.getActionCommand();
+            for (CommitTypeDomain commitTypeDomain : commitTypeList) {
+                if (commitTypeDomain.getType().equals(command)) {
+                    return commitTypeDomain;
+                }
+            }
+        }
+        return commitTypeList.get(0);
     }
 
     /**
@@ -125,6 +160,46 @@ public class CommUtil {
         //添加空白占位
         scopeList.addFirst("");
         return scopeList;
+    }
+
+    /**
+     * 加载默认的提交类型
+     *
+     * @return 提交类型对象列表
+     */
+    public static List<CommitTypeDomain> getDefaultCommitTypeList() {
+        var commitTypeList = new LinkedList<CommitTypeDomain>();
+        var resourceBundle = i18nResourceBundle(store.getLanguage().getKey());
+        for (String type : CommitTypeDomain.TYPES) {
+            var description = resourceBundle.getString("plugin.radio." + type);
+            if (StrUtil.isBlank(description)) description = type;
+            commitTypeList.add(new CommitTypeDomain(type, description));
+        }
+        return commitTypeList;
+    }
+
+    /**
+     * 解析提交类型
+     *
+     * @param typeName 类型名称
+     * @return 提交类型对象
+     */
+    public static CommitTypeDomain parseCommitType(String typeName) {
+        //加载自定义的提交类型
+        if (store.isCustomEnable()) {
+
+
+            return null;
+        }
+
+        //加载默认的提交类型
+        var commitTypeList = getDefaultCommitTypeList();
+        for (CommitTypeDomain commitType : commitTypeList) {
+            if (commitType.getType().equalsIgnoreCase(typeName)) {
+                return commitType;
+            }
+        }
+        return null;
     }
 
 }

@@ -49,19 +49,4 @@ public class CommitTypeDomain {
      */
     private String description;
 
-    /**
-     * 解析提交类型
-     *
-     * @param typeName 类型名称
-     * @return 提交类型对象
-     */
-    public static CommitTypeDomain parseCommitType(String typeName) {
-        for (String type : TYPES) {
-            if (type.equalsIgnoreCase(typeName)) {
-                return new CommitTypeDomain(typeName, typeName);
-            }
-        }
-        return null;
-    }
-
 }

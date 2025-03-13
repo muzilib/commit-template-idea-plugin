@@ -61,14 +61,13 @@ public class CommitTemplateDialog extends JDialog {
     private JTextField inputShortDescription;
     private ButtonGroup typeChangeGroup;
 
-    private final StoreCommitTemplateState store;
+    private final StoreCommitTemplateState store = StoreCommitTemplateState.getInstance();
 
     /**
      * 创建弹窗信息
      */
-    public CommitTemplateDialog(StoreCommitTemplateState store) {
+    public CommitTemplateDialog() {
         $$$setupUI$$$();
-        this.store = store;
         setModal(true);
         setContentPane(contentPane);
         getRootPane().setDefaultButton(buttonOK);
@@ -104,7 +103,6 @@ public class CommitTemplateDialog extends JDialog {
         var buttonElements = typeChangeGroup.getElements();
         while (buttonElements.hasMoreElements()) {
             var button = buttonElements.nextElement();
-
             if (button.isSelected()) {
                 changeTypeEnum = ChangeTypeEnum.valueOf(button.getActionCommand().toUpperCase());
                 break;
@@ -176,7 +174,10 @@ public class CommitTemplateDialog extends JDialog {
         Constant.LANGUAGES.forEach(optionLanguage::addItem);
         optionLanguage.addActionListener(e -> {
             var language = CommUtil.convertLanguageDomain(optionLanguage);
-            if (!language.equals(store.getLanguage())) handleDisplayLanguageEvent(language);
+            if (!language.equals(store.getLanguage())) {
+                store.setLanguage(language);
+                handleDisplayLanguageEvent(language);
+            }
         });
 
         //设置窗口打开位置为屏幕中心
@@ -189,7 +190,6 @@ public class CommitTemplateDialog extends JDialog {
         //设置git提交更改范围历史记录
         var scopeList = CommUtil.loadGitCommitScopeHistory(project);
         scopeList.forEach(optionScopeChange::addItem);
-        setVisible(true);
     }
 
     /**
@@ -199,11 +199,12 @@ public class CommitTemplateDialog extends JDialog {
         //提交类型回显
 
         if (gitCommit.getCommitType() != null) {
+            var commitTypeList = CommUtil.getDefaultCommitTypeList();
             var buttonElements = typeChangeGroup.getElements();
             while (buttonElements.hasMoreElements()) {
                 var button = buttonElements.nextElement();
                 var index = Integer.parseInt(button.getActionCommand());
-                var changeType = store.getSystemCommitTypeList().get(index - 1);
+                var changeType = commitTypeList.get(index - 1);
 
                 if (changeType.getType().equalsIgnoreCase(gitCommit.getCommitType().getType())) {
                     button.setSelected(true);
@@ -253,13 +254,15 @@ public class CommitTemplateDialog extends JDialog {
         checkBoxSkipCI.setText(resourceBundle.getString("plugin.checkbox.skipCI"));
 
         //渲染提交类型按钮组信息
+        var commitTypeList = CommUtil.getDefaultCommitTypeList();
         var buttonElements = typeChangeGroup.getElements();
         buttonElements.nextElement();
         while (buttonElements.hasMoreElements()) {
             var button = buttonElements.nextElement();
             var index = Integer.parseInt(button.getActionCommand());
 
-            var commitType = store.getSystemCommitTypeList().get(index - 1);
+            var commitType = commitTypeList.get(index - 1);
+            button.setActionCommand(commitType.getType());
             button.setText(commitType.getType() + " - " + commitType.getDescription());
         }
 
