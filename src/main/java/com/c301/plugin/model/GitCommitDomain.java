@@ -86,8 +86,8 @@ public class GitCommitDomain {
             builder.append(issue).append(", ");
         }
 
-        if (!builder.isEmpty()) builder.deleteCharAt(builder.length() - 1);
-        return builder.toString();
+        if (!builder.isEmpty()) builder.deleteCharAt(builder.length() - 2);
+        return builder.toString().trim();
     }
 
     /**
@@ -100,7 +100,10 @@ public class GitCommitDomain {
         var gitCommit = new GitCommitDomain();
         if (StrUtil.isNotBlank(rawMessage)) {
             try {
-                var matcher = Pattern.compile("^([a-zA-Z0-9]+)?(?:\\(([^()]+)\\))?:\\s*(.+)$").matcher(rawMessage);
+                // 在正则前统一处理换行符
+                rawMessage = rawMessage.replaceAll("\\r\\n?", "\n");
+                var pattern = Pattern.compile("^([a-zA-Z0-9\\u4e00-\\u9fa5-]+)?(?:\\(([^()]+)\\))?:\\s+([^\\n]+)", Pattern.UNICODE_CHARACTER_CLASS);
+                var matcher = pattern.matcher(rawMessage);
                 if (!matcher.find()) return gitCommit;
 
                 //解析第一行内容
@@ -113,26 +116,31 @@ public class GitCommitDomain {
                 if (strings.length < 2) return gitCommit;
 
                 //设置长描述
-                var index = 1;
+                var index = 2;
                 var builder = new StringBuilder();
                 for (; index < strings.length; index++) {
                     var line = strings[index];
                     if (line.startsWith("BREAKING") || line.startsWith("Closes") || line.equalsIgnoreCase("[skip ci]")) {
                         break;
                     }
-                    builder.append(line).append('\n');
+                    builder.append(line);
+                    if (StrUtil.isNotBlank(line)) builder.append('\n');
                 }
+                if (!builder.isEmpty()) builder.deleteCharAt(builder.length() - 1);
                 gitCommit.setLongDescription(builder.toString());
 
                 //设置重大变化
                 builder = new StringBuilder();
                 for (; index < strings.length; index++) {
-                    String lineString = strings[index];
-                    if (lineString.startsWith("Closes") || lineString.equalsIgnoreCase("[skip ci]")) {
+                    var line = strings[index];
+                    if (line.startsWith("Closes") || line.equalsIgnoreCase("[skip ci]")) {
                         break;
                     }
-                    builder.append(lineString).append('\n');
+                    if (line.startsWith("BREAKING CHANGE: ")) line = line.replace("BREAKING CHANGE: ", "");
+                    builder.append(line);
+                    if (StrUtil.isNotBlank(line)) builder.append('\n');
                 }
+                if (!builder.isEmpty()) builder.deleteCharAt(builder.length() - 1);
                 gitCommit.setBreakingChanges(builder.toString());
 
                 //获取关闭问题列表
