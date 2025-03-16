@@ -27,8 +27,6 @@ public class CommUtil {
 
     private static final StoreCommitTemplateState store = StoreCommitTemplateState.getInstance();
 
-    private static final List<CommitTypeDomain> COMMIT_TYPE_LIST = new LinkedList<>();
-
     /**
      * 获取国际化资源
      *
@@ -170,17 +168,28 @@ public class CommUtil {
      * @return 提交类型对象列表
      */
     public static List<CommitTypeDomain> getDefaultCommitTypeList() {
-        if (COMMIT_TYPE_LIST.isEmpty()) {
-            synchronized (CommitTypeDomain.class) {
-                var resourceBundle = i18nResourceBundle(store.getLanguage().getKey());
-                for (String type : CommitTypeDomain.TYPES) {
-                    var description = resourceBundle.getString("plugin.radio." + type);
-                    if (StrUtil.isBlank(description)) description = type;
-                    COMMIT_TYPE_LIST.add(new CommitTypeDomain(type, description));
-                }
+        return getDefaultCommitTypeList(null);
+    }
+
+    /**
+     * 加载默认的提交类型
+     *
+     * @param languageKey 语言key
+     * @return 提交类型对象列表
+     */
+    public static List<CommitTypeDomain> getDefaultCommitTypeList(String languageKey) {
+        if (StrUtil.isBlank(languageKey)) languageKey = store.getLanguage().getKey();
+
+        var commitTypeList = new LinkedList<CommitTypeDomain>();
+        synchronized (CommitTypeDomain.class) {
+            var resourceBundle = i18nResourceBundle(languageKey);
+            for (String type : CommitTypeDomain.TYPES) {
+                var description = resourceBundle.getString("plugin.radio." + type);
+                if (StrUtil.isBlank(description)) description = type;
+                commitTypeList.add(new CommitTypeDomain(type, description));
             }
         }
-        return COMMIT_TYPE_LIST;
+        return commitTypeList;
     }
 
     /**

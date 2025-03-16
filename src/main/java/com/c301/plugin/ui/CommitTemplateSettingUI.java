@@ -30,8 +30,6 @@ import java.util.Objects;
 @Getter
 public class CommitTemplateSettingUI {
 
-    private JPanel editCommitTypePanel;
-
     private JPanel mainPanel;
     private JLabel imageIcon;
     private JPanel aboutPanel;
@@ -60,11 +58,24 @@ public class CommitTemplateSettingUI {
             }
         });
 
+        //设置提交类型编辑面板
+        var commitTypeTable = new JBCommitTypeTable(store);
+        commitTypeTable.setDefaultRenderer(Object.class, new CustomTableCellRenderer());
+        var editCommitTypePanel = ToolbarDecorator.createDecorator(commitTypeTable)
+                .setAddAction(button -> commitTypeTable.handlesAddActionEvent())
+                .setRemoveAction(button -> commitTypeTable.handlesRemoveActionEvent())
+                .setEditAction(button -> commitTypeTable.handlesEditActionEvent())
+                .setMoveUpAction(button -> commitTypeTable.handlesMoveUpActionEvent())
+                .setMoveDownAction(button -> commitTypeTable.handlesMoveDownActionEvent())
+                .createPanel();
+        typeTablePanel.add(editCommitTypePanel, BorderLayout.CENTER);
+
         //设置自定义语言模板开启状态
         checkBoxCommitType.addItemListener(e -> {
             var enable = (e.getStateChange() == ItemEvent.SELECTED);
 
             typeTablePanel.setEnabled(enable);
+            commitTypeTable.setEnabled(enable);
             editCommitTypePanel.setEnabled(enable);
         });
 
@@ -74,21 +85,14 @@ public class CommitTemplateSettingUI {
         var image = icon.getImage().getScaledInstance(128, 128, Image.SCALE_SMOOTH);
         icon.setImage(image);
         imageIcon.setIcon(icon);
+    }
 
-        //设置主界面
-        var commitTypeTable = new JBCommitTypeTable(store);
-        commitTypeTable.setDefaultRenderer(Object.class, new CustomTableCellRenderer());
-
-        if (editCommitTypePanel == null) {
-            editCommitTypePanel = ToolbarDecorator.createDecorator(commitTypeTable)
-                    .setAddAction(button -> commitTypeTable.handlesAddActionEvent())
-                    .setRemoveAction(button -> commitTypeTable.handlesRemoveActionEvent())
-                    .setEditAction(button -> commitTypeTable.handlesEditActionEvent())
-                    .setMoveUpAction(button -> commitTypeTable.handlesMoveUpActionEvent())
-                    .setMoveDownAction(button -> commitTypeTable.handlesMoveDownActionEvent())
-                    .createPanel();
-        }
-        typeTablePanel.add(editCommitTypePanel, BorderLayout.CENTER);
+    /**
+     * 处理页面重置事件
+     */
+    public void handleResetEvent() {
+        optionLanguage.setSelectedItem(store.getLanguage());
+        handleDisplayLanguageEvent(store.getLanguage());
     }
 
     /**
@@ -97,20 +101,13 @@ public class CommitTemplateSettingUI {
      * @param language 语言对象
      */
     private void handleDisplayLanguageEvent(LanguageDomain language) {
-        var resourceBundle = CommUtil.i18nResourceBundle(null);
+        var resourceBundle = CommUtil.i18nResourceBundle(language.getKey());
 
         //显示语言控制
         tabbedPane.setTitleAt(0, resourceBundle.getString("plugin.setting.label.setting"));
         tabbedPane.setTitleAt(1, resourceBundle.getString("plugin.setting.label.about"));
         labelLanguage.setText(resourceBundle.getString("plugin.setting.label.language"));
         labelCommitType.setText(resourceBundle.getString("plugin.setting.label.template"));
-//        if (JBCommitTypeTable != null) {
-//            var title = new String[]{
-//                    resourceBundle.getString("plugin.setting.label.typeName"),
-//                    resourceBundle.getString("plugin.setting.label.typeDescribe")
-//            };
-//            //JBCommitTypeTable.flush(title);
-//        }
     }
 
     {

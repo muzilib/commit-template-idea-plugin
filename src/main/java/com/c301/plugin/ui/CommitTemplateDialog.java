@@ -239,6 +239,7 @@ public class CommitTemplateDialog extends JDialog {
 
         //语言类型回显
         optionLanguage.setSelectedItem(store.getLanguage());
+        handleDisplayLanguageEvent(store.getLanguage());
 
         //文本内容回显
         optionScopeChange.setSelectedItem(gitCommit.getChangeScope());
@@ -278,7 +279,7 @@ public class CommitTemplateDialog extends JDialog {
         checkBoxSkipCI.setText(resourceBundle.getString("plugin.checkbox.skipCI"));
 
         //渲染提交类型按钮组信息
-        var commitTypeList = CommUtil.getDefaultCommitTypeList();
+        var commitTypeList = CommUtil.getDefaultCommitTypeList(language.getKey());
         var buttonElements = typeChangeGroup.getElements();
         buttonElements.nextElement();
         while (buttonElements.hasMoreElements()) {

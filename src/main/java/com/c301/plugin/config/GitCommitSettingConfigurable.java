@@ -48,7 +48,7 @@ public class GitCommitSettingConfigurable implements SearchableConfigurable {
 
     @Override
     public void reset() {
-
+        commitSettingUI.handleResetEvent();
     }
 
     @Override
