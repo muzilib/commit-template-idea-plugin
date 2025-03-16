@@ -155,4 +155,71 @@ public class GitCommitDomain {
         return gitCommit;
     }
 
+    /**
+     * 生成提交信息
+     *
+     * @return 提交信息
+     */
+    public String toStringMessage() {
+        var builder = new StringBuilder();
+
+        //提交类型
+        if (commitType != null) {
+            builder.append(commitType.getType());
+        }
+
+        //变更范围
+        if (StrUtil.isNotBlank(changeScope)) {
+            var value = changeScope.trim();
+            builder.append("(").append(value).append("): ");
+        }
+
+        //短说明
+        if (StrUtil.isNotBlank(shortDescription)) {
+            builder.append(shortDescription.trim());
+        }
+
+        //长说明
+        if (StrUtil.isNotBlank(longDescription)) {
+            var value = longDescription.trim();
+            if (wrapText) value = StrUtil.wrap(value, MAX_LINE_LENGTH);
+
+            builder.append(System.lineSeparator())
+                    .append(System.lineSeparator())
+                    .append(value);
+        }
+
+        //重大变化
+        if (StrUtil.isNotBlank(breakingChanges)) {
+            var value = "BREAKING CHANGE: " + breakingChanges.trim();
+            if (wrapText) value = StrUtil.wrap(value, MAX_LINE_LENGTH);
+
+            builder.append(System.lineSeparator())
+                    .append(System.lineSeparator())
+                    .append(value);
+        }
+
+        //关闭问题
+        if (!closedIssues.isEmpty()) {
+            builder.append(System.lineSeparator());
+
+            for (Integer closedIssue : closedIssues) {
+                var value = "#" + closedIssue.toString();
+
+                builder.append(System.lineSeparator())
+                        .append(STR_CLOSES)
+                        .append(" ")
+                        .append(value);
+            }
+        }
+
+        //跳过CI
+        if (skipCI) {
+            builder.append(System.lineSeparator())
+                    .append(System.lineSeparator())
+                    .append("[skip ci]");
+        }
+        return builder.toString();
+    }
+
 }

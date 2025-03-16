@@ -27,6 +27,8 @@ public class CommUtil {
 
     private static final StoreCommitTemplateState store = StoreCommitTemplateState.getInstance();
 
+    private static final List<CommitTypeDomain> COMMIT_TYPE_LIST = new LinkedList<>();
+
     /**
      * 获取国际化资源
      *
@@ -168,14 +170,17 @@ public class CommUtil {
      * @return 提交类型对象列表
      */
     public static List<CommitTypeDomain> getDefaultCommitTypeList() {
-        var commitTypeList = new LinkedList<CommitTypeDomain>();
-        var resourceBundle = i18nResourceBundle(store.getLanguage().getKey());
-        for (String type : CommitTypeDomain.TYPES) {
-            var description = resourceBundle.getString("plugin.radio." + type);
-            if (StrUtil.isBlank(description)) description = type;
-            commitTypeList.add(new CommitTypeDomain(type, description));
+        if (COMMIT_TYPE_LIST.isEmpty()) {
+            synchronized (CommitTypeDomain.class) {
+                var resourceBundle = i18nResourceBundle(store.getLanguage().getKey());
+                for (String type : CommitTypeDomain.TYPES) {
+                    var description = resourceBundle.getString("plugin.radio." + type);
+                    if (StrUtil.isBlank(description)) description = type;
+                    COMMIT_TYPE_LIST.add(new CommitTypeDomain(type, description));
+                }
+            }
         }
-        return commitTypeList;
+        return COMMIT_TYPE_LIST;
     }
 
     /**

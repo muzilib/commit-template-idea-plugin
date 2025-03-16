@@ -59,7 +59,7 @@ public class CreateCommitAction extends AnAction implements DumbAware {
         }
 
         //java传递回调方法
-        var dialog = new CommitTemplateDialog();
+        var dialog = new CommitTemplateDialog(commitMessageI);
         dialog.handleUIInit();
         dialog.resetUIFrom(gitCommit);
         dialog.setVisible(true);

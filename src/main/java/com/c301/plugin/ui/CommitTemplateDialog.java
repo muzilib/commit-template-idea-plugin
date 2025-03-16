@@ -2,14 +2,16 @@ package com.c301.plugin.ui;
 
 import com.c301.plugin.config.StoreCommitTemplateState;
 import com.c301.plugin.constant.Constant;
+import com.c301.plugin.model.CommitTypeDomain;
 import com.c301.plugin.model.GitCommitDomain;
 import com.c301.plugin.model.LanguageDomain;
 import com.c301.plugin.model.WindowsConfigDomain;
-import com.c301.plugin.model.old.ChangeTypeEnum;
 import com.c301.plugin.ui.render.LanguageListCellRendererRender;
 import com.c301.plugin.utils.CommUtil;
+import com.c301.plugin.utils.StrUtil;
 import com.intellij.ide.DataManager;
 import com.intellij.openapi.actionSystem.CommonDataKeys;
+import com.intellij.openapi.vcs.CommitMessageI;
 import com.intellij.openapi.wm.WindowManager;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
@@ -18,6 +20,7 @@ import com.intellij.uiDesigner.core.Spacer;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.LinkedList;
 
 /**
  * 提交模板对话框
@@ -62,15 +65,17 @@ public class CommitTemplateDialog extends JDialog {
     private ButtonGroup typeChangeGroup;
 
     private final StoreCommitTemplateState store = StoreCommitTemplateState.getInstance();
+    private final CommitMessageI commitMessageI;
 
     /**
      * 创建弹窗信息
      */
-    public CommitTemplateDialog() {
+    public CommitTemplateDialog(CommitMessageI commitMessageI) {
         $$$setupUI$$$();
         setModal(true);
         setContentPane(contentPane);
         getRootPane().setDefaultButton(buttonOK);
+        this.commitMessageI = commitMessageI;
 
         //设置显示窗口大小
         pack();
@@ -98,32 +103,53 @@ public class CommitTemplateDialog extends JDialog {
      * 处理确定事件
      */
     private void handleOKEvent() {
-        //获取选中的对象
-        var changeTypeEnum = ChangeTypeEnum.FEAT;
-        var buttonElements = typeChangeGroup.getElements();
-        while (buttonElements.hasMoreElements()) {
-            var button = buttonElements.nextElement();
-            if (button.isSelected()) {
-                changeTypeEnum = ChangeTypeEnum.valueOf(button.getActionCommand().toUpperCase());
+        if (commitMessageI != null) {
+            //处理提交类型
+            CommitTypeDomain commitType = null;
+            var commitTypeList = CommUtil.getDefaultCommitTypeList();
+            var buttonElements = typeChangeGroup.getElements();
+            while (buttonElements.hasMoreElements()) {
+                var button = buttonElements.nextElement();
+                if (!button.isSelected()) continue;
+
+                var index = Integer.parseInt(button.getActionCommand());
+                commitType = commitTypeList.get(index - 1);
                 break;
             }
+
+            //处理变更范围
+            var changeScopeValue = "";
+            if (optionScopeChange.getSelectedItem() != null) {
+                changeScopeValue = optionScopeChange.getSelectedItem().toString();
+            }
+
+            //处理关闭问题
+            var closedIssuesValue = new LinkedList<Integer>();
+            if (StrUtil.isNotBlank(inputClosedIssues.getText())) {
+                try {
+                    var arrays = inputClosedIssues.getText().trim().replaceAll("，", ",").split(",");
+                    for (var item : arrays) {
+                        item = item.trim();
+                        if (!StrUtil.isNumeric(item)) item = item.replace("#", "");
+                        closedIssuesValue.add(Integer.parseInt(item));
+                    }
+                } catch (Exception ignored) {
+                }
+            }
+
+            var gitCommit = new GitCommitDomain() {{
+                setShortDescription(inputShortDescription.getText());
+                setLongDescription(inputLongDescription.getText());
+                setBreakingChanges(inputBreakingChanges.getText());
+                setWrapText(checkBoxWrapText.isSelected());
+                setSkipCI(checkBoxSkipCI.isSelected());
+            }};
+            gitCommit.setCommitType(commitType);
+            gitCommit.setChangeScope(changeScopeValue);
+            gitCommit.setClosedIssues(closedIssuesValue);
+            commitMessageI.setCommitMessage(gitCommit.toStringMessage());
         }
 
-        //获取用户提交的数据
-//        var commitMessage = new CommitMessage();
-//        commitMessage.setChangeType(changeTypeEnum);
-//        commitMessage.setChangeScope((String) optionScopeChange.getSelectedItem());
-//        commitMessage.setShortDescription(inputShortDescription.getText().trim());
-//        commitMessage.setLongDescription(inputLongDescription.getText().trim());
-//        commitMessage.setBreakingChanges(inputBreakingChanges.getText().trim());
-//        commitMessage.setClosedIssues(inputClosedIssues.getText().trim());
-//        commitMessage.setWrapText(checkBoxWrapText.isSelected());
-//        commitMessage.setSkipCI(checkBoxSkipCI.isSelected());
-
-        //设置信息到提交面板中
-//        if (commitMessageI != null) {
-//            commitMessageI.setCommitMessage(commitMessage.toRwaString());
-//        }
         handleCancelEvent();
     }
 
@@ -133,8 +159,6 @@ public class CommitTemplateDialog extends JDialog {
     private void handleCancelEvent() {
         var language = CommUtil.convertLanguageDomain(optionLanguage);
         store.setLanguage(language);
-
-
         dispose();
     }
 
@@ -173,6 +197,7 @@ public class CommitTemplateDialog extends JDialog {
         //语言下拉列表显示
         Constant.LANGUAGES.forEach(optionLanguage::addItem);
         optionLanguage.addActionListener(e -> {
+            optionLanguage.hidePopup();
             var language = CommUtil.convertLanguageDomain(optionLanguage);
             if (!language.equals(store.getLanguage())) {
                 store.setLanguage(language);
@@ -197,7 +222,6 @@ public class CommitTemplateDialog extends JDialog {
      */
     public void resetUIFrom(GitCommitDomain gitCommit) {
         //提交类型回显
-
         if (gitCommit.getCommitType() != null) {
             var commitTypeList = CommUtil.getDefaultCommitTypeList();
             var buttonElements = typeChangeGroup.getElements();
