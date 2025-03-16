@@ -1,5 +1,8 @@
 package com.c301.plugin.ui.render;
 
+import com.c301.plugin.config.StoreCommitTemplateState;
+import com.c301.plugin.utils.CommUtil;
+
 import javax.swing.table.AbstractTableModel;
 
 /**
@@ -13,13 +16,18 @@ import javax.swing.table.AbstractTableModel;
  **/
 public class CommitTypeTableModel extends AbstractTableModel {
 
-    public static final int NAME_COLUMN = 0;
-    public static final int VALUE_COLUMN = 1;
-    private static final String[] HEADERS = new String[]{"", ""};
+    public static final int TYPE_COLUMN = 0;
+    public static final int DESCRIPTION_COLUMN = 1;
+
+    private final StoreCommitTemplateState store;
+
+    public CommitTypeTableModel(StoreCommitTemplateState store) {
+        this.store = store;
+    }
 
     @Override
     public int getRowCount() {
-        return CommitTypeTable.getDataList().size();
+        return store.getCustomCommitTypeList().size();
     }
 
     @Override
@@ -29,33 +37,28 @@ public class CommitTypeTableModel extends AbstractTableModel {
 
     @Override
     public Object getValueAt(int rowIndex, int columnIndex) {
-        var domain = CommitTypeTable.getDataList().get(rowIndex);
-        if (columnIndex == NAME_COLUMN) return domain.getName();
-        if (columnIndex == VALUE_COLUMN) return domain.getDirection();
-        return "";
+        var dataList = store.getCustomCommitTypeList();
+
+        //获取数据对象
+        var domain = dataList.get(rowIndex);
+        if (columnIndex == TYPE_COLUMN) return domain.getType();
+        if (columnIndex == DESCRIPTION_COLUMN) return domain.getDescription();
+        return null;
     }
 
     @Override
     public String getColumnName(int columnIndex) {
-        if (columnIndex == NAME_COLUMN) return HEADERS[NAME_COLUMN];
-        if (columnIndex == VALUE_COLUMN) return HEADERS[VALUE_COLUMN];
-        return null;
+        var language = store.getLanguage();
+        var resourceBundle = CommUtil.i18nResourceBundle(language.getKey());
+
+        if (columnIndex == TYPE_COLUMN) resourceBundle.getString("plugin.setting.label.typeName");
+        if (columnIndex == DESCRIPTION_COLUMN) resourceBundle.getString("plugin.setting.label.typeDescribe");
+        return "None";
     }
 
     @Override
     public Class<?> getColumnClass(int columnIndex) {
         return String.class;
-    }
-
-    /**
-     * 设置标题
-     *
-     * @param titles 标题集合
-     */
-    public void setColumnTitles(String[] titles) {
-        HEADERS[NAME_COLUMN] = titles[NAME_COLUMN];
-        HEADERS[VALUE_COLUMN] = titles[VALUE_COLUMN];
-        fireTableStructureChanged();
     }
 
 }

@@ -1,7 +1,6 @@
 package com.c301.plugin.config;
 
-import com.c301.plugin.model.old.StoreConfig;
-import com.c301.plugin.ui.GitCommitSettingUI;
+import com.c301.plugin.ui.CommitTemplateSettingUI;
 import com.c301.plugin.utils.CommUtil;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.options.SearchableConfigurable;
@@ -22,8 +21,8 @@ import javax.swing.*;
  * @Version 1.0
  **/
 public class GitCommitSettingConfigurable implements SearchableConfigurable {
-    private final StoreConfig storeConfig = new StoreConfig();
-    private GitCommitSettingUI gitCommitSettingUI = null;
+    private final StoreCommitTemplateState store = StoreCommitTemplateState.getInstance();
+    private CommitTemplateSettingUI commitSettingUI = null;
 
     @Override
     public @NotNull @NonNls String getId() {
@@ -38,26 +37,23 @@ public class GitCommitSettingConfigurable implements SearchableConfigurable {
 
     @Override
     public @Nullable JComponent createComponent() {
-        if (gitCommitSettingUI == null) gitCommitSettingUI = new GitCommitSettingUI();
-        return gitCommitSettingUI.getMainPanel();
+        if (commitSettingUI == null) commitSettingUI = new CommitTemplateSettingUI(store);
+        return commitSettingUI.getMainPanel();
     }
 
     @Override
     public boolean isModified() {
-        return gitCommitSettingUI.isModified(storeConfig);
+        return false;
     }
 
     @Override
     public void reset() {
-        gitCommitSettingUI.reset(storeConfig);
+
     }
 
     @Override
     public void apply() throws ConfigurationException {
-        var apply = gitCommitSettingUI.applyStoreConfig();
-        storeConfig.language = apply.language;
-        storeConfig.templateEnable = apply.templateEnable;
-        storeConfig.commitTypeList = apply.commitTypeList;
+
     }
 
 }

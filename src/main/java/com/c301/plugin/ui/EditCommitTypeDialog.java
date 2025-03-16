@@ -1,8 +1,6 @@
 package com.c301.plugin.ui;
 
-import com.c301.plugin.model.old.ChangeTypeDomain;
-import com.c301.plugin.model.old.ChangeTypeEnum;
-import com.c301.plugin.ui.render.CommitTypeTable;
+import com.c301.plugin.model.CommitTypeDomain;
 import com.c301.plugin.utils.CommUtil;
 import com.c301.plugin.utils.StrUtil;
 import com.intellij.openapi.wm.WindowManager;
@@ -15,7 +13,6 @@ import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.util.Arrays;
 
 /**
  * 编辑commitType 对话框
@@ -37,7 +34,7 @@ public class EditCommitTypeDialog extends JDialog {
     private JLabel labelName;
 
 
-    public EditCommitTypeDialog(ChangeTypeDomain data) {
+    public EditCommitTypeDialog(CommitTypeDomain data) {
         setContentPane(contentPane);
         getRootPane().setDefaultButton(buttonOK);
         setPreferredSize(new Dimension(400, 220));
@@ -54,13 +51,13 @@ public class EditCommitTypeDialog extends JDialog {
             inputType.addItem("");
         } else {
             setTitle(resourceBundle.getString("plugin.setting.dialog.title.edit"));
-            inputType.addItem(data.getName());
+            /*inputType.addItem(data.getName());
             inputType.setSelectedItem(data.getName());
-            inputDescribe.setText(data.getDirection());
+            inputDescribe.setText(data.getDirection());*/
         }
 
         //添加默认类型列表
-        for (var type : ChangeTypeEnum.values()) inputType.addItem(type.getCode());
+        /*for (var type : ChangeTypeEnum.values()) inputType.addItem(type.getCode());
         inputType.addActionListener(e -> {
             var itemObject = inputType.getSelectedItem();
             if (itemObject != null) {
@@ -71,7 +68,7 @@ public class EditCommitTypeDialog extends JDialog {
                         .findFirst().
                         ifPresent(item -> inputDescribe.setText(resourceBundle.getString("plugin.radio." + item.getCode())));
             }
-        });
+        });*/
 
         //设置窗口打开位置为屏幕中心
         setLocationRelativeTo(null);
@@ -103,10 +100,10 @@ public class EditCommitTypeDialog extends JDialog {
             return;
         }
 
-        var domain = new ChangeTypeDomain();
+        /*var domain = new ChangeTypeDomain();
         domain.setName(typeOption.toString());
         domain.setDirection(inputDescribe.getText());
-        CommitTypeTable.handleCommitTypeDataEvent(domain);
+        JBCommitTypeTable.handleCommitTypeDataEvent(domain);*/
         onCancel();
     }
 
