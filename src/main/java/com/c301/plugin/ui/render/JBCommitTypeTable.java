@@ -52,7 +52,7 @@ public class JBCommitTypeTable extends JBTable {
             return;
         }
 
-        var dialog = new EditCommitTypeDialog(null);
+        var dialog = new EditCommitTypeDialog(store, false);
         dialog.setVisible(true);
     }
 
@@ -65,7 +65,7 @@ public class JBCommitTypeTable extends JBTable {
 
         var customList = store.getCustomCommitTypeList();
         var data = customList.get(selectRows[0]);
-        var dialog = new EditCommitTypeDialog(data);
+        var dialog = new EditCommitTypeDialog(store, true);
         dialog.setVisible(true);
     }
 

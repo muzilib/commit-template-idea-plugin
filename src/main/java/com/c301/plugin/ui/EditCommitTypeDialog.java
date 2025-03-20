@@ -1,6 +1,8 @@
 package com.c301.plugin.ui;
 
+import com.c301.plugin.config.StoreCommitTemplateState;
 import com.c301.plugin.model.CommitTypeDomain;
+import com.c301.plugin.model.LanguageDomain;
 import com.c301.plugin.utils.CommUtil;
 import com.c301.plugin.utils.StrUtil;
 import com.intellij.openapi.wm.WindowManager;
@@ -30,45 +32,22 @@ public class EditCommitTypeDialog extends JDialog {
     private JButton buttonCancel;
     private JComboBox<String> inputType;
     private JTextArea inputDescribe;
-    private JLabel labelDescribe;
     private JLabel labelName;
+    private JLabel labelDescribe;
 
+    private final StoreCommitTemplateState store;
+    private boolean editStatus = false;
 
-    public EditCommitTypeDialog(CommitTypeDomain data) {
+    public EditCommitTypeDialog(StoreCommitTemplateState store, boolean editStatus) {
+        this.store = store;
+        this.editStatus = editStatus;
+
         setContentPane(contentPane);
         getRootPane().setDefaultButton(buttonOK);
         setPreferredSize(new Dimension(400, 220));
         setMinimumSize(new Dimension(400, 220));
         pack();
         setModal(true);
-
-        //设置显示信息
-        var resourceBundle = CommUtil.i18nResourceBundle(null);
-        buttonOK.setText(resourceBundle.getString("plugin.button.ok"));
-        buttonCancel.setText(resourceBundle.getString("plugin.button.cancel"));
-        if (data == null) {
-            setTitle(resourceBundle.getString("plugin.setting.dialog.title.add"));
-            inputType.addItem("");
-        } else {
-            setTitle(resourceBundle.getString("plugin.setting.dialog.title.edit"));
-            /*inputType.addItem(data.getName());
-            inputType.setSelectedItem(data.getName());
-            inputDescribe.setText(data.getDirection());*/
-        }
-
-        //添加默认类型列表
-        /*for (var type : ChangeTypeEnum.values()) inputType.addItem(type.getCode());
-        inputType.addActionListener(e -> {
-            var itemObject = inputType.getSelectedItem();
-            if (itemObject != null) {
-                inputDescribe.setText("");
-
-                Arrays.stream(ChangeTypeEnum.values())
-                        .filter(item -> item.getCode().equals(itemObject.toString()))
-                        .findFirst().
-                        ifPresent(item -> inputDescribe.setText(resourceBundle.getString("plugin.radio." + item.getCode())));
-            }
-        });*/
 
         //设置窗口打开位置为屏幕中心
         setLocationRelativeTo(null);
@@ -84,6 +63,27 @@ public class EditCommitTypeDialog extends JDialog {
                 onCancel();
             }
         });
+
+        //设置类型列表
+        inputType.addItem("");
+        CommitTypeDomain.TYPES.forEach(item -> inputType.addItem(item));
+        inputType.addActionListener(e -> {
+            inputDescribe.setText("");
+
+            //设置选中类型描述
+            var item = inputType.getSelectedItem();
+            if (item == null) return;
+
+            //获取选中类型
+            var typeName = item.toString();
+            if (CommitTypeDomain.TYPES.contains(typeName)) {
+                var resourceBundle = CommUtil.i18nResourceBundle(store.getLanguage().getKey());
+                inputDescribe.setText(resourceBundle.getString("plugin.radio." + typeName));
+            }
+        });
+
+        //切换语言事件
+        handleDisplayLanguageEvent(store.getLanguage());
     }
 
     /**
@@ -100,10 +100,16 @@ public class EditCommitTypeDialog extends JDialog {
             return;
         }
 
-        /*var domain = new ChangeTypeDomain();
-        domain.setName(typeOption.toString());
-        domain.setDirection(inputDescribe.getText());
-        JBCommitTypeTable.handleCommitTypeDataEvent(domain);*/
+        //保存信息
+        var customList = store.getCustomCommitTypeList();
+        customList.stream()
+                .filter(item -> item.getType().equalsIgnoreCase(typeOption.toString()))
+                .findFirst()
+                .ifPresent(customList::remove);
+        var domain = new CommitTypeDomain();
+        domain.setType(typeOption.toString());
+        domain.setDescription(inputDescribe.getText());
+        customList.add(domain);
         onCancel();
     }
 
@@ -112,6 +118,24 @@ public class EditCommitTypeDialog extends JDialog {
      */
     private void onCancel() {
         dispose();
+    }
+
+    /**
+     * 显示语言切换事件
+     *
+     * @param language 语言对象
+     */
+    private void handleDisplayLanguageEvent(LanguageDomain language) {
+        var resourceBundle = CommUtil.i18nResourceBundle(language.getKey());
+
+        buttonOK.setText(resourceBundle.getString("plugin.button.ok"));
+        buttonCancel.setText(resourceBundle.getString("plugin.button.cancel"));
+        labelName.setText(resourceBundle.getString("plugin.setting.table.typeName"));
+        labelDescribe.setText(resourceBundle.getString("plugin.setting.table.typeDescribe"));
+
+        //设置标题名称
+        var titleKey = editStatus ? "edit" : "add";
+        setTitle(resourceBundle.getString("plugin.setting.dialog.title." + titleKey));
     }
 
     {

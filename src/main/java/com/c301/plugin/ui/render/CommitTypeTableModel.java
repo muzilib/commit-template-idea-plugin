@@ -51,8 +51,8 @@ public class CommitTypeTableModel extends AbstractTableModel {
         var language = store.getLanguage();
         var resourceBundle = CommUtil.i18nResourceBundle(language.getKey());
 
-        if (columnIndex == TYPE_COLUMN) resourceBundle.getString("plugin.setting.label.typeName");
-        if (columnIndex == DESCRIPTION_COLUMN) resourceBundle.getString("plugin.setting.label.typeDescribe");
+        if (columnIndex == TYPE_COLUMN) return resourceBundle.getString("plugin.setting.table.typeName");
+        if (columnIndex == DESCRIPTION_COLUMN) return resourceBundle.getString("plugin.setting.table.typeDescribe");
         return "None";
     }
 

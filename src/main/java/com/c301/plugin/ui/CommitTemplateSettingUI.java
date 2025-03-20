@@ -77,6 +77,11 @@ public class CommitTemplateSettingUI {
             typeTablePanel.setEnabled(enable);
             commitTypeTable.setEnabled(enable);
             editCommitTypePanel.setEnabled(enable);
+
+            //自定义提交模板描述信息
+            var resourceBundle = CommUtil.i18nResourceBundle(null);
+            var active = checkBoxCommitType.isSelected() ? "active" : "deActive";
+            checkBoxCommitType.setText(resourceBundle.getString("plugin.setting.label.customTemplateTips." + active));
         });
 
         //初始化Logo信息
@@ -93,6 +98,7 @@ public class CommitTemplateSettingUI {
     public void handleResetEvent() {
         optionLanguage.setSelectedItem(store.getLanguage());
         handleDisplayLanguageEvent(store.getLanguage());
+        checkBoxCommitType.setSelected(store.isCustomEnable());
     }
 
     /**
@@ -107,7 +113,11 @@ public class CommitTemplateSettingUI {
         tabbedPane.setTitleAt(0, resourceBundle.getString("plugin.setting.label.setting"));
         tabbedPane.setTitleAt(1, resourceBundle.getString("plugin.setting.label.about"));
         labelLanguage.setText(resourceBundle.getString("plugin.setting.label.language"));
-        labelCommitType.setText(resourceBundle.getString("plugin.setting.label.template"));
+        labelCommitType.setText(resourceBundle.getString("plugin.setting.label.customTemplate"));
+
+        //自定义提交模板描述信息
+        var active = checkBoxCommitType.isSelected() ? "active" : "deActive";
+        checkBoxCommitType.setText(resourceBundle.getString("plugin.setting.label.customTemplateTips." + active));
     }
 
     {
