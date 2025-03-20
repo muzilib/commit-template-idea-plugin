@@ -1,6 +1,6 @@
 package com.c301.plugin.ui.render;
 
-import com.c301.plugin.config.StoreCommitTemplateState;
+import com.c301.plugin.model.SettingCacheDomain;
 import com.c301.plugin.utils.CommUtil;
 
 import javax.swing.table.AbstractTableModel;
@@ -19,15 +19,15 @@ public class CommitTypeTableModel extends AbstractTableModel {
     public static final int TYPE_COLUMN = 0;
     public static final int DESCRIPTION_COLUMN = 1;
 
-    private final StoreCommitTemplateState store;
+    private final SettingCacheDomain cache;
 
-    public CommitTypeTableModel(StoreCommitTemplateState store) {
-        this.store = store;
+    public CommitTypeTableModel(SettingCacheDomain cache) {
+        this.cache = cache;
     }
 
     @Override
     public int getRowCount() {
-        return store.getCustomCommitTypeList().size();
+        return cache.getCustomCommitTypeList().size();
     }
 
     @Override
@@ -37,7 +37,7 @@ public class CommitTypeTableModel extends AbstractTableModel {
 
     @Override
     public Object getValueAt(int rowIndex, int columnIndex) {
-        var dataList = store.getCustomCommitTypeList();
+        var dataList = cache.getCustomCommitTypeList();
 
         //获取数据对象
         var domain = dataList.get(rowIndex);
@@ -48,7 +48,7 @@ public class CommitTypeTableModel extends AbstractTableModel {
 
     @Override
     public String getColumnName(int columnIndex) {
-        var language = store.getLanguage();
+        var language = cache.getLanguage();
         var resourceBundle = CommUtil.i18nResourceBundle(language.getKey());
 
         if (columnIndex == TYPE_COLUMN) return resourceBundle.getString("plugin.setting.table.typeName");

@@ -16,7 +16,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.LinkedList;
-import java.util.List;
 
 /**
  * 存储提交模板信息
@@ -72,6 +71,6 @@ public class StoreCommitTemplateState implements PersistentStateComponent<StoreC
     /**
      * 用户自定义 提交类型列表
      */
-    private List<CommitTypeDomain> customCommitTypeList = new LinkedList<>();
+    private LinkedList<CommitTypeDomain> customCommitTypeList = new LinkedList<>();
 
 }

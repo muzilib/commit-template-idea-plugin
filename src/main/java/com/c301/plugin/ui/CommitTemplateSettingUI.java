@@ -1,8 +1,8 @@
 package com.c301.plugin.ui;
 
-import com.c301.plugin.config.StoreCommitTemplateState;
 import com.c301.plugin.constant.Constant;
 import com.c301.plugin.model.LanguageDomain;
+import com.c301.plugin.model.SettingCacheDomain;
 import com.c301.plugin.ui.render.CustomTableCellRenderer;
 import com.c301.plugin.ui.render.JBCommitTypeTable;
 import com.c301.plugin.ui.render.LanguageListCellRendererRender;
@@ -41,12 +41,11 @@ public class CommitTemplateSettingUI {
     private JCheckBox checkBoxCommitType;
     private JComboBox<LanguageDomain> optionLanguage;
 
-    private final StoreCommitTemplateState store;
+    private final SettingCacheDomain cache;
 
-    public CommitTemplateSettingUI(StoreCommitTemplateState store) {
-        this.store = store;
-
-        var commitTypeTable = new JBCommitTypeTable(store);
+    public CommitTemplateSettingUI(SettingCacheDomain cache) {
+        this.cache = cache;
+        var commitTypeTable = new JBCommitTypeTable(cache);
 
         //初始化语言列表
         optionLanguage.setRenderer(new LanguageListCellRendererRender());
@@ -54,8 +53,8 @@ public class CommitTemplateSettingUI {
         optionLanguage.addActionListener(e -> {
             optionLanguage.hidePopup();
             var language = CommUtil.convertLanguageDomain(optionLanguage);
-            if (!language.equals(store.getLanguage())) {
-                store.setLanguage(language);
+            if (!language.equals(cache.getLanguage())) {
+                cache.setLanguage(language);
                 handleDisplayLanguageEvent(language);
                 commitTypeTable.handleRefreshEvent();
             }
@@ -76,6 +75,7 @@ public class CommitTemplateSettingUI {
         checkBoxCommitType.addItemListener(e -> {
             var enable = (e.getStateChange() == ItemEvent.SELECTED);
 
+            cache.setCustomEnable(enable);
             typeTablePanel.setEnabled(enable);
             commitTypeTable.setEnabled(enable);
             editCommitTypePanel.setEnabled(enable);
@@ -97,10 +97,12 @@ public class CommitTemplateSettingUI {
     /**
      * 处理页面重置事件
      */
-    public void handleResetEvent() {
-        optionLanguage.setSelectedItem(store.getLanguage());
-        handleDisplayLanguageEvent(store.getLanguage());
-        checkBoxCommitType.setSelected(store.isCustomEnable());
+    public void handleResetEvent(SettingCacheDomain cache) {
+        optionLanguage.setSelectedItem(cache.getLanguage());
+        checkBoxCommitType.setSelected(cache.isCustomEnable());
+        this.cache.setCustomCommitTypeList(cache.getCustomCommitTypeList());
+
+        handleDisplayLanguageEvent(cache.getLanguage());
     }
 
     /**

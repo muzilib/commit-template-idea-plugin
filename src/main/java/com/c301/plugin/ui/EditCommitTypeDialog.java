@@ -1,8 +1,8 @@
 package com.c301.plugin.ui;
 
-import com.c301.plugin.config.StoreCommitTemplateState;
 import com.c301.plugin.model.CommitTypeDomain;
 import com.c301.plugin.model.LanguageDomain;
+import com.c301.plugin.model.SettingCacheDomain;
 import com.c301.plugin.ui.render.JBCommitTypeTable;
 import com.c301.plugin.utils.CommUtil;
 import com.c301.plugin.utils.StrUtil;
@@ -40,10 +40,10 @@ public class EditCommitTypeDialog extends JDialog {
     private int index = -1;
     private final JBCommitTypeTable table;
     private CommitTypeDomain commitType;
-    private final StoreCommitTemplateState store;
+    private final SettingCacheDomain cache;
 
-    public EditCommitTypeDialog(StoreCommitTemplateState store, JBCommitTypeTable table, CommitTypeDomain commitType) {
-        this.store = store;
+    public EditCommitTypeDialog(SettingCacheDomain cache, JBCommitTypeTable table, CommitTypeDomain commitType) {
+        this.cache = cache;
         this.table = table;
         this.commitType = commitType;
 
@@ -71,7 +71,7 @@ public class EditCommitTypeDialog extends JDialog {
 
         //设置类型列表
         inputType.addItem("");
-        var typeNameArrays = store.getCustomCommitTypeList().stream()
+        var typeNameArrays = cache.getCustomCommitTypeList().stream()
                 .map(item -> item.getType().toLowerCase())
                 .filter(StrUtil::isNotBlank)
                 .collect(Collectors.toSet());
@@ -89,13 +89,13 @@ public class EditCommitTypeDialog extends JDialog {
             //获取选中类型
             var typeName = item.toString();
             if (CommitTypeDomain.TYPES.contains(typeName)) {
-                var resourceBundle = CommUtil.i18nResourceBundle(store.getLanguage().getKey());
+                var resourceBundle = CommUtil.i18nResourceBundle(cache.getLanguage().getKey());
                 inputDescribe.setText(resourceBundle.getString("plugin.radio." + typeName));
             }
         });
 
         //切换语言事件
-        handleDisplayLanguageEvent(store.getLanguage());
+        handleDisplayLanguageEvent(cache.getLanguage());
     }
 
     /**
@@ -113,7 +113,7 @@ public class EditCommitTypeDialog extends JDialog {
         }
 
         //新增事件
-        var customList = store.getCustomCommitTypeList();
+        var customList = cache.getCustomCommitTypeList();
         if (commitType == null) {
             var domain = new CommitTypeDomain();
             domain.setType(typeOption.toString());

@@ -117,6 +117,13 @@ public class CommUtil {
      */
     @SuppressWarnings("unchecked")
     public static <T> T deepCopy(T obj) {
+        //类型为List对象
+        if (obj instanceof List<?> list) {
+            var newList = new LinkedList<>();
+            for (var o : list) newList.add(deepCopy(o));
+            return (T) newList;
+        }
+
         var gson = new Gson();
         var jsonString = gson.toJson(obj);
         return (T) gson.fromJson(jsonString, obj.getClass());

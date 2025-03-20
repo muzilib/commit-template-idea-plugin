@@ -1,7 +1,7 @@
 package com.c301.plugin.ui.render;
 
-import com.c301.plugin.config.StoreCommitTemplateState;
 import com.c301.plugin.constant.Constant;
+import com.c301.plugin.model.SettingCacheDomain;
 import com.c301.plugin.ui.EditCommitTypeDialog;
 import com.intellij.ui.table.JBTable;
 
@@ -18,11 +18,10 @@ import javax.swing.*;
  **/
 public class JBCommitTypeTable extends JBTable {
 
-    private final StoreCommitTemplateState store;
+    private final SettingCacheDomain cache;
 
-    public JBCommitTypeTable(StoreCommitTemplateState store) {
-        this.store = store;
-
+    public JBCommitTypeTable(SettingCacheDomain cache) {
+        this.cache = cache;
         handleRefreshEvent();
     }
 
@@ -30,7 +29,7 @@ public class JBCommitTypeTable extends JBTable {
      * 新增 事件
      */
     public void handlesAddActionEvent() {
-        var customList = store.getCustomCommitTypeList();
+        var customList = cache.getCustomCommitTypeList();
 
         //检查是否超过最大数量
         if (customList.size() >= Constant.MAX_COMMIT_TYPE_LENGTH) {
@@ -38,7 +37,7 @@ public class JBCommitTypeTable extends JBTable {
             return;
         }
 
-        var dialog = new EditCommitTypeDialog(store, this, null);
+        var dialog = new EditCommitTypeDialog(cache, this, null);
         dialog.setVisible(true);
     }
 
@@ -49,10 +48,10 @@ public class JBCommitTypeTable extends JBTable {
         var selectRows = getSelectedRows();
         if (selectRows.length != 1) return;
 
-        var arrays = store.getCustomCommitTypeList();
+        var arrays = cache.getCustomCommitTypeList();
         var commitType = arrays.get(selectRows[0]);
 
-        var dialog = new EditCommitTypeDialog(store, this, commitType);
+        var dialog = new EditCommitTypeDialog(cache, this, commitType);
         dialog.resetUIFrom(commitType, selectRows[0]);
         dialog.setVisible(true);
     }
@@ -65,7 +64,7 @@ public class JBCommitTypeTable extends JBTable {
         if (selectRows.length != 1) return;
 
         var index = selectRows[0];
-        store.getCustomCommitTypeList().remove(index);
+        cache.getCustomCommitTypeList().remove(index);
         handleRefreshEvent();
     }
 
@@ -78,7 +77,7 @@ public class JBCommitTypeTable extends JBTable {
         var index = selectRows[0];
         if (index == 0) return;
 
-        var arrays = store.getCustomCommitTypeList();
+        var arrays = cache.getCustomCommitTypeList();
         var temp = arrays.get(index - 1);
         arrays.set(index - 1, arrays.get(index));
         arrays.set(index, temp);
@@ -94,7 +93,7 @@ public class JBCommitTypeTable extends JBTable {
         if (selectRows.length != 1) return;
         var index = selectRows[0];
 
-        var arrays = store.getCustomCommitTypeList();
+        var arrays = cache.getCustomCommitTypeList();
         if (index == arrays.size() - 1) return;
 
         var temp = arrays.get(index + 1);
@@ -108,7 +107,7 @@ public class JBCommitTypeTable extends JBTable {
      * 刷新页面事件
      */
     public void handleRefreshEvent() {
-        setModel(new CommitTypeTableModel(store));
+        setModel(new CommitTypeTableModel(cache));
         setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
         //设置列宽 提交类型 分类
