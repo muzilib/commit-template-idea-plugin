@@ -2,7 +2,6 @@ package com.c301.plugin.ui.render;
 
 import com.c301.plugin.config.StoreCommitTemplateState;
 import com.c301.plugin.constant.Constant;
-import com.c301.plugin.model.CommitTypeDomain;
 import com.c301.plugin.ui.EditCommitTypeDialog;
 import com.intellij.ui.table.JBTable;
 
@@ -24,20 +23,7 @@ public class JBCommitTypeTable extends JBTable {
     public JBCommitTypeTable(StoreCommitTemplateState store) {
         this.store = store;
 
-        setModel(new CommitTypeTableModel(store));
-        setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-
-        //设置列宽 提交类型 分类
-        var typeColumn = getColumnModel().getColumn(CommitTypeTableModel.TYPE_COLUMN);
-        typeColumn.setMinWidth(150);
-        typeColumn.setMaxWidth(250);
-        typeColumn.setPreferredWidth(150);
-
-        //设置列宽 提交类型 描述
-        var descriptionColumn = getColumnModel().getColumn(CommitTypeTableModel.DESCRIPTION_COLUMN);
-        descriptionColumn.setMinWidth(550);
-        descriptionColumn.setMaxWidth(750);
-        descriptionColumn.setPreferredWidth(550);
+        handleRefreshEvent();
     }
 
     /**
@@ -52,7 +38,7 @@ public class JBCommitTypeTable extends JBTable {
             return;
         }
 
-        var dialog = new EditCommitTypeDialog(store, false);
+        var dialog = new EditCommitTypeDialog(store, this, null);
         dialog.setVisible(true);
     }
 
@@ -63,9 +49,11 @@ public class JBCommitTypeTable extends JBTable {
         var selectRows = getSelectedRows();
         if (selectRows.length != 1) return;
 
-        var customList = store.getCustomCommitTypeList();
-        var data = customList.get(selectRows[0]);
-        var dialog = new EditCommitTypeDialog(store, true);
+        var arrays = store.getCustomCommitTypeList();
+        var commitType = arrays.get(selectRows[0]);
+
+        var dialog = new EditCommitTypeDialog(store, this, commitType);
+        dialog.resetUIFrom(commitType, selectRows[0]);
         dialog.setVisible(true);
     }
 
@@ -75,10 +63,10 @@ public class JBCommitTypeTable extends JBTable {
     public void handlesRemoveActionEvent() {
         var selectRows = getSelectedRows();
         if (selectRows.length != 1) return;
-        var index = selectRows[0];
 
-//        DATA_LIST.remove(index);
-//        TABLE_MODEL.fireTableDataChanged();
+        var index = selectRows[0];
+        store.getCustomCommitTypeList().remove(index);
+        handleRefreshEvent();
     }
 
     /**
@@ -90,11 +78,12 @@ public class JBCommitTypeTable extends JBTable {
         var index = selectRows[0];
         if (index == 0) return;
 
-//        var temp = DATA_LIST.get(index - 1);
-//        DATA_LIST.set(index - 1, DATA_LIST.get(index));
-//        DATA_LIST.set(index, temp);
-//        TABLE_MODEL.fireTableDataChanged();
+        var arrays = store.getCustomCommitTypeList();
+        var temp = arrays.get(index - 1);
+        arrays.set(index - 1, arrays.get(index));
+        arrays.set(index, temp);
         setRowSelectionInterval(index - 1, index - 1);
+        handleRefreshEvent();
     }
 
     /**
@@ -104,34 +93,35 @@ public class JBCommitTypeTable extends JBTable {
         var selectRows = getSelectedRows();
         if (selectRows.length != 1) return;
         var index = selectRows[0];
-//        if (index == DATA_LIST.size() - 1) return;
 
-//        var temp = DATA_LIST.get(index + 1);
-//        DATA_LIST.set(index + 1, DATA_LIST.get(index));
-//        DATA_LIST.set(index, temp);
-//        TABLE_MODEL.fireTableDataChanged();
+        var arrays = store.getCustomCommitTypeList();
+        if (index == arrays.size() - 1) return;
+
+        var temp = arrays.get(index + 1);
+        arrays.set(index + 1, arrays.get(index));
+        arrays.set(index, temp);
         setRowSelectionInterval(index + 1, index + 1);
+        handleRefreshEvent();
     }
 
     /**
-     * 处理数据新增或更新事件
-     *
-     * @param data 数据
+     * 刷新页面事件
      */
-    public static void handleCommitTypeDataEvent(CommitTypeDomain data) {
-        /*ChangeTypeDomain changeTypeDomain = null;
-        for (var item : DATA_LIST) {
-            if (item.getName().equals(data.getName())) {
-                changeTypeDomain = item;
-                break;
-            }
-        }
+    public void handleRefreshEvent() {
+        setModel(new CommitTypeTableModel(store));
+        setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
-        if (changeTypeDomain != null) {
-            changeTypeDomain.setName(data.getName());
-            changeTypeDomain.setDirection(data.getDirection());
-        } else DATA_LIST.add(data);
-        TABLE_MODEL.fireTableDataChanged();*/
+        //设置列宽 提交类型 分类
+        var typeColumn = getColumnModel().getColumn(CommitTypeTableModel.TYPE_COLUMN);
+        typeColumn.setMinWidth(150);
+        typeColumn.setMaxWidth(250);
+        typeColumn.setPreferredWidth(150);
+
+        //设置列宽 提交类型 描述
+        var descriptionColumn = getColumnModel().getColumn(CommitTypeTableModel.DESCRIPTION_COLUMN);
+        descriptionColumn.setMinWidth(550);
+        descriptionColumn.setMaxWidth(750);
+        descriptionColumn.setPreferredWidth(550);
     }
 
 }

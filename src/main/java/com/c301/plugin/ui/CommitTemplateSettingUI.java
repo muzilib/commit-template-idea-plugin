@@ -46,6 +46,8 @@ public class CommitTemplateSettingUI {
     public CommitTemplateSettingUI(StoreCommitTemplateState store) {
         this.store = store;
 
+        var commitTypeTable = new JBCommitTypeTable(store);
+
         //初始化语言列表
         optionLanguage.setRenderer(new LanguageListCellRendererRender());
         Constant.LANGUAGES.forEach(optionLanguage::addItem);
@@ -55,11 +57,11 @@ public class CommitTemplateSettingUI {
             if (!language.equals(store.getLanguage())) {
                 store.setLanguage(language);
                 handleDisplayLanguageEvent(language);
+                commitTypeTable.handleRefreshEvent();
             }
         });
 
         //设置提交类型编辑面板
-        var commitTypeTable = new JBCommitTypeTable(store);
         commitTypeTable.setDefaultRenderer(Object.class, new CustomTableCellRenderer());
         var editCommitTypePanel = ToolbarDecorator.createDecorator(commitTypeTable)
                 .setAddAction(button -> commitTypeTable.handlesAddActionEvent())

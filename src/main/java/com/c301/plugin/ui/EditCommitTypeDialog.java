@@ -3,6 +3,7 @@ package com.c301.plugin.ui;
 import com.c301.plugin.config.StoreCommitTemplateState;
 import com.c301.plugin.model.CommitTypeDomain;
 import com.c301.plugin.model.LanguageDomain;
+import com.c301.plugin.ui.render.JBCommitTypeTable;
 import com.c301.plugin.utils.CommUtil;
 import com.c301.plugin.utils.StrUtil;
 import com.intellij.openapi.wm.WindowManager;
@@ -15,6 +16,7 @@ import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.util.stream.Collectors;
 
 /**
  * 编辑commitType 对话框
@@ -35,12 +37,15 @@ public class EditCommitTypeDialog extends JDialog {
     private JLabel labelName;
     private JLabel labelDescribe;
 
+    private int index = -1;
+    private final JBCommitTypeTable table;
+    private CommitTypeDomain commitType;
     private final StoreCommitTemplateState store;
-    private boolean editStatus = false;
 
-    public EditCommitTypeDialog(StoreCommitTemplateState store, boolean editStatus) {
+    public EditCommitTypeDialog(StoreCommitTemplateState store, JBCommitTypeTable table, CommitTypeDomain commitType) {
         this.store = store;
-        this.editStatus = editStatus;
+        this.table = table;
+        this.commitType = commitType;
 
         setContentPane(contentPane);
         getRootPane().setDefaultButton(buttonOK);
@@ -66,7 +71,14 @@ public class EditCommitTypeDialog extends JDialog {
 
         //设置类型列表
         inputType.addItem("");
-        CommitTypeDomain.TYPES.forEach(item -> inputType.addItem(item));
+        var typeNameArrays = store.getCustomCommitTypeList().stream()
+                .map(item -> item.getType().toLowerCase())
+                .filter(StrUtil::isNotBlank)
+                .collect(Collectors.toSet());
+        for (String typeName : CommitTypeDomain.TYPES) {
+            if (typeNameArrays.contains(typeName)) continue;
+            inputType.addItem(typeName);
+        }
         inputType.addActionListener(e -> {
             inputDescribe.setText("");
 
@@ -100,16 +112,34 @@ public class EditCommitTypeDialog extends JDialog {
             return;
         }
 
-        //保存信息
+        //新增事件
         var customList = store.getCustomCommitTypeList();
-        customList.stream()
-                .filter(item -> item.getType().equalsIgnoreCase(typeOption.toString()))
-                .findFirst()
-                .ifPresent(customList::remove);
-        var domain = new CommitTypeDomain();
+        if (commitType == null) {
+            var domain = new CommitTypeDomain();
+            domain.setType(typeOption.toString());
+            domain.setDescription(inputDescribe.getText());
+            customList.add(domain);
+            table.handleRefreshEvent();
+            onCancel();
+            return;
+        }
+
+        //修改事件
+        if (index == -1) return;
+
+        //找到修改的行索引，判断typeName是否重复
+        for (int i = 0; i < customList.size(); i++) {
+            var item = customList.get(i);
+            if (item.getType().equals(typeOption.toString())) {
+                if (i == index) continue;
+                JOptionPane.showMessageDialog(this, "类型名称已存在，请重新输入", "错误", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+        }
+        var domain = customList.get(index);
         domain.setType(typeOption.toString());
         domain.setDescription(inputDescribe.getText());
-        customList.add(domain);
+        table.handleRefreshEvent();
         onCancel();
     }
 
@@ -118,6 +148,21 @@ public class EditCommitTypeDialog extends JDialog {
      */
     private void onCancel() {
         dispose();
+    }
+
+    /**
+     * 重置表单信息
+     *
+     * @param commitType 提交类型对象
+     * @param index      选中的行索引
+     */
+    public void resetUIFrom(CommitTypeDomain commitType, int index) {
+        this.index = index;
+        this.commitType = commitType;
+        if (commitType == null) return;
+
+        inputType.setSelectedItem(commitType.getType());
+        inputDescribe.setText(commitType.getDescription());
     }
 
     /**
@@ -134,7 +179,7 @@ public class EditCommitTypeDialog extends JDialog {
         labelDescribe.setText(resourceBundle.getString("plugin.setting.table.typeDescribe"));
 
         //设置标题名称
-        var titleKey = editStatus ? "edit" : "add";
+        var titleKey = commitType != null ? "edit" : "add";
         setTitle(resourceBundle.getString("plugin.setting.dialog.title." + titleKey));
     }
 
