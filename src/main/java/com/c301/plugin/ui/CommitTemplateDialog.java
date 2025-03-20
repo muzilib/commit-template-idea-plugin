@@ -106,14 +106,12 @@ public class CommitTemplateDialog extends JDialog {
         if (commitMessageI != null) {
             //处理提交类型
             CommitTypeDomain commitType = null;
-            var commitTypeList = CommUtil.getDefaultCommitTypeList();
             var buttonElements = typeChangeGroup.getElements();
             while (buttonElements.hasMoreElements()) {
                 var button = buttonElements.nextElement();
                 if (!button.isSelected()) continue;
 
-                var index = Integer.parseInt(button.getActionCommand());
-                commitType = commitTypeList.get(index - 1);
+                commitType = CommUtil.parseCommitType(button.getActionCommand());
                 break;
             }
 
@@ -276,13 +274,16 @@ public class CommitTemplateDialog extends JDialog {
         checkBoxSkipCI.setText(resourceBundle.getString("plugin.checkbox.skipCI"));
 
         //渲染提交类型按钮组信息
-        var commitTypeList = CommUtil.getDefaultCommitTypeList(language.getKey());
+        var commitTypeList = CommUtil.getDefaultCommitTypeList();
         var buttonElements = typeChangeGroup.getElements();
         buttonElements.nextElement();
         while (buttonElements.hasMoreElements()) {
             var button = buttonElements.nextElement();
+            button.setVisible(false);
             var index = Integer.parseInt(button.getActionCommand());
+            if (index > commitTypeList.size()) continue;
 
+            button.setVisible(true);
             var commitType = commitTypeList.get(index - 1);
             button.setActionCommand(commitType.getType());
             button.setText(commitType.getType() + " - " + commitType.getDescription());

@@ -175,6 +175,9 @@ public class CommUtil {
      * @return 提交类型对象列表
      */
     public static List<CommitTypeDomain> getDefaultCommitTypeList() {
+        if (store.isCustomEnable()) return store.getCustomCommitTypeList();
+
+        //默认提交类型列表
         return getDefaultCommitTypeList(null);
     }
 
@@ -206,17 +209,9 @@ public class CommUtil {
      * @return 提交类型对象
      */
     public static CommitTypeDomain parseCommitType(String typeName) {
-        //加载自定义的提交类型
-        if (store.isCustomEnable()) {
-
-
-            return null;
-        }
-
-        //加载默认的提交类型
         var commitTypeList = getDefaultCommitTypeList();
         for (CommitTypeDomain commitType : commitTypeList) {
-            if (commitType.getType().equalsIgnoreCase(typeName)) {
+            if (commitType.getType().equals(typeName)) {
                 return commitType;
             }
         }
