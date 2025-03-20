@@ -171,26 +171,23 @@ public class CommitTemplateDialog extends JDialog {
             @Override
             public void componentMoved(ComponentEvent e) {
                 super.componentMoved(e);
-
                 var windows = store.getCommitWindowConfig();
-                if (windows == null) {
-                    windows = new WindowsConfigDomain();
-                    store.setCommitWindowConfig(windows);
-                }
+                if (windows == null) windows = new WindowsConfigDomain();
 
-                store.getCommitWindowConfig().setWindowX(getX());
-                store.getCommitWindowConfig().setWindowY(getY());
+                windows.setWindowX(getX());
+                windows.setWindowY(getY());
+                store.setCommitWindowConfig(windows);
             }
 
             @Override
             public void componentResized(ComponentEvent e) {
                 super.componentResized(e);
-                if (store.getCommitWindowConfig() == null) {
-                    store.setCommitWindowConfig(new WindowsConfigDomain());
-                }
+                var windows = store.getCommitWindowConfig();
+                if (windows == null) windows = new WindowsConfigDomain();
 
-                store.getCommitWindowConfig().setWindowWidth(getWidth());
-                store.getCommitWindowConfig().setWindowHeight(getHeight());
+                windows.setWindowWidth(getWidth());
+                windows.setWindowHeight(getHeight());
+                store.setCommitWindowConfig(windows);
             }
         });
 

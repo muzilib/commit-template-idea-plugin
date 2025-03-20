@@ -7,15 +7,18 @@ import com.c301.plugin.ui.render.CustomTableCellRenderer;
 import com.c301.plugin.ui.render.JBCommitTypeTable;
 import com.c301.plugin.ui.render.LanguageListCellRendererRender;
 import com.c301.plugin.utils.CommUtil;
+import com.intellij.ui.DoubleClickListener;
 import com.intellij.ui.ToolbarDecorator;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
 import lombok.Getter;
+import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ItemEvent;
+import java.awt.event.MouseEvent;
 import java.util.Objects;
 
 /**
@@ -85,6 +88,15 @@ public class CommitTemplateSettingUI {
             var active = checkBoxCommitType.isSelected() ? "active" : "deActive";
             checkBoxCommitType.setText(resourceBundle.getString("plugin.setting.label.customTemplateTips." + active));
         });
+
+        //添加双击行元素事件
+        new DoubleClickListener() {
+            @Override
+            protected boolean onDoubleClick(@NotNull MouseEvent e) {
+                commitTypeTable.handlesEditActionEvent();
+                return true;
+            }
+        }.installOn(commitTypeTable);
 
         //初始化Logo信息
         var url = this.getClass().getResource("/META-INF/pluginIcon.png");

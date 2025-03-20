@@ -38,6 +38,7 @@ public class JBCommitTypeTable extends JBTable {
         }
 
         var dialog = new EditCommitTypeDialog(cache, this, null);
+        dialog.handleUIInit();
         dialog.setVisible(true);
     }
 
@@ -53,6 +54,7 @@ public class JBCommitTypeTable extends JBTable {
 
         var dialog = new EditCommitTypeDialog(cache, this, commitType);
         dialog.resetUIFrom(commitType, selectRows[0]);
+        dialog.handleUIInit();
         dialog.setVisible(true);
     }
 

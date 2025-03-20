@@ -1,8 +1,10 @@
 package com.c301.plugin.ui;
 
+import com.c301.plugin.config.StoreCommitTemplateState;
 import com.c301.plugin.model.CommitTypeDomain;
 import com.c301.plugin.model.LanguageDomain;
 import com.c301.plugin.model.SettingCacheDomain;
+import com.c301.plugin.model.WindowsConfigDomain;
 import com.c301.plugin.ui.render.JBCommitTypeTable;
 import com.c301.plugin.utils.CommUtil;
 import com.c301.plugin.utils.StrUtil;
@@ -13,9 +15,7 @@ import com.intellij.uiDesigner.core.Spacer;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.KeyEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import java.awt.event.*;
 import java.util.stream.Collectors;
 
 /**
@@ -148,6 +148,57 @@ public class EditCommitTypeDialog extends JDialog {
      */
     private void onCancel() {
         dispose();
+    }
+
+    /**
+     * 初始化弹窗配置
+     */
+    public void handleUIInit() {
+        var store = StoreCommitTemplateState.getInstance();
+
+        //窗口大小发生变化监听事件
+        addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentMoved(ComponentEvent e) {
+                super.componentMoved(e);
+                var windows = store.getSettingCommitTypeWindowConfig();
+                if (windows == null) windows = new WindowsConfigDomain();
+
+                windows.setWindowX(getX());
+                windows.setWindowY(getY());
+                store.setSettingCommitTypeWindowConfig(windows);
+            }
+
+            @Override
+            public void componentResized(ComponentEvent e) {
+                super.componentResized(e);
+                var windows = store.getSettingCommitTypeWindowConfig();
+                if (windows == null) windows = new WindowsConfigDomain();
+
+                windows.setWindowWidth(getWidth());
+                windows.setWindowHeight(getHeight());
+                store.setSettingCommitTypeWindowConfig(windows);
+            }
+        });
+
+        //比对存储的窗口大小
+        var window = store.getSettingCommitTypeWindowConfig();
+        if (window == null) window = new WindowsConfigDomain();
+
+        //设置窗口宽高
+        var width = 400;
+        var height = 200;
+        var storeWidth = window.getWindowWidth();
+        if (storeWidth < width) window.setWindowWidth(width);
+        var storeHeight = window.getWindowHeight();
+        if (storeHeight < height) window.setWindowHeight(height);
+        setSize(new Dimension(storeWidth, storeHeight));
+        setMinimumSize(new Dimension(width, height));
+
+        //设置窗口坐标
+        var x = window.getWindowX();
+        var y = window.getWindowY();
+        if (x != -1 && y != -1) setBounds(x, y, storeWidth, storeHeight);
     }
 
     /**
