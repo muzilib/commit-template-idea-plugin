@@ -151,7 +151,12 @@ public class CommUtil {
             for (String type : CommitTypeDomain.TYPES) {
                 var description = resourceBundle.getString("plugin.radio." + type);
                 if (StrUtil.isBlank(description)) description = type;
-                commitTypeList.add(new CommitTypeDomain(type, description));
+
+                var commitType = new CommitTypeDomain();
+                commitType.setType(type);
+                commitType.setEmoji(null);
+                commitType.setDescription(description);
+                commitTypeList.add(commitType);
             }
         }
         return commitTypeList;
