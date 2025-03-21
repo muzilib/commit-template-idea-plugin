@@ -78,38 +78,6 @@ public class CommUtil {
     }
 
     /**
-     * 获取选择器的提交类型实体
-     *
-     * @param commitTypeButtonGroup 提交类型按钮组选中对象
-     * @return 提交类型对象
-     */
-    public static CommitTypeDomain convertCommitTypeDomain(ButtonGroup commitTypeButtonGroup) {
-        //加载自定义的提交类型
-        if (store.isCustomEnable()) {
-
-
-            return null;
-        }
-
-        //系统默认类型
-        var commitTypeList = getDefaultCommitTypeList();
-        var buttonElements = commitTypeButtonGroup.getElements();
-        while (buttonElements.hasMoreElements()) {
-            var button = buttonElements.nextElement();
-            if (!button.isSelected()) continue;
-
-            //选中对象
-            var command = button.getActionCommand();
-            for (CommitTypeDomain commitTypeDomain : commitTypeList) {
-                if (commitTypeDomain.getType().equals(command)) {
-                    return commitTypeDomain;
-                }
-            }
-        }
-        return commitTypeList.get(0);
-    }
-
-    /**
      * 传入一个类对象并深度拷贝返回一个拷贝对象
      *
      * @param obj 传入对象

@@ -62,6 +62,7 @@ public class CommitTemplateDialog extends JDialog {
     private JTextArea inputLongDescription;
     private JTextArea inputBreakingChanges;
     private JTextField inputShortDescription;
+    private JLabel labelCommitTypeNoData;
     private ButtonGroup typeChangeGroup;
 
     private final StoreCommitTemplateState store = StoreCommitTemplateState.getInstance();
@@ -75,6 +76,7 @@ public class CommitTemplateDialog extends JDialog {
         setModal(true);
         setContentPane(contentPane);
         getRootPane().setDefaultButton(buttonOK);
+        labelCommitTypeNoData.setVisible(false);
         this.commitMessageI = commitMessageI;
 
         //设置显示窗口大小
@@ -220,7 +222,7 @@ public class CommitTemplateDialog extends JDialog {
         if (gitCommit.getCommitType() != null) {
             var commitTypeList = CommUtil.getDefaultCommitTypeList();
             var buttonElements = typeChangeGroup.getElements();
-            while (buttonElements.hasMoreElements()) {
+            while (!commitTypeList.isEmpty() && buttonElements.hasMoreElements()) {
                 var button = buttonElements.nextElement();
                 var index = Integer.parseInt(button.getActionCommand());
                 var changeType = commitTypeList.get(index - 1);
@@ -276,17 +278,25 @@ public class CommitTemplateDialog extends JDialog {
         //渲染提交类型按钮组信息
         var commitTypeList = CommUtil.getDefaultCommitTypeList();
         var buttonElements = typeChangeGroup.getElements();
-        buttonElements.nextElement();
-        while (buttonElements.hasMoreElements()) {
-            var button = buttonElements.nextElement();
-            button.setVisible(false);
-            var index = Integer.parseInt(button.getActionCommand());
-            if (index > commitTypeList.size()) continue;
+        if (commitTypeList.isEmpty()) {
+            while (buttonElements.hasMoreElements()) {
+                var button = buttonElements.nextElement();
+                button.setVisible(false);
+            }
+            labelCommitTypeNoData.setVisible(true);
+        } else {
+            buttonElements.nextElement();
+            while (buttonElements.hasMoreElements()) {
+                var button = buttonElements.nextElement();
+                button.setVisible(false);
+                var index = Integer.parseInt(button.getActionCommand());
+                if (index > commitTypeList.size()) continue;
 
-            button.setVisible(true);
-            var commitType = commitTypeList.get(index - 1);
-            button.setActionCommand(commitType.getType());
-            button.setText(commitType.getType() + " - " + commitType.getDescription());
+                button.setVisible(true);
+                var commitType = commitTypeList.get(index - 1);
+                button.setActionCommand(commitType.getType());
+                button.setText(commitType.getType() + " - " + commitType.getDescription());
+            }
         }
 
         //渲染窗口宽度信息
@@ -399,7 +409,7 @@ public class CommitTemplateDialog extends JDialog {
         labelTypeOfChange.setText("Type of change");
         panel3.add(labelTypeOfChange, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final JPanel panel4 = new JPanel();
-        panel4.setLayout(new GridLayoutManager(11, 1, new Insets(0, 0, 0, 0), -1, -1));
+        panel4.setLayout(new GridLayoutManager(12, 1, new Insets(0, 0, 0, 0), -1, -1));
         panel3.add(panel4, new GridConstraints(1, 1, 1, 2, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
         radioButton1 = new JRadioButton();
         radioButton1.setActionCommand("1");
@@ -448,6 +458,10 @@ public class CommitTemplateDialog extends JDialog {
         radioButton11.setActionCommand("11");
         radioButton11.setText("revert - Reverts a previous commit");
         panel4.add(radioButton11, new GridConstraints(10, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        labelCommitTypeNoData = new JLabel();
+        labelCommitTypeNoData.setEnabled(true);
+        labelCommitTypeNoData.setText("无数据，请前往设置界面添加");
+        panel4.add(labelCommitTypeNoData, new GridConstraints(11, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         labelLanguage = new JLabel();
         labelLanguage.setText("Language");
         panel3.add(labelLanguage, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
