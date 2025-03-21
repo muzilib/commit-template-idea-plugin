@@ -2,6 +2,7 @@ package com.c301.plugin.config;
 
 import com.c301.plugin.model.GitmojiDomain;
 import com.c301.plugin.ui.render.GitmojiVcsLogIconCellRenderer;
+import com.c301.plugin.utils.CommUtil;
 import com.intellij.vcs.log.ui.table.GraphTableModel;
 import com.intellij.vcs.log.ui.table.VcsLogGraphTable;
 import com.intellij.vcs.log.ui.table.column.VcsLogCustomColumn;
@@ -39,18 +40,23 @@ public class GitmojiVcsLogCustomColumn implements VcsLogCustomColumn<GitmojiDoma
 
     @Override
     public boolean isEnabledByDefault() {
+        return true;
+    }
+
+    @Override
+    public boolean isResizable() {
         return false;
     }
 
     @Override
     public @Nullable GitmojiDomain getValue(@NotNull GraphTableModel model, int row) {
+        CommUtil.handleInitGitmojiEvent();
         var content = model.getCommitMetadata(row).getFullMessage();
-        /*if (content.contains(":") && content.contains(":")) {
-            var index = content.indexOf(":");
-            var code = content.substring(0, index);
-            var name = content.substring(index + 1, content.length());
-            return new GitmojiDomain(code, name, "", "");
-        }*/
+        for (GitmojiDomain item : GitmojiDomain.GITMOJIS) {
+            if (content.contains(item.getCode()) || content.contains(item.getEmoji())) {
+                return item;
+            }
+        }
         return null;
     }
 

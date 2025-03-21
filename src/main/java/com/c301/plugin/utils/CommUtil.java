@@ -149,16 +149,37 @@ public class CommUtil {
     public static List<CommitTypeDomain> getDefaultCommitTypeList(String languageKey) {
         if (StrUtil.isBlank(languageKey)) languageKey = store.getLanguage().getKey();
 
+        //读取gitmoji信息
+        handleInitGitmojiEvent();
+        var gitemojiMap = new HashMap<String, GitmojiDomain>();
+        for (GitmojiDomain item : GitmojiDomain.GITMOJIS) gitemojiMap.put(item.getCode(), item);
+
         var commitTypeList = new LinkedList<CommitTypeDomain>();
         synchronized (CommitTypeDomain.class) {
             var resourceBundle = i18nResourceBundle(languageKey);
-            for (CommitTypeDomain item : CommitTypeDomain.TYPES) {
-                var description = resourceBundle.getString("plugin.radio." + item.getType());
-                if (StrUtil.isBlank(description)) description = item.getDescription();
+            for (String typeName : CommitTypeDomain.TYPES) {
+                var description = resourceBundle.getString("plugin.radio." + typeName);
+                if (StrUtil.isBlank(description)) description = typeName;
+
+                //添加默认的gitmoji信息
+                var gitmoji = switch (typeName) {
+                    case "feat" -> gitemojiMap.get(":sparkles:");
+                    case "fix" -> gitemojiMap.get(":bug:");
+                    case "docs" -> gitemojiMap.get(":memo:");
+                    case "style" -> gitemojiMap.get(":lipstick:");
+                    case "refactor" -> gitemojiMap.get(":recycle:");
+                    case "perf" -> gitemojiMap.get(":children_crossing:");
+                    case "test" -> gitemojiMap.get(":white_check_mark:");
+                    case "build" -> gitemojiMap.get(":building_construction:");
+                    case "ci" -> gitemojiMap.get(":construction_worker:");
+                    case "chore" -> gitemojiMap.get(":construction:");
+                    case "revert" -> gitemojiMap.get(":rewind:");
+                    default -> new GitmojiDomain("error", "error", "error", "error");
+                };
 
                 var commitType = new CommitTypeDomain();
-                commitType.setType(item.getType());
-                commitType.setEmoji(item.getEmoji());
+                commitType.setType(typeName);
+                commitType.setEmoji(gitmoji);
                 commitType.setDescription(description);
                 commitTypeList.add(commitType);
             }
@@ -186,7 +207,6 @@ public class CommUtil {
      * 初始化Gitmoji事件
      */
     public static void handleInitGitmojiEvent() {
-        //初始化Gitmoji信息
         if (GitmojiDomain.GITMOJIS.isEmpty()) {
             try (var inputStream = GitmojiDomain.class.getResourceAsStream("/icons/gitmojis.json")) {
                 if (inputStream != null) {

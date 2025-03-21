@@ -173,7 +173,8 @@ public class GitCommitDomain {
 
         //提交类型
         if (commitType != null) {
-            builder.append(commitType.getType());
+            builder.append(commitType.getEmoji().getEmoji())
+                    .append(commitType.getType());
         }
 
         //变更范围

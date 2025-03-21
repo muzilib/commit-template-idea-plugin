@@ -1,6 +1,5 @@
 package com.c301.plugin.model;
 
-import com.c301.plugin.utils.CommUtil;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -36,21 +35,19 @@ public class CommitTypeDomain {
     /**
      * 系统默认的11个提交类型
      */
-    public static final List<CommitTypeDomain> TYPES = new LinkedList<>() {
+    public static final List<String> TYPES = new LinkedList<>() {
         {
-            CommUtil.handleInitGitmojiEvent();
-
-            add(new CommitTypeDomain("feat", null));
-            add(new CommitTypeDomain("fix", null));
-            add(new CommitTypeDomain("docs", null));
-            add(new CommitTypeDomain("style", null));
-            add(new CommitTypeDomain("refactor", null));
-            add(new CommitTypeDomain("perf", null));
-            add(new CommitTypeDomain("test", null));
-            add(new CommitTypeDomain("build", null));
-            add(new CommitTypeDomain("ci", null));
-            add(new CommitTypeDomain("chore", null));
-            add(new CommitTypeDomain("revert", null));
+            add("feat");
+            add("fix");
+            add("docs");
+            add("style");
+            add("refactor");
+            add("perf");
+            add("test");
+            add("build");
+            add("ci");
+            add("chore");
+            add("revert");
         }
     };
 
@@ -75,7 +72,7 @@ public class CommitTypeDomain {
      */
     public String toString(boolean emojiEnable) {
         if (emojiEnable && emoji != null) {
-            return emoji.getCode() + " " + type + " - " + description;
+            return emoji.getEmoji() + " " + type + " - " + description;
         }
 
         return type + " - " + description;
