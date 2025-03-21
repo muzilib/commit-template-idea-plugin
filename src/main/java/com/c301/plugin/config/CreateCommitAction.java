@@ -1,7 +1,7 @@
-package com.c301.plugin.action;
+package com.c301.plugin.config;
 
-import com.c301.plugin.dialog.CommitTemplateDialog;
-import com.c301.plugin.model.CommitMessage;
+import com.c301.plugin.model.GitCommitDomain;
+import com.c301.plugin.ui.CommitTemplateDialog;
 import com.c301.plugin.utils.CommUtil;
 import com.intellij.ide.DataManager;
 import com.intellij.openapi.actionSystem.ActionManager;
@@ -51,14 +51,18 @@ public class CreateCommitAction extends AnAction implements DumbAware {
         }
 
         //正常打开窗口
-        var commitMessage = new CommitMessage();
+        var gitCommit = new GitCommitDomain();
         var commitMessageI = getCommitMessagePanel(actionEvent);
         if (commitMessageI instanceof CheckinProjectPanel) {
             var content = ((CheckinProjectPanel) commitMessageI).getCommitMessage();
-            commitMessage = CommitMessage.parseRawMessage(content);
+            gitCommit = GitCommitDomain.parseRawMessage(content);
         }
+
+        //java传递回调方法
         var dialog = new CommitTemplateDialog(commitMessageI);
-        dialog.init(actionEvent.getProject(), commitMessage);
+        dialog.handleUIInit();
+        dialog.resetUIFrom(gitCommit);
+        dialog.setVisible(true);
     }
 
     /**

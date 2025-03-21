@@ -1,58 +1,233 @@
 package com.c301.plugin.model;
 
-import java.util.ArrayList;
+import com.c301.plugin.constant.Constant;
+import com.c301.plugin.utils.CommUtil;
+import com.c301.plugin.utils.StrUtil;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.util.LinkedList;
 import java.util.List;
+import java.util.regex.Pattern;
+
+import static com.c301.plugin.constant.Constant.*;
 
 /**
- * Git提交记录对象
+ * Git提交日志对象
  *
  * @Title GitCommitDomain
  * @ClassName com.c301.plugin.model.GitCommitDomain
  * @Author Chenbing
- * @Date 25 /02/19 17:43
+ * @Date 25 /03/11 17:36
  * @Version 1.0
  */
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class GitCommitDomain {
 
     /**
-     * The constant ERROR.
+     * 提交类型
      */
-    public static GitCommitDomain ERROR = new GitCommitDomain();
+    private CommitTypeDomain commitType = null;
+    /**
+     * 变更范围或模块
+     */
+    private String changeScope;
+    /**
+     * 简短说明
+     */
+    private String shortDescription;
+    /**
+     * 详细说明
+     */
+    private String longDescription;
+    /**
+     * 重大变化
+     */
+    private String breakingChanges;
+    /**
+     * 关闭问题，例如#1234
+     */
+    private List<Integer> closedIssues = new LinkedList<>();
+    /**
+     * 文字过长是否换行
+     */
+    private boolean wrapText = false;
+    /**
+     * 跳过CI
+     */
+    private boolean skipCI = false;
 
-    private int exitValue = -1;
-    private List<String> logs = new ArrayList<>();
+    /**
+     * 获取关闭问题Git提交字符串格式
+     *
+     * @return 返回 Closes #1234
+     */
+    public String getClosedIssuesText() {
+        var builder = new StringBuilder();
+        for (Integer issue : closedIssues) {
+            builder.append(Constant.STR_CLOSES).append(" #").append(issue).append(System.lineSeparator());
+        }
 
-    private GitCommitDomain() {
+        if (!builder.isEmpty()) builder.deleteCharAt(builder.length() - 1);
+        return builder.toString();
     }
 
     /**
-     * Instantiates a new Git action domain.
+     * 获取关闭问题数值列表字符串
      *
-     * @param exitValue the exit value
-     * @param logs      the logs
+     * @return 返回14, 134, 34
      */
-    public GitCommitDomain(int exitValue, List<String> logs) {
-        this.exitValue = exitValue;
-        this.logs = logs;
-    }
+    public String getClosedIssuesNumbers() {
+        var builder = new StringBuilder();
+        for (Integer issue : closedIssues) {
+            builder.append(issue).append(", ");
+        }
 
-
-    /**
-     * Is success boolean.
-     *
-     * @return the boolean
-     */
-    public boolean isSuccess() {
-        return exitValue == 0;
+        if (!builder.isEmpty()) builder.deleteCharAt(builder.length() - 2);
+        return builder.toString().trim();
     }
 
     /**
-     * Gets logs.
+     * 解析原始提交信息
      *
-     * @return the logs
+     * @param rawMessage 原始提交信息
+     * @return GitCommitDomain对象
      */
-    public List<String> getLogs() {
-        return logs;
+    public static GitCommitDomain parseRawMessage(String rawMessage) {
+        var gitCommit = new GitCommitDomain();
+        if (StrUtil.isNotBlank(rawMessage)) {
+            try {
+                // 在正则前统一处理换行符
+                rawMessage = rawMessage.replaceAll("\\r\\n?", "\n");
+                var pattern = Pattern.compile("^([a-zA-Z0-9\\u4e00-\\u9fa5-]+)?(?:\\(([^()]+)\\))?:\\s+([^\\n]+)", Pattern.UNICODE_CHARACTER_CLASS);
+                var matcher = pattern.matcher(rawMessage);
+                if (!matcher.find()) return gitCommit;
+
+                //解析第一行内容
+                gitCommit.setCommitType(CommUtil.parseCommitType(matcher.group(1)));
+                gitCommit.setChangeScope(matcher.group(2));
+                gitCommit.setShortDescription(matcher.group(3));
+
+                //解析剩余信息
+                var strings = rawMessage.split(CHAR_LINE);
+                if (strings.length < 2) return gitCommit;
+
+                //设置长描述
+                var index = 2;
+                var builder = new StringBuilder();
+                for (; index < strings.length; index++) {
+                    var line = strings[index];
+                    if (line.startsWith("BREAKING") || line.startsWith("Closes") || line.equalsIgnoreCase("[skip ci]")) {
+                        break;
+                    }
+                    builder.append(line);
+                    if (StrUtil.isNotBlank(line)) builder.append('\n');
+                }
+                if (!builder.isEmpty()) builder.deleteCharAt(builder.length() - 1);
+                gitCommit.setLongDescription(builder.toString());
+
+                //设置重大变化
+                builder = new StringBuilder();
+                for (; index < strings.length; index++) {
+                    var line = strings[index];
+                    if (line.startsWith("Closes") || line.equalsIgnoreCase("[skip ci]")) {
+                        break;
+                    }
+                    if (line.startsWith("BREAKING CHANGE: ")) line = line.replace("BREAKING CHANGE: ", "");
+                    builder.append(line);
+                    if (StrUtil.isNotBlank(line)) builder.append('\n');
+                }
+                if (!builder.isEmpty()) builder.deleteCharAt(builder.length() - 1);
+                gitCommit.setBreakingChanges(builder.toString());
+
+                //获取关闭问题列表
+                var closeIssuesList = new LinkedList<Integer>();
+                matcher = COMMIT_CLOSES_FORMAT.matcher(rawMessage);
+                while (matcher.find()) {
+                    var issue = matcher.group(1);
+                    issue = issue.trim().replaceAll("#", "");
+
+                    if (!StrUtil.isNumeric(issue)) continue;
+                    closeIssuesList.add(Integer.parseInt(issue));
+                }
+                gitCommit.setClosedIssues(closeIssuesList);
+
+                gitCommit.setSkipCI(rawMessage.contains(SKIP_CI));
+                gitCommit.setWrapText(false);
+            } catch (Exception ignored) {
+            }
+        }
+        return gitCommit;
+    }
+
+    /**
+     * 生成提交信息
+     *
+     * @return 提交信息
+     */
+    public String toStringMessage() {
+        var builder = new StringBuilder();
+
+        //提交类型
+        if (commitType != null) {
+            builder.append(commitType.getType());
+        }
+
+        //变更范围
+        if (StrUtil.isNotBlank(changeScope)) {
+            var value = changeScope.trim();
+            builder.append("(").append(value).append("): ");
+        }
+
+        //短说明
+        if (StrUtil.isNotBlank(shortDescription)) {
+            builder.append(shortDescription.trim());
+        }
+
+        //长说明
+        if (StrUtil.isNotBlank(longDescription)) {
+            var value = longDescription.trim();
+            if (wrapText) value = StrUtil.wrap(value, MAX_LINE_LENGTH);
+
+            builder.append(System.lineSeparator())
+                    .append(System.lineSeparator())
+                    .append(value);
+        }
+
+        //重大变化
+        if (StrUtil.isNotBlank(breakingChanges)) {
+            var value = "BREAKING CHANGE: " + breakingChanges.trim();
+            if (wrapText) value = StrUtil.wrap(value, MAX_LINE_LENGTH);
+
+            builder.append(System.lineSeparator())
+                    .append(System.lineSeparator())
+                    .append(value);
+        }
+
+        //关闭问题
+        if (!closedIssues.isEmpty()) {
+            builder.append(System.lineSeparator());
+
+            for (Integer closedIssue : closedIssues) {
+                var value = "#" + closedIssue.toString();
+
+                builder.append(System.lineSeparator())
+                        .append(STR_CLOSES)
+                        .append(" ")
+                        .append(value);
+            }
+        }
+
+        //跳过CI
+        if (skipCI) {
+            builder.append(System.lineSeparator())
+                    .append(System.lineSeparator())
+                    .append("[skip ci]");
+        }
+        return builder.toString();
     }
 
 }
