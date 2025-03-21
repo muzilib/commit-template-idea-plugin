@@ -3,14 +3,18 @@ package com.c301.plugin.utils;
 import com.c301.plugin.config.StoreCommitTemplateState;
 import com.c301.plugin.constant.Constant;
 import com.c301.plugin.model.CommitTypeDomain;
+import com.c301.plugin.model.GitmojiDomain;
 import com.c301.plugin.model.LanguageDomain;
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.intellij.openapi.project.Project;
 
 import javax.swing.*;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -148,13 +152,13 @@ public class CommUtil {
         var commitTypeList = new LinkedList<CommitTypeDomain>();
         synchronized (CommitTypeDomain.class) {
             var resourceBundle = i18nResourceBundle(languageKey);
-            for (String type : CommitTypeDomain.TYPES) {
-                var description = resourceBundle.getString("plugin.radio." + type);
-                if (StrUtil.isBlank(description)) description = type;
+            for (CommitTypeDomain item : CommitTypeDomain.TYPES) {
+                var description = resourceBundle.getString("plugin.radio." + item.getType());
+                if (StrUtil.isBlank(description)) description = item.getDescription();
 
                 var commitType = new CommitTypeDomain();
-                commitType.setType(type);
-                commitType.setEmoji(null);
+                commitType.setType(item.getType());
+                commitType.setEmoji(item.getEmoji());
                 commitType.setDescription(description);
                 commitTypeList.add(commitType);
             }
@@ -176,6 +180,26 @@ public class CommUtil {
             }
         }
         return null;
+    }
+
+    /**
+     * 初始化Gitmoji事件
+     */
+    public static void handleInitGitmojiEvent() {
+        //初始化Gitmoji信息
+        if (GitmojiDomain.GITMOJIS.isEmpty()) {
+            try (var inputStream = GitmojiDomain.class.getResourceAsStream("/icons/gitmojis.json")) {
+                if (inputStream != null) {
+                    var json = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+
+                    var listType = new TypeToken<LinkedList<GitmojiDomain>>() {
+                    }.getType();
+                    List<GitmojiDomain> list = new Gson().fromJson(json, listType);
+                    GitmojiDomain.GITMOJIS.addAll(list);
+                }
+            } catch (IOException ignored) {
+            }
+        }
     }
 
 }

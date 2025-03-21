@@ -29,6 +29,8 @@ public class CreateCommitAction extends AnAction implements DumbAware {
 
     @Override
     public void actionPerformed(@NotNull AnActionEvent actionEvent) {
+        CommUtil.handleInitGitmojiEvent();
+
         // 设置按钮文本和描述
         var resourceBundle = CommUtil.i18nResourceBundle(null);
         var templatePresentation = getTemplatePresentation();

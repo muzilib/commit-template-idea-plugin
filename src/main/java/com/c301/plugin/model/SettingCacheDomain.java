@@ -29,6 +29,10 @@ public class SettingCacheDomain {
      */
     private boolean customEnable = false;
     /**
+     * 自定义emoji启用状态
+     */
+    private boolean emojiEnable = false;
+    /**
      * 用户自定义 提交类型列表
      */
     private LinkedList<CommitTypeDomain> customCommitTypeList = new LinkedList<>();

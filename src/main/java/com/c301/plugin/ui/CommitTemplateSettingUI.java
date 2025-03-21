@@ -88,8 +88,19 @@ public class CommitTemplateSettingUI {
 
             //自定义提交模板描述信息
             var resourceBundle = CommUtil.i18nResourceBundle(null);
-            var active = checkBoxCommitType.isSelected() ? "active" : "deActive";
+            var active = enable ? "active" : "deActive";
             checkBoxCommitType.setText(resourceBundle.getString("plugin.setting.label.customTemplateTips." + active));
+        });
+
+        //自定义提交模板开启状态
+        checkBoxGitmoji.addItemListener(e -> {
+            var enable = (e.getStateChange() == ItemEvent.SELECTED);
+            cache.setEmojiEnable(enable);
+
+            //自定义提交模板描述信息
+            var resourceBundle = CommUtil.i18nResourceBundle(null);
+            var active = enable ? "active" : "deActive";
+            checkBoxGitmoji.setText(resourceBundle.getString("plugin.setting.label.customTemplateTips." + active));
         });
 
         //添加双击行元素事件
@@ -115,6 +126,7 @@ public class CommitTemplateSettingUI {
     public void handleResetEvent(SettingCacheDomain cache) {
         optionLanguage.setSelectedItem(cache.getLanguage());
         checkBoxCommitType.setSelected(cache.isCustomEnable());
+        checkBoxGitmoji.setSelected(cache.isEmojiEnable());
         this.cache.setCustomCommitTypeList(cache.getCustomCommitTypeList());
 
         handleDisplayLanguageEvent(cache.getLanguage());

@@ -75,6 +75,8 @@
                                  id="plugins.muzilib.commit.template"
                                  displayName="Commit Template Idea Plugin"
                                  instance="com.c301.plugin.config.GitCommitSettingConfigurable"/>
+
+        <vcsLogCustomColumn implementation="com.github.patou.gitmoji.GitmojiCustomColumn" />
     </extensions>
 
     <actions resource-bundle="i18n.data">

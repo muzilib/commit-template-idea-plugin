@@ -316,7 +316,7 @@ public class CommitTemplateDialog extends JDialog {
                 button.setVisible(true);
                 var commitType = commitTypeList.get(index - 1);
                 button.setActionCommand(commitType.getType());
-                button.setText(commitType.getType() + " - " + commitType.getDescription());
+                button.setText(commitType.toString(store.isEmojiEnable()));
             }
         }
 

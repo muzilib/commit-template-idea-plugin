@@ -77,9 +77,9 @@ public class EditCommitTypeDialog extends JDialog {
                 .map(item -> item.getType().toLowerCase())
                 .filter(StrUtil::isNotBlank)
                 .collect(Collectors.toSet());
-        for (String typeName : CommitTypeDomain.TYPES) {
-            if (typeNameArrays.contains(typeName)) continue;
-            inputType.addItem(typeName);
+        for (CommitTypeDomain item : CommitTypeDomain.TYPES) {
+            if (typeNameArrays.contains(item.getType())) continue;
+            inputType.addItem(item.getType());
         }
 
         //设置类型列表选中事件
@@ -90,8 +90,12 @@ public class EditCommitTypeDialog extends JDialog {
             labelErrorTypeName.setVisible(false);
 
             //获取选中类型
-            var typeName = item.toString();
-            if (CommitTypeDomain.TYPES.contains(typeName)) {
+            var typeName = item.toString().trim();
+            var hasCommitType = CommitTypeDomain.TYPES.stream()
+                    .filter(item2 -> item2.getType().equals(typeName))
+                    .findFirst()
+                    .orElse(null);
+            if (hasCommitType != null) {
                 var resourceBundle = CommUtil.i18nResourceBundle(cache.getLanguage().getKey());
                 inputDescribe.setText(resourceBundle.getString("plugin.radio." + typeName));
                 labelErrorTypeName.setVisible(false);
