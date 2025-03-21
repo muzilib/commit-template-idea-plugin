@@ -47,6 +47,10 @@ public class CommitTypeDomain {
     /**
      * 提交类型说明
      */
+    private String emoji;
+    /**
+     * 提交类型说明
+     */
     private String description;
 
 }
