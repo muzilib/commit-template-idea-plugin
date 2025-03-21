@@ -36,6 +36,8 @@ public class EditCommitTypeDialog extends JDialog {
     private JTextArea inputDescribe;
     private JLabel labelName;
     private JLabel labelDescribe;
+    private JLabel labelErrorTypeName;
+    private JLabel labelErrorTypeDescribe;
 
     private int index = -1;
     private final JBCommitTypeTable table;
@@ -49,8 +51,8 @@ public class EditCommitTypeDialog extends JDialog {
 
         setContentPane(contentPane);
         getRootPane().setDefaultButton(buttonOK);
-        setPreferredSize(new Dimension(400, 220));
-        setMinimumSize(new Dimension(400, 220));
+        setPreferredSize(new Dimension(460, 270));
+        setMinimumSize(new Dimension(460, 270));
         pack();
         setModal(true);
 
@@ -79,20 +81,62 @@ public class EditCommitTypeDialog extends JDialog {
             if (typeNameArrays.contains(typeName)) continue;
             inputType.addItem(typeName);
         }
-        inputType.addActionListener(e -> {
-            inputDescribe.setText("");
 
+        //设置类型列表选中事件
+        inputType.addActionListener(e -> {
             //设置选中类型描述
             var item = inputType.getSelectedItem();
             if (item == null) return;
+            labelErrorTypeName.setVisible(false);
 
             //获取选中类型
             var typeName = item.toString();
             if (CommitTypeDomain.TYPES.contains(typeName)) {
                 var resourceBundle = CommUtil.i18nResourceBundle(cache.getLanguage().getKey());
                 inputDescribe.setText(resourceBundle.getString("plugin.radio." + typeName));
+                labelErrorTypeName.setVisible(false);
             }
         });
+
+        //JComboBox输入模式绑定失去焦点事件
+        inputType.getEditor().getEditorComponent().addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusLost(FocusEvent e) {
+                super.focusLost(e);
+                labelErrorTypeName.setVisible(false);
+
+                var item = inputType.getSelectedItem();
+                if (item == null || StrUtil.isBlank(item.toString())) {
+                    labelErrorTypeName.setText("*类型名称 不能为空，请重新输入");
+                    labelErrorTypeName.setVisible(true);
+                }
+            }
+        });
+
+        //inputDescribe 绑定失去焦点事件和输入事件
+        inputDescribe.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyReleased(KeyEvent e) {
+                super.keyReleased(e);
+                labelErrorTypeDescribe.setVisible(false);
+            }
+        });
+        inputDescribe.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusLost(FocusEvent e) {
+                super.focusLost(e);
+                labelErrorTypeDescribe.setVisible(false);
+
+                if (StrUtil.isBlank(inputDescribe.getText())) {
+                    labelErrorTypeDescribe.setText("*类型描述 不能为空，请重新输入");
+                    labelErrorTypeDescribe.setVisible(true);
+                }
+            }
+        });
+
+        //关闭异常显示
+        labelErrorTypeName.setVisible(false);
+        labelErrorTypeDescribe.setVisible(false);
 
         //切换语言事件
         handleDisplayLanguageEvent(cache.getLanguage());
@@ -104,41 +148,59 @@ public class EditCommitTypeDialog extends JDialog {
     private void onOK() {
         var typeOption = inputType.getSelectedItem();
         if (typeOption == null || StrUtil.isBlank(typeOption.toString())) {
-            JOptionPane.showMessageDialog(this, "请输入/选择类型名称", "错误", JOptionPane.ERROR_MESSAGE);
+            labelErrorTypeName.setText("*类型名称 不能为空，请重新输入");
+            labelErrorTypeName.setVisible(true);
             return;
         }
         if (StrUtil.isBlank(inputDescribe.getText())) {
-            JOptionPane.showMessageDialog(this, "请输入类型描述", "错误", JOptionPane.ERROR_MESSAGE);
+            labelErrorTypeDescribe.setText("*类型描述 不能为空，请重新输入");
+            labelErrorTypeDescribe.setVisible(true);
             return;
         }
 
-        //新增事件
+        var typeName = typeOption.toString().trim();
+        var typeDescribe = inputDescribe.getText().trim();
         var customList = cache.getCustomCommitTypeList();
-        if (commitType == null) {
+
+        //新增事件
+        if (this.commitType == null) {
+            //检查类型名称是否重复
+            var commitType = customList.stream()
+                    .filter(item -> item.getType().equals(typeName))
+                    .findFirst()
+                    .orElse(null);
+            if (commitType != null) {
+                labelErrorTypeName.setText("*类型名称 已存在，请重新输入");
+                labelErrorTypeName.setVisible(true);
+                return;
+            }
+
+            //添加新的类型
             var domain = new CommitTypeDomain();
-            domain.setType(typeOption.toString());
-            domain.setDescription(inputDescribe.getText());
+            domain.setType(typeName);
+            domain.setDescription(typeDescribe);
             customList.add(domain);
             table.handleRefreshEvent();
             onCancel();
             return;
         }
 
-        //修改事件
-        if (index == -1) return;
-
         //找到修改的行索引，判断typeName是否重复
+        if (index == -1) return;
         for (int i = 0; i < customList.size(); i++) {
             var item = customList.get(i);
-            if (item.getType().equals(typeOption.toString())) {
+            if (item.getType().equals(typeName)) {
                 if (i == index) continue;
-                JOptionPane.showMessageDialog(this, "类型名称已存在，请重新输入", "错误", JOptionPane.ERROR_MESSAGE);
+
+                labelErrorTypeName.setText("*类型名称 已存在，请重新输入");
+                labelErrorTypeName.setVisible(true);
                 return;
             }
         }
+
         var domain = customList.get(index);
-        domain.setType(typeOption.toString());
-        domain.setDescription(inputDescribe.getText());
+        domain.setType(typeName);
+        domain.setDescription(typeDescribe);
         table.handleRefreshEvent();
         onCancel();
     }
@@ -266,31 +328,39 @@ public class EditCommitTypeDialog extends JDialog {
         buttonCancel.setText("Cancel");
         panel2.add(buttonCancel, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final JPanel panel3 = new JPanel();
-        panel3.setLayout(new GridLayoutManager(3, 2, new Insets(0, 0, 0, 0), -1, -1));
+        panel3.setLayout(new GridLayoutManager(6, 1, new Insets(0, 0, 0, 0), -1, -1));
         contentPane.add(panel3, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
+        inputType = new JComboBox();
+        inputType.setEditable(true);
+        Font inputTypeFont = UIManager.getFont("Label.font");
+        if (inputTypeFont != null) inputType.setFont(inputTypeFont);
+        panel3.add(inputType, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JScrollPane scrollPane1 = new JScrollPane();
+        panel3.add(scrollPane1, new GridConstraints(4, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        inputDescribe = new JTextArea();
+        Font inputDescribeFont = UIManager.getFont("Label.font");
+        if (inputDescribeFont != null) inputDescribe.setFont(inputDescribeFont);
+        scrollPane1.setViewportView(inputDescribe);
         labelName = new JLabel();
         Font labelNameFont = UIManager.getFont("Label.font");
         if (labelNameFont != null) labelName.setFont(labelNameFont);
         labelName.setText("类型名称");
         panel3.add(labelName, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        inputType = new JComboBox();
-        inputType.setEditable(true);
-        Font inputTypeFont = UIManager.getFont("Label.font");
-        if (inputTypeFont != null) inputType.setFont(inputTypeFont);
-        panel3.add(inputType, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         labelDescribe = new JLabel();
         Font labelDescribeFont = UIManager.getFont("Label.font");
         if (labelDescribeFont != null) labelDescribe.setFont(labelDescribeFont);
         labelDescribe.setText("类型描述");
-        panel3.add(labelDescribe, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        final JScrollPane scrollPane1 = new JScrollPane();
-        panel3.add(scrollPane1, new GridConstraints(1, 1, 2, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
-        inputDescribe = new JTextArea();
-        Font inputDescribeFont = UIManager.getFont("Label.font");
-        if (inputDescribeFont != null) inputDescribe.setFont(inputDescribeFont);
-        scrollPane1.setViewportView(inputDescribe);
-        final Spacer spacer2 = new Spacer();
-        panel3.add(spacer2, new GridConstraints(2, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        panel3.add(labelDescribe, new GridConstraints(3, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        labelErrorTypeName = new JLabel();
+        labelErrorTypeName.setBackground(new Color(-65536));
+        labelErrorTypeName.setForeground(new Color(-1376256));
+        labelErrorTypeName.setText("*类型名称 不能为空/重复");
+        panel3.add(labelErrorTypeName, new GridConstraints(2, 0, 1, 1, GridConstraints.ANCHOR_EAST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        labelErrorTypeDescribe = new JLabel();
+        labelErrorTypeDescribe.setBackground(new Color(-65536));
+        labelErrorTypeDescribe.setForeground(new Color(-65536));
+        labelErrorTypeDescribe.setText("*类型描述 不能为空/重复");
+        panel3.add(labelErrorTypeDescribe, new GridConstraints(5, 0, 1, 1, GridConstraints.ANCHOR_EAST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
     }
 
     /**
