@@ -280,6 +280,10 @@ public class CommitTemplateDialog extends JDialog {
         checkBoxWrapText.setText(resourceBundle.getString("plugin.checkbox.wrapAt72Characters"));
         checkBoxSkipCI.setText(resourceBundle.getString("plugin.checkbox.skipCI"));
 
+        //提示信息
+        labelCommitTypeNoData.setText(resourceBundle.getString("plugin.setting.label.tipsNoData"));
+        labelCommitTypeSetting.setText(resourceBundle.getString("plugin.setting.label.tipsGoSetting"));
+
         //渲染提交类型按钮组信息
         var commitTypeList = CommUtil.getDefaultCommitTypeList();
         var buttonElements = typeChangeGroup.getElements();

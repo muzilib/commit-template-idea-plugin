@@ -53,19 +53,6 @@ public class CommUtil {
     }
 
     /**
-     * 获取语言实体
-     *
-     * @param languageKey the language key
-     * @return language domain
-     */
-    public static LanguageDomain convertLanguageDomain(String languageKey) {
-        return Constant.LANGUAGES.stream()
-                .filter(item -> item.getKey().equals(languageKey))
-                .findFirst()
-                .orElse(LanguageDomain.EN_US);
-    }
-
-    /**
      * 获取选择器的语言实体
      *
      * @param optionLanguage the option language

@@ -99,6 +99,7 @@ public class EditCommitTypeDialog extends JDialog {
         });
 
         //JComboBox输入模式绑定失去焦点事件
+        var resourceBundle = CommUtil.i18nResourceBundle(null);
         inputType.getEditor().getEditorComponent().addFocusListener(new FocusAdapter() {
             @Override
             public void focusLost(FocusEvent e) {
@@ -107,7 +108,7 @@ public class EditCommitTypeDialog extends JDialog {
 
                 var item = inputType.getSelectedItem();
                 if (item == null || StrUtil.isBlank(item.toString())) {
-                    labelErrorTypeName.setText("*类型名称 不能为空，请重新输入");
+                    labelErrorTypeName.setText(resourceBundle.getString("plugin.setting.dialog.error.typeName.notBlank"));
                     labelErrorTypeName.setVisible(true);
                 }
             }
@@ -128,8 +129,8 @@ public class EditCommitTypeDialog extends JDialog {
                 labelErrorTypeDescribe.setVisible(false);
 
                 if (StrUtil.isBlank(inputDescribe.getText())) {
-                    labelErrorTypeDescribe.setText("*类型描述 不能为空，请重新输入");
-                    labelErrorTypeDescribe.setVisible(true);
+                    labelErrorTypeDescribe.setText(resourceBundle.getString("plugin.setting.dialog.error.typeDescribe.notBlank"));
+                    labelErrorTypeDescribe.setVisible(false);
                 }
             }
         });
@@ -146,14 +147,16 @@ public class EditCommitTypeDialog extends JDialog {
      * 点击确定按钮
      */
     private void onOK() {
+        var resourceBundle = CommUtil.i18nResourceBundle(null);
+
         var typeOption = inputType.getSelectedItem();
         if (typeOption == null || StrUtil.isBlank(typeOption.toString())) {
-            labelErrorTypeName.setText("*类型名称 不能为空，请重新输入");
+            labelErrorTypeName.setText(resourceBundle.getString("plugin.setting.dialog.error.typeName.notBlank"));
             labelErrorTypeName.setVisible(true);
             return;
         }
         if (StrUtil.isBlank(inputDescribe.getText())) {
-            labelErrorTypeDescribe.setText("*类型描述 不能为空，请重新输入");
+            labelErrorTypeDescribe.setText(resourceBundle.getString("plugin.setting.dialog.error.typeDescribe.notBlank"));
             labelErrorTypeDescribe.setVisible(true);
             return;
         }
@@ -170,7 +173,7 @@ public class EditCommitTypeDialog extends JDialog {
                     .findFirst()
                     .orElse(null);
             if (commitType != null) {
-                labelErrorTypeName.setText("*类型名称 已存在，请重新输入");
+                labelErrorTypeName.setText(resourceBundle.getString("plugin.setting.dialog.error.typeName.repeat"));
                 labelErrorTypeName.setVisible(true);
                 return;
             }
@@ -192,7 +195,7 @@ public class EditCommitTypeDialog extends JDialog {
             if (item.getType().equals(typeName)) {
                 if (i == index) continue;
 
-                labelErrorTypeName.setText("*类型名称 已存在，请重新输入");
+                labelErrorTypeName.setText(resourceBundle.getString("plugin.setting.dialog.error.typeName.repeat"));
                 labelErrorTypeName.setVisible(true);
                 return;
             }
