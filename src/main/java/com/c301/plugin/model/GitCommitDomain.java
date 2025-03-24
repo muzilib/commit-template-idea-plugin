@@ -100,10 +100,15 @@ public class GitCommitDomain {
         var gitCommit = new GitCommitDomain();
         if (StrUtil.isNotBlank(rawMessage)) {
             try {
+                // 去除第一个emoji
+                var pattern = Pattern.compile("[\\x{1F300}-\\x{1F5FF}\\x{1F600}-\\x{1F64F}\\x{1F680}-\\x{1F6FF}\\x{2600}-\\x{26FF}\\x{2700}-\\x{27BF}\\x{FE00}-\\x{FE0F}]", Pattern.UNICODE_CHARACTER_CLASS);
+                var matcher = pattern.matcher(rawMessage);
+                if (matcher.find()) rawMessage = matcher.replaceFirst("");
+
                 // 在正则前统一处理换行符
                 rawMessage = rawMessage.replaceAll("\\r\\n?", "\n");
-                var pattern = Pattern.compile("^([a-zA-Z0-9\\u4e00-\\u9fa5-]+)?(?:\\(([^()]+)\\))?:\\s+([^\\n]+)", Pattern.UNICODE_CHARACTER_CLASS);
-                var matcher = pattern.matcher(rawMessage);
+                pattern = Pattern.compile("^([a-zA-Z0-9\\u4e00-\\u9fa5-]+)?(?:\\(([^()]+)\\))?:\\s+([^\\n]+)", Pattern.UNICODE_CHARACTER_CLASS);
+                matcher = pattern.matcher(rawMessage);
                 if (!matcher.find()) return gitCommit;
 
                 //解析第一行内容

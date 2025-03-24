@@ -92,7 +92,7 @@ public class CommitTemplateSettingUI {
             checkBoxCommitType.setText(resourceBundle.getString("plugin.setting.label.customTemplateTips." + active));
         });
 
-        //自定义提交模板开启状态
+        //启用Gitmoji符号
         checkBoxGitmoji.addItemListener(e -> {
             var enable = (e.getStateChange() == ItemEvent.SELECTED);
             cache.setEmojiEnable(enable);
@@ -101,6 +101,7 @@ public class CommitTemplateSettingUI {
             var resourceBundle = CommUtil.i18nResourceBundle(null);
             var active = enable ? "active" : "deActive";
             checkBoxGitmoji.setText(resourceBundle.getString("plugin.setting.label.customTemplateTips." + active));
+            commitTypeTable.handleRefreshEvent();
         });
 
         //添加双击行元素事件

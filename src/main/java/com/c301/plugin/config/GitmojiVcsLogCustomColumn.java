@@ -13,7 +13,8 @@ import org.jetbrains.annotations.Nullable;
 import javax.swing.table.TableCellRenderer;
 
 /**
- * 自定义 gitmoji 渲染列
+ * 自定义 GitLog日志中 gitmoji 渲染列<br/>
+ * 参考项目：<a href="https://github.com/patou/gitmoji-intellij-plugin">gitmoji-intellij-plugin</a>
  *
  * @Title GitmojiVcsLogCustomColumn
  * @ClassName com.c301.plugin.config.GitmojiVcsLogCustomColumn
@@ -22,6 +23,8 @@ import javax.swing.table.TableCellRenderer;
  * @Version 1.0
  **/
 public class GitmojiVcsLogCustomColumn implements VcsLogCustomColumn<GitmojiDomain> {
+
+    private final GitmojiDomain DEFAULT_GITMOJI = new GitmojiDomain("anguished", "anguished", "😧", "anguished");
 
     @Override
     public @NotNull String getId() {
@@ -40,7 +43,9 @@ public class GitmojiVcsLogCustomColumn implements VcsLogCustomColumn<GitmojiDoma
 
     @Override
     public boolean isEnabledByDefault() {
-        return true;
+        //判断是否开启了gitmoji
+        var store = StoreCommitTemplateState.getInstance();
+        return store.isEmojiEnable();
     }
 
     @Override
@@ -67,7 +72,7 @@ public class GitmojiVcsLogCustomColumn implements VcsLogCustomColumn<GitmojiDoma
 
     @Override
     public GitmojiDomain getStubValue(@NotNull GraphTableModel graphTableModel) {
-        return new GitmojiDomain("anguished", "anguished", "😧", "anguished");
+        return DEFAULT_GITMOJI;
     }
 
 }

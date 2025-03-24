@@ -201,6 +201,7 @@
                 </constraints>
                 <properties>
                   <actionCommand value="1"/>
+                  <font swing-font="Label.font"/>
                   <margin top="2" left="2" bottom="2" right="2"/>
                   <selected value="true"/>
                   <text value="feat - A new feature"/>
@@ -213,6 +214,7 @@
                 </constraints>
                 <properties>
                   <actionCommand value="2"/>
+                  <font swing-font="Label.font"/>
                   <margin top="2" left="2" bottom="2" right="2"/>
                   <selected value="false"/>
                   <text value="fix - A bug fix"/>
@@ -225,6 +227,7 @@
                 </constraints>
                 <properties>
                   <actionCommand value="3"/>
+                  <font swing-font="Label.font"/>
                   <margin top="2" left="2" bottom="2" right="2"/>
                   <text value="docs - Documentation only changes"/>
                   <visible value="true"/>
@@ -236,6 +239,7 @@
                 </constraints>
                 <properties>
                   <actionCommand value="4"/>
+                  <font swing-font="Label.font"/>
                   <margin top="2" left="2" bottom="2" right="2"/>
                   <text value="style - Changes that do not affect the meaning of the code (white-space, formatting, missing semi-colons, etc)"/>
                   <visible value="true"/>
@@ -247,6 +251,7 @@
                 </constraints>
                 <properties>
                   <actionCommand value="5"/>
+                  <font swing-font="Label.font"/>
                   <margin top="2" left="2" bottom="2" right="2"/>
                   <text value="refactor - A code change that neither fixes a bug nor adds a feature"/>
                   <visible value="true"/>
@@ -258,6 +263,7 @@
                 </constraints>
                 <properties>
                   <actionCommand value="6"/>
+                  <font swing-font="Label.font"/>
                   <margin top="2" left="2" bottom="2" right="2"/>
                   <selected value="false"/>
                   <text value="perf - A code change that improves performance"/>
@@ -270,6 +276,7 @@
                 </constraints>
                 <properties>
                   <actionCommand value="7"/>
+                  <font swing-font="Label.font"/>
                   <margin top="2" left="2" bottom="2" right="2"/>
                   <text value="test - Adding missing tests or correcting existing tests"/>
                   <visible value="true"/>
@@ -281,6 +288,7 @@
                 </constraints>
                 <properties>
                   <actionCommand value="8"/>
+                  <font swing-font="Label.font"/>
                   <margin top="2" left="2" bottom="2" right="2"/>
                   <text value="build - Changes that affect the build system or external dependencies (example scopes: gulp, broccoli, npm)"/>
                   <visible value="true"/>
@@ -292,6 +300,7 @@
                 </constraints>
                 <properties>
                   <actionCommand value="9"/>
+                  <font swing-font="Label.font"/>
                   <margin top="2" left="2" bottom="2" right="2"/>
                   <text value="ci - Changes to our CI configuration files and scripts (example scopes: Travis, Circle, BrowserStack, SauceLabs)"/>
                   <visible value="true"/>
@@ -303,6 +312,7 @@
                 </constraints>
                 <properties>
                   <actionCommand value="10"/>
+                  <font swing-font="Label.font"/>
                   <margin top="2" left="2" bottom="2" right="2"/>
                   <text value="chore - Other changes that don't modify src or test files"/>
                   <visible value="true"/>
@@ -314,6 +324,7 @@
                 </constraints>
                 <properties>
                   <actionCommand value="11"/>
+                  <font swing-font="Label.font"/>
                   <margin top="2" left="2" bottom="2" right="2"/>
                   <text value="revert - Reverts a previous commit"/>
                   <visible value="true"/>

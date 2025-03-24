@@ -1,5 +1,7 @@
 package com.c301.plugin.ui.render;
 
+import com.c301.plugin.constant.Constant;
+
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
@@ -26,8 +28,7 @@ public class CustomTableCellRenderer extends DefaultTableCellRenderer {
 
         //设置渲染字体
         if (component instanceof JLabel) {
-            var font = UIManager.getFont("Label.font");
-            if (font != null) component.setFont(font);
+            component.setFont(Constant.EMOJI_FONT);
         }
         return component;
     }

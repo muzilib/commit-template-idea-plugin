@@ -2,6 +2,7 @@ package com.c301.plugin.constant;
 
 import com.c301.plugin.model.LanguageDomain;
 
+import java.awt.*;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -57,5 +58,10 @@ public interface Constant {
         add(LanguageDomain.JA_JP);
         add(LanguageDomain.KO_KR);
     }};
+
+    /**
+     * Emoji字体集合
+     */
+    Font EMOJI_FONT = new Font("Noto Color Emoji,Segoe UI Emoji,Apple Color Emoji,Microsoft YaHei UI", Font.PLAIN, 12);
 
 }

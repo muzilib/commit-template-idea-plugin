@@ -16,12 +16,20 @@ import javax.swing.table.AbstractTableModel;
  **/
 public class CommitTypeTableModel extends AbstractTableModel {
 
-    public static final int TYPE_COLUMN = 0;
-    public static final int DESCRIPTION_COLUMN = 1;
+    public static int GITMOJE_COLUMN = -1;
+    public static int TYPE_COLUMN = -1;
+    public static int DESCRIPTION_COLUMN = -1;
 
     private final SettingCacheDomain cache;
 
     public CommitTypeTableModel(SettingCacheDomain cache) {
+        TYPE_COLUMN = 0;
+        DESCRIPTION_COLUMN = 1;
+        if (cache.isEmojiEnable()) {
+            GITMOJE_COLUMN = 0;
+            TYPE_COLUMN = 1;
+            DESCRIPTION_COLUMN = 2;
+        }
         this.cache = cache;
     }
 
@@ -32,7 +40,7 @@ public class CommitTypeTableModel extends AbstractTableModel {
 
     @Override
     public int getColumnCount() {
-        return 2;
+        return cache.isEmojiEnable() ? 3 : 2;
     }
 
     @Override
@@ -41,6 +49,10 @@ public class CommitTypeTableModel extends AbstractTableModel {
 
         //获取数据对象
         var domain = dataList.get(rowIndex);
+        if (columnIndex == GITMOJE_COLUMN) {
+            if (domain.getEmoji() == null) return "";
+            return domain.getEmoji().getEmoji();
+        }
         if (columnIndex == TYPE_COLUMN) return domain.getType();
         if (columnIndex == DESCRIPTION_COLUMN) return domain.getDescription();
         return null;
@@ -51,6 +63,7 @@ public class CommitTypeTableModel extends AbstractTableModel {
         var language = cache.getLanguage();
         var resourceBundle = CommUtil.i18nResourceBundle(language.getKey());
 
+        if (columnIndex == GITMOJE_COLUMN) return "Gitmoji";
         if (columnIndex == TYPE_COLUMN) return resourceBundle.getString("plugin.setting.table.typeName");
         if (columnIndex == DESCRIPTION_COLUMN) return resourceBundle.getString("plugin.setting.table.typeDescribe");
         return "None";
