@@ -78,4 +78,17 @@ public class CommitTypeDomain {
         return type + " - " + description;
     }
 
+    /**
+     * 获取hashString字符串
+     *
+     * @return 字符串
+     */
+    public String hashString() {
+        var value = type + " - " + description;
+        if (emoji != null) {
+            value += emoji.getCode();
+        }
+        return value;
+    }
+
 }

@@ -1,10 +1,9 @@
 package com.c301.plugin.ui;
 
 import com.c301.plugin.config.StoreCommitTemplateState;
-import com.c301.plugin.model.CommitTypeDomain;
-import com.c301.plugin.model.LanguageDomain;
-import com.c301.plugin.model.SettingCacheDomain;
-import com.c301.plugin.model.WindowsConfigDomain;
+import com.c301.plugin.constant.Constant;
+import com.c301.plugin.model.*;
+import com.c301.plugin.ui.render.GitmojiListCellRendererRender;
 import com.c301.plugin.ui.render.JBCommitTypeTable;
 import com.c301.plugin.utils.CommUtil;
 import com.c301.plugin.utils.StrUtil;
@@ -38,7 +37,8 @@ public class EditCommitTypeDialog extends JDialog {
     private JLabel labelDescribe;
     private JLabel labelErrorTypeName;
     private JLabel labelErrorTypeDescribe;
-    private JComboBox inputGitmoji;
+    private JComboBox<GitmojiDomain> inputGitmoji;
+    private JLabel labelGitmoji;
 
     private int index = -1;
     private final JBCommitTypeTable table;
@@ -81,6 +81,21 @@ public class EditCommitTypeDialog extends JDialog {
         for (String typeName : CommitTypeDomain.TYPES) {
             if (typeNameArrays.contains(typeName)) continue;
             inputType.addItem(typeName);
+        }
+
+        //是否开启gitmoji配置
+        labelGitmoji.setVisible(false);
+        inputGitmoji.setVisible(false);
+        if (cache.isEmojiEnable()) {
+            labelGitmoji.setVisible(true);
+            inputGitmoji.setVisible(true);
+
+            //设置gitmoji标签
+            inputGitmoji.setFont(Constant.EMOJI_FONT);
+            inputGitmoji.setRenderer(new GitmojiListCellRendererRender());
+            inputGitmoji.addItem(null);
+            CommUtil.handleInitGitmojiEvent();
+            GitmojiDomain.GITMOJIS.forEach(inputGitmoji::addItem);
         }
 
         //设置类型列表选中事件
@@ -153,7 +168,6 @@ public class EditCommitTypeDialog extends JDialog {
      */
     private void onOK() {
         var resourceBundle = CommUtil.i18nResourceBundle(null);
-
         var typeOption = inputType.getSelectedItem();
         if (typeOption == null || StrUtil.isBlank(typeOption.toString())) {
             labelErrorTypeName.setText(resourceBundle.getString("plugin.setting.dialog.error.typeName.notBlank"));
@@ -164,6 +178,11 @@ public class EditCommitTypeDialog extends JDialog {
             labelErrorTypeDescribe.setText(resourceBundle.getString("plugin.setting.dialog.error.typeDescribe.notBlank"));
             labelErrorTypeDescribe.setVisible(true);
             return;
+        }
+        GitmojiDomain gitmoji = null;
+        if (cache.isEmojiEnable()) {
+            var gitmojiOption = inputGitmoji.getSelectedItem();
+            if (gitmojiOption != null) gitmoji = (GitmojiDomain) gitmojiOption;
         }
 
         var typeName = typeOption.toString().trim();
@@ -185,6 +204,7 @@ public class EditCommitTypeDialog extends JDialog {
 
             //添加新的类型
             var domain = new CommitTypeDomain();
+            domain.setEmoji(gitmoji);
             domain.setType(typeName);
             domain.setDescription(typeDescribe);
             customList.add(domain);
@@ -207,6 +227,7 @@ public class EditCommitTypeDialog extends JDialog {
         }
 
         var domain = customList.get(index);
+        domain.setEmoji(gitmoji);
         domain.setType(typeName);
         domain.setDescription(typeDescribe);
         table.handleRefreshEvent();
@@ -369,11 +390,11 @@ public class EditCommitTypeDialog extends JDialog {
         labelErrorTypeDescribe.setForeground(new Color(-65536));
         labelErrorTypeDescribe.setText("*类型描述 不能为空/重复");
         panel3.add(labelErrorTypeDescribe, new GridConstraints(7, 0, 1, 1, GridConstraints.ANCHOR_EAST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        final JLabel label1 = new JLabel();
-        Font label1Font = UIManager.getFont("Label.font");
-        if (label1Font != null) label1.setFont(label1Font);
-        label1.setText("Gitmoji");
-        panel3.add(label1, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        labelGitmoji = new JLabel();
+        Font labelGitmojiFont = UIManager.getFont("Label.font");
+        if (labelGitmojiFont != null) labelGitmoji.setFont(labelGitmojiFont);
+        labelGitmoji.setText("Gitmoji");
+        panel3.add(labelGitmoji, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         inputGitmoji = new JComboBox();
         inputGitmoji.setEditable(false);
         inputGitmoji.setEnabled(true);

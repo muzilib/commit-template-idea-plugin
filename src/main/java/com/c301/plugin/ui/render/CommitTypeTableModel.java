@@ -25,6 +25,7 @@ public class CommitTypeTableModel extends AbstractTableModel {
     public CommitTypeTableModel(SettingCacheDomain cache) {
         TYPE_COLUMN = 0;
         DESCRIPTION_COLUMN = 1;
+
         if (cache.isEmojiEnable()) {
             GITMOJE_COLUMN = 0;
             TYPE_COLUMN = 1;
@@ -49,7 +50,7 @@ public class CommitTypeTableModel extends AbstractTableModel {
 
         //获取数据对象
         var domain = dataList.get(rowIndex);
-        if (columnIndex == GITMOJE_COLUMN) {
+        if (cache.isEmojiEnable() && columnIndex == GITMOJE_COLUMN) {
             if (domain.getEmoji() == null) return "";
             return domain.getEmoji().getEmoji();
         }
@@ -63,7 +64,7 @@ public class CommitTypeTableModel extends AbstractTableModel {
         var language = cache.getLanguage();
         var resourceBundle = CommUtil.i18nResourceBundle(language.getKey());
 
-        if (columnIndex == GITMOJE_COLUMN) return "Gitmoji";
+        if (cache.isEmojiEnable() && columnIndex == GITMOJE_COLUMN) return "Gitmoji";
         if (columnIndex == TYPE_COLUMN) return resourceBundle.getString("plugin.setting.table.typeName");
         if (columnIndex == DESCRIPTION_COLUMN) return resourceBundle.getString("plugin.setting.table.typeDescribe");
         return "None";

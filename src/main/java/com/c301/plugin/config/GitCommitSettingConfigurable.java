@@ -59,10 +59,7 @@ public class GitCommitSettingConfigurable implements SearchableConfigurable {
         for (int i = 0; i < cache.getCustomCommitTypeList().size(); i++) {
             var cacheCommitType = cache.getCustomCommitTypeList().get(i);
             var storeCommitType = store.getCustomCommitTypeList().get(i);
-
-            var value1 = cacheCommitType.getType() + "_" + cacheCommitType.getDescription();
-            var value2 = storeCommitType.getType() + "_" + storeCommitType.getDescription();
-            if (!value1.equals(value2)) {
+            if (!cacheCommitType.hashString().equals(storeCommitType.hashString())) {
                 modified = true;
                 break;
             }

@@ -115,9 +115,9 @@ public class JBCommitTypeTable extends JBTable {
         //设置列宽 gitmoji 分类
         if (cache.isEmojiEnable()) {
             var gitmojiColumn = getColumnModel().getColumn(CommitTypeTableModel.GITMOJE_COLUMN);
-            gitmojiColumn.setMinWidth(40);
-            gitmojiColumn.setMaxWidth(60);
-            gitmojiColumn.setPreferredWidth(40);
+            gitmojiColumn.setMinWidth(100);
+            gitmojiColumn.setMaxWidth(120);
+            gitmojiColumn.setPreferredWidth(100);
         }
 
         //设置列宽 提交类型 分类
