@@ -30,6 +30,7 @@ import java.util.concurrent.TimeUnit;
 public class CommUtil {
 
     private static final StoreCommitTemplateState store = StoreCommitTemplateState.getInstance();
+    private static Properties properties = null;
 
     /**
      * 获取国际化资源
@@ -208,7 +209,7 @@ public class CommUtil {
      */
     public static void handleInitGitmojiEvent() {
         if (GitmojiDomain.GITMOJIS.isEmpty()) {
-            try (var inputStream = GitmojiDomain.class.getResourceAsStream("/icons/gitmojis.json")) {
+            try (var inputStream = CommUtil.class.getResourceAsStream("/icons/gitmojis.json")) {
                 if (inputStream != null) {
                     var json = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
 
@@ -220,6 +221,28 @@ public class CommUtil {
             } catch (IOException ignored) {
             }
         }
+    }
+
+    /**
+     * 读取gradle.properties文件中的值
+     *
+     * @param key 键
+     * @return 值
+     */
+    public static String handleReadProperties(String key) {
+        if (properties == null) {
+            try (var inputStream = CommUtil.class.getResourceAsStream("/version.properties")) {
+                if (inputStream != null) {
+                    properties = new Properties();
+                    properties.load(inputStream);
+                }
+            } catch (IOException ignored) {
+            }
+        }
+
+        var value = properties.getProperty(key);
+        if (StrUtil.isBlank(value)) return "-";
+        return value;
     }
 
 }
