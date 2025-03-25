@@ -87,7 +87,7 @@ public class CommitTemplateSettingUI {
             editCommitTypePanel.setEnabled(enable);
 
             //自定义提交模板描述信息
-            var resourceBundle = CommUtil.i18nResourceBundle(null);
+            var resourceBundle = CommUtil.i18nResourceBundle(cache.getLanguage().getKey());
             var active = enable ? "active" : "deActive";
             checkBoxCommitType.setText(resourceBundle.getString("plugin.setting.label.customTemplateTips." + active));
         });
@@ -98,9 +98,9 @@ public class CommitTemplateSettingUI {
             cache.setEmojiEnable(enable);
 
             //自定义提交模板描述信息
-            var resourceBundle = CommUtil.i18nResourceBundle(null);
+            var resourceBundle = CommUtil.i18nResourceBundle(cache.getLanguage().getKey());
             var active = enable ? "active" : "deActive";
-            checkBoxGitmoji.setText(resourceBundle.getString("plugin.setting.label.customTemplateTips." + active));
+            checkBoxGitmoji.setText(resourceBundle.getString("plugin.setting.label.customGitmojiTips." + active));
             commitTypeTable.handleRefreshEvent();
         });
 
@@ -146,10 +146,15 @@ public class CommitTemplateSettingUI {
         tabbedPane.setTitleAt(1, resourceBundle.getString("plugin.setting.label.about"));
         labelLanguage.setText(resourceBundle.getString("plugin.setting.label.language"));
         labelCommitType.setText(resourceBundle.getString("plugin.setting.label.customTemplate"));
+        labelGitmojiWebsite.setText(resourceBundle.getString("plugin.setting.label.gitmoji.website"));
 
         //自定义提交模板描述信息
         var active = checkBoxCommitType.isSelected() ? "active" : "deActive";
         checkBoxCommitType.setText(resourceBundle.getString("plugin.setting.label.customTemplateTips." + active));
+
+        //使用Gitmoji信息
+        active = checkBoxGitmoji.isSelected() ? "active" : "deActive";
+        checkBoxGitmoji.setText(resourceBundle.getString("plugin.setting.label.customGitmojiTips." + active));
     }
 
     {
