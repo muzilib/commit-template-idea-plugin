@@ -27,7 +27,7 @@ public class GitmojiDomain {
      */
     public static final List<GitmojiDomain> GITMOJIS = new LinkedList<>();
 
-    private Icon icon;
+    private transient Icon icon;
 
     private String code;
     private String name;
