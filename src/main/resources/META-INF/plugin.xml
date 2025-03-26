@@ -26,6 +26,12 @@
     <change-notes>
         <![CDATA[
         <p>
+            <h4>V250326-2342</h4>
+            <p>1. Added a settings interface. You can go to "Settings > Tools > Commit Template Idea Plugin" to customize the settings.</p>
+            <p>2. Added Git submission template customization function to adjust the template content according to needs.</p>
+            <p>3. Added Gitmoji support to add some interesting expressions to your submission content</p>
+        </p>
+        <p>
             <h4>V250227-1438</h4>
             <p>1. Breaking update: Refactored the project pop-up window business to provide support for English, Simplified Chinese, Traditional Chinese, French, Canadian French, German, Italian, Japanese, and Korean. (Note: Language translation is processed using Google Translate, there may be grammatical errors, translation errors, etc. If you encounter any problems, please contact me (email: muzi@muzilib.com))</p>
             <p>2. Highlights: Supports recording window position and size, which is more in line with user habits</p>
