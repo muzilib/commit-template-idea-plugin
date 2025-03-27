@@ -27,16 +27,19 @@ public class GitmojiVcsLogCustomColumn implements VcsLogCustomColumn<GitmojiDoma
     private final GitmojiDomain DEFAULT_GITMOJI = new GitmojiDomain("anguished", "anguished", "😧", "anguished");
 
     @Override
+    @SuppressWarnings("UnstableApiUsage")
     public @NotNull String getId() {
         return "gitmoji";
     }
 
     @Override
+    @SuppressWarnings("UnstableApiUsage")
     public @Nls @NotNull String getLocalizedName() {
         return "Gitmoji";
     }
 
     @Override
+    @SuppressWarnings("UnstableApiUsage")
     public boolean isDynamic() {
         return true;
     }
@@ -49,11 +52,13 @@ public class GitmojiVcsLogCustomColumn implements VcsLogCustomColumn<GitmojiDoma
     }
 
     @Override
+    @SuppressWarnings("UnstableApiUsage")
     public boolean isResizable() {
         return false;
     }
 
     @Override
+    @SuppressWarnings("UnstableApiUsage")
     public @Nullable GitmojiDomain getValue(@NotNull GraphTableModel model, int row) {
         CommUtil.handleInitGitmojiEvent();
         var content = model.getCommitMetadata(row).getFullMessage();
@@ -66,11 +71,13 @@ public class GitmojiVcsLogCustomColumn implements VcsLogCustomColumn<GitmojiDoma
     }
 
     @Override
+    @SuppressWarnings("UnstableApiUsage")
     public @NotNull TableCellRenderer createTableCellRenderer(@NotNull VcsLogGraphTable vcsLogGraphTable) {
         return new GitmojiVcsLogIconCellRenderer();
     }
 
     @Override
+    @SuppressWarnings("UnstableApiUsage")
     public GitmojiDomain getStubValue(@NotNull GraphTableModel graphTableModel) {
         return DEFAULT_GITMOJI;
     }

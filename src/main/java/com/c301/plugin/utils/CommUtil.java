@@ -29,7 +29,6 @@ import java.util.concurrent.TimeUnit;
  */
 public class CommUtil {
 
-    private static final StoreCommitTemplateState store = StoreCommitTemplateState.getInstance();
     private static Properties properties = null;
 
     /**
@@ -135,6 +134,7 @@ public class CommUtil {
      * @return 提交类型对象列表
      */
     public static List<CommitTypeDomain> getDefaultCommitTypeList() {
+        var store = StoreCommitTemplateState.getInstance();
         if (store.isCustomEnable()) return store.getCustomCommitTypeList();
 
         //默认提交类型列表
@@ -148,6 +148,7 @@ public class CommUtil {
      * @return 提交类型对象列表
      */
     public static List<CommitTypeDomain> getDefaultCommitTypeList(String languageKey) {
+        var store = StoreCommitTemplateState.getInstance();
         if (StrUtil.isBlank(languageKey)) languageKey = store.getLanguage().getKey();
 
         //读取gitmoji信息
