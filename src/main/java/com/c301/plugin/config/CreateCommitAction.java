@@ -3,7 +3,6 @@ package com.c301.plugin.config;
 import com.c301.plugin.model.GitCommitDomain;
 import com.c301.plugin.ui.CommitTemplateDialog;
 import com.c301.plugin.utils.CommUtil;
-import com.intellij.ide.DataManager;
 import com.intellij.openapi.actionSystem.ActionManager;
 import com.intellij.openapi.actionSystem.ActionPlaces;
 import com.intellij.openapi.actionSystem.AnAction;
@@ -18,7 +17,6 @@ import com.intellij.openapi.vcs.ui.Refreshable;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.event.KeyEvent;
-import java.util.Objects;
 
 /**
  * 提交事件
@@ -39,13 +37,28 @@ public class CreateCommitAction extends AnAction implements DumbAware {
 
         // 通过快捷键打开窗口
         if (actionEvent.getInputEvent() instanceof KeyEvent && actionEvent.getPlace().equals(ActionPlaces.KEYBOARD_SHORTCUT)) {
-            ActionManager.getInstance().getAction("CheckinProject").actionPerformed(actionEvent);
+            try {
+                var checkinProjectAction = ActionManager.getInstance().getAction("CheckinProject");
+                ActionManager.getInstance().tryToExecute(
+                        checkinProjectAction,
+                        actionEvent.getInputEvent(),
+                        null,
+                        ActionPlaces.UNKNOWN,
+                        true
+                );
+            } catch (Exception ignored) {
+            }
 
             ApplicationManager.getApplication().invokeLater(() -> {
                 try {
-                    var dataContext = DataManager.getInstance().getDataContextFromFocusAsync().blockingGet(2000);
-                    var vcsActionEvent = AnActionEvent.createFromDataContext(ActionPlaces.UNKNOWN, null, Objects.requireNonNull(dataContext));
-                    ActionManager.getInstance().getAction("plugin_commit_button").actionPerformed(vcsActionEvent);
+                    var action = ActionManager.getInstance().getAction("plugin_commit_button");
+                    ActionManager.getInstance().tryToExecute(
+                            action,
+                            actionEvent.getInputEvent(),
+                            null,
+                            ActionPlaces.UNKNOWN,
+                            true
+                    );
                 } catch (Exception ignored) {
                 }
             }, ModalityState.current());
