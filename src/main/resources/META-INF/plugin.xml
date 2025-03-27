@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>commit-template-plugin</id>
     <name>Git Commit Template</name>
-    <version>1.0.6</version>
+    <version>1.0.7</version>
     <vendor email="muzi@muzilib.com" url="https://github.com/muzilib">Chenbing</vendor>
 
     <description>
@@ -25,6 +25,14 @@
 
     <change-notes>
         <![CDATA[
+        <p>
+            <h4>V250326-2342</h4>
+            <p>1. Added a settings interface. You can go to "Settings > Tools > Commit Template Idea Plugin" to customize the settings.</p>
+            <p>2. Added Git submission template customization function to adjust the template content according to needs.</p>
+            <p>3. Added Gitmoji support to add some fun emojis to your commits. To turn on the Gitmoji option, you can go to the "Git > Log" panel, click the "eye" icon -> Show columns -> Gitmoji to show/hide columns and view emojis in the extended column.</p>
+            <p>4. Added shortcut key support, now you can use "Alt + Shift + Q" to call up the submission panel</p>
+            <p>5. Please note that Gitmoji relies on IDEA's experimental API, which may be abandoned in the future depending on the version, causing the plugin to fail.</p>
+        </p>
         <p>
             <h4>V250227-1438</h4>
             <p>1. Breaking update: Refactored the project pop-up window business to provide support for English, Simplified Chinese, Traditional Chinese, French, Canadian French, German, Italian, Japanese, and Korean. (Note: Language translation is processed using Google Translate, there may be grammatical errors, translation errors, etc. If you encounter any problems, please contact me (email: muzi@muzilib.com))</p>
@@ -68,12 +76,24 @@
      Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
     <extensions defaultExtensionNs="com.intellij">
         <!-- Add your extensions here -->
+        <applicationService
+                serviceImplementation="com.c301.plugin.config.StoreCommitTemplateState"/>
+
+        <applicationConfigurable groupId="tools"
+                                 id="plugins.muzilib.commit.template"
+                                 displayName="Commit Template Idea Plugin"
+                                 instance="com.c301.plugin.config.GitCommitSettingConfigurable"/>
+
+        <vcsLogCustomColumn implementation="com.c301.plugin.config.GitmojiVcsLogCustomColumn" />
     </extensions>
 
     <actions resource-bundle="i18n.data">
         <action id="plugin_commit_button"
-                class="com.c301.plugin.action.CreateCommitAction"
+                class="com.c301.plugin.config.CreateCommitAction"
                 icon="/icons/load.png">
+            <keyboard-shortcut keymap="$default" first-keystroke="alt shift Q"/>
+            <keyboard-shortcut keymap="Mac OS X" first-keystroke="alt shift Q"/>
+            <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="alt shift Q"/>
             <add-to-group group-id="Vcs.MessageActionGroup" anchor="first"/>
         </action>
     </actions>
