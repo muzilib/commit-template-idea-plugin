@@ -289,7 +289,7 @@ public class CommitTemplateDialog extends JDialog {
         labelCommitTypeSetting.setText(resourceBundle.getString("plugin.setting.label.tipsGoSetting"));
 
         //渲染提交类型按钮组信息
-        var commitTypeList = CommUtil.getDefaultCommitTypeList();
+        var commitTypeList = CommUtil.getDefaultCommitTypeList(language.getKey());
         var buttonElements = typeChangeGroup.getElements();
         if (commitTypeList.isEmpty()) {
             while (buttonElements.hasMoreElements()) {
@@ -311,15 +311,15 @@ public class CommitTemplateDialog extends JDialog {
             });
         } else {
             buttonElements.nextElement();
+            var index = 0;
             while (buttonElements.hasMoreElements()) {
                 var button = buttonElements.nextElement();
                 button.setVisible(false);
-                var index = Integer.parseInt(button.getActionCommand());
-                if (index > commitTypeList.size()) continue;
+                if (index >= commitTypeList.size()) continue;
 
                 button.setVisible(true);
                 button.setFont(Constant.EMOJI_FONT);
-                var commitType = commitTypeList.get(index - 1);
+                var commitType = commitTypeList.get(index++);
                 button.setActionCommand(commitType.getType());
                 button.setText(commitType.toString(store.isEmojiEnable()));
             }
