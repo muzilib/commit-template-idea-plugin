@@ -19,7 +19,11 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.ItemEvent;
+import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Objects;
 
 /**
@@ -152,6 +156,20 @@ public class CommitTemplateSettingUI {
 
             var clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
             clipboard.setContents(new StringSelection(information), null);
+        });
+
+        //点击Gitmoji网站打开链接
+        labelGitmojiWebsite.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        labelGitmojiWebsite.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                super.mouseClicked(e);
+                try {
+                    Desktop.getDesktop().browse(new URI("https://gitmoji.dev"));
+                } catch (IOException | URISyntaxException ex) {
+                    throw new RuntimeException(ex);
+                }
+            }
         });
     }
 

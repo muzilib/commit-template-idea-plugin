@@ -3,6 +3,7 @@ package com.c301.plugin.ui.render;
 import com.c301.plugin.constant.Constant;
 import com.c301.plugin.model.SettingCacheDomain;
 import com.c301.plugin.ui.EditCommitTypeDialog;
+import com.c301.plugin.utils.CommUtil;
 import com.intellij.ui.table.JBTable;
 
 import javax.swing.*;
@@ -33,7 +34,10 @@ public class JBCommitTypeTable extends JBTable {
 
         //检查是否超过最大数量
         if (customList.size() >= Constant.MAX_COMMIT_TYPE_LENGTH) {
-            JOptionPane.showMessageDialog(this, "模板类型已添加最大上线，请删除或修改已有记录。", "错误", JOptionPane.ERROR_MESSAGE);
+            var resourceBundle = CommUtil.i18nResourceBundle(null);
+            var label = resourceBundle.getString("plugin.setting.dialog.warning");
+            var message = resourceBundle.getString("plugin.setting.dialog.maxlength");
+            JOptionPane.showMessageDialog(this, message, label, JOptionPane.WARNING_MESSAGE);
             return;
         }
 

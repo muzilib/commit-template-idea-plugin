@@ -44,7 +44,7 @@ public class CreateCommitAction extends AnAction implements DumbAware {
             ApplicationManager.getApplication().invokeLater(() -> {
                 try {
                     var dataContext = DataManager.getInstance().getDataContextFromFocusAsync().blockingGet(2000);
-                    var vcsActionEvent = AnActionEvent.createFromAnAction(this, actionEvent.getInputEvent(), ActionPlaces.UNKNOWN, Objects.requireNonNull(dataContext));
+                    var vcsActionEvent = AnActionEvent.createFromDataContext(ActionPlaces.UNKNOWN, null, Objects.requireNonNull(dataContext));
                     ActionManager.getInstance().getAction("plugin_commit_button").actionPerformed(vcsActionEvent);
                 } catch (Exception ignored) {
                 }

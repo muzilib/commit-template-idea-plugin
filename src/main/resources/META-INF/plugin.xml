@@ -30,6 +30,8 @@
             <p>1. Added a settings interface. You can go to "Settings > Tools > Commit Template Idea Plugin" to customize the settings.</p>
             <p>2. Added Git submission template customization function to adjust the template content according to needs.</p>
             <p>3. Added Gitmoji support to add some interesting expressions to your submission content</p>
+            <p>4. Added shortcut key support, now you can use "Alt + Shift + Q" to call up the submission panel</p>
+            <p>5. Please note that Gitmoji relies on IDEA's experimental API, which may be abandoned in the future depending on the version, causing the plugin to fail.</p>
         </p>
         <p>
             <h4>V250227-1438</h4>
