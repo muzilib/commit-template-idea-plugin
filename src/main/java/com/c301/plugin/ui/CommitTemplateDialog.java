@@ -10,8 +10,6 @@ import com.c301.plugin.model.WindowsConfigDomain;
 import com.c301.plugin.ui.render.LanguageListCellRendererRender;
 import com.c301.plugin.utils.CommUtil;
 import com.c301.plugin.utils.StrUtil;
-import com.intellij.ide.DataManager;
-import com.intellij.openapi.actionSystem.CommonDataKeys;
 import com.intellij.openapi.options.ShowSettingsUtil;
 import com.intellij.openapi.project.ProjectManager;
 import com.intellij.openapi.vcs.CommitMessageI;
@@ -19,6 +17,7 @@ import com.intellij.openapi.wm.WindowManager;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
+import com.intellij.vcs.commit.CommitProjectPanelAdapter;
 
 import javax.swing.*;
 import java.awt.*;
@@ -214,9 +213,8 @@ public class CommitTemplateDialog extends JDialog {
         });
 
         //设置窗口打开位置为屏幕中心
-        var dataContext = DataManager.getInstance().getDataContext(this);
-        var project = CommonDataKeys.PROJECT.getData(dataContext);
         setLocationRelativeTo(null);
+        var project = ((CommitProjectPanelAdapter) commitMessageI).getProject();
         var parentWindow = WindowManager.getInstance().getFrame(project);
         if (parentWindow != null) setLocationRelativeTo(parentWindow);
 

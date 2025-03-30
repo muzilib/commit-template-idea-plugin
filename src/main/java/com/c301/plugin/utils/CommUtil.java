@@ -15,6 +15,7 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * 通用工具类
@@ -123,7 +124,7 @@ public class CommUtil {
 
         //添加空白占位
         scopeList.addFirst("");
-        return scopeList;
+        return scopeList.stream().distinct().collect(Collectors.toList());
     }
 
     /**
