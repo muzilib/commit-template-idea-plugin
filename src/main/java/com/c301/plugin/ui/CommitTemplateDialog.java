@@ -156,7 +156,9 @@ public class CommitTemplateDialog extends JDialog {
             gitCommit.setCommitType(commitType);
             gitCommit.setChangeScope(changeScopeValue);
             gitCommit.setClosedIssues(closedIssuesValue);
-            commitMessageI.setCommitMessage(gitCommit.toStringMessage());
+
+            var location = store.isEmojiEnable() ? store.getEmojiLocation() : null;
+            commitMessageI.setCommitMessage(gitCommit.toStringMessage(location));
         }
 
         handleCancelEvent();
@@ -435,7 +437,7 @@ public class CommitTemplateDialog extends JDialog {
         labelTypeOfChange.setText("Type of change");
         panel3.add(labelTypeOfChange, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final JPanel panel4 = new JPanel();
-        panel4.setLayout(new GridLayoutManager(12, 6, new Insets(0, 0, 0, 0), -1, -1));
+        panel4.setLayout(new GridLayoutManager(12, 3, new Insets(0, 0, 0, 0), -1, -1));
         panel3.add(panel4, new GridConstraints(1, 1, 1, 2, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
         radioButton1 = new JRadioButton();
         radioButton1.setActionCommand("1");
@@ -454,7 +456,7 @@ public class CommitTemplateDialog extends JDialog {
         radioButton2.setSelected(false);
         radioButton2.setText("fix - A bug fix");
         radioButton2.setVisible(true);
-        panel4.add(radioButton2, new GridConstraints(2, 0, 1, 6, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        panel4.add(radioButton2, new GridConstraints(2, 0, 1, 3, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         radioButton3 = new JRadioButton();
         radioButton3.setActionCommand("3");
         Font radioButton3Font = UIManager.getFont("Label.font");
@@ -462,7 +464,7 @@ public class CommitTemplateDialog extends JDialog {
         radioButton3.setMargin(new Insets(2, 2, 2, 2));
         radioButton3.setText("docs - Documentation only changes");
         radioButton3.setVisible(true);
-        panel4.add(radioButton3, new GridConstraints(3, 0, 1, 6, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        panel4.add(radioButton3, new GridConstraints(3, 0, 1, 3, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         radioButton4 = new JRadioButton();
         radioButton4.setActionCommand("4");
         Font radioButton4Font = UIManager.getFont("Label.font");
@@ -470,7 +472,7 @@ public class CommitTemplateDialog extends JDialog {
         radioButton4.setMargin(new Insets(2, 2, 2, 2));
         radioButton4.setText("style - Changes that do not affect the meaning of the code (white-space, formatting, missing semi-colons, etc)");
         radioButton4.setVisible(true);
-        panel4.add(radioButton4, new GridConstraints(4, 0, 1, 6, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        panel4.add(radioButton4, new GridConstraints(4, 0, 1, 3, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         radioButton5 = new JRadioButton();
         radioButton5.setActionCommand("5");
         Font radioButton5Font = UIManager.getFont("Label.font");
@@ -478,7 +480,7 @@ public class CommitTemplateDialog extends JDialog {
         radioButton5.setMargin(new Insets(2, 2, 2, 2));
         radioButton5.setText("refactor - A code change that neither fixes a bug nor adds a feature");
         radioButton5.setVisible(true);
-        panel4.add(radioButton5, new GridConstraints(5, 0, 1, 6, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        panel4.add(radioButton5, new GridConstraints(5, 0, 1, 3, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         radioButton6 = new JRadioButton();
         radioButton6.setActionCommand("6");
         Font radioButton6Font = UIManager.getFont("Label.font");
@@ -487,7 +489,7 @@ public class CommitTemplateDialog extends JDialog {
         radioButton6.setSelected(false);
         radioButton6.setText("perf - A code change that improves performance");
         radioButton6.setVisible(true);
-        panel4.add(radioButton6, new GridConstraints(6, 0, 1, 6, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        panel4.add(radioButton6, new GridConstraints(6, 0, 1, 3, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         radioButton7 = new JRadioButton();
         radioButton7.setActionCommand("7");
         Font radioButton7Font = UIManager.getFont("Label.font");
@@ -495,7 +497,7 @@ public class CommitTemplateDialog extends JDialog {
         radioButton7.setMargin(new Insets(2, 2, 2, 2));
         radioButton7.setText("test - Adding missing tests or correcting existing tests");
         radioButton7.setVisible(true);
-        panel4.add(radioButton7, new GridConstraints(7, 0, 1, 6, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        panel4.add(radioButton7, new GridConstraints(7, 0, 1, 3, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         radioButton8 = new JRadioButton();
         radioButton8.setActionCommand("8");
         Font radioButton8Font = UIManager.getFont("Label.font");
@@ -503,7 +505,7 @@ public class CommitTemplateDialog extends JDialog {
         radioButton8.setMargin(new Insets(2, 2, 2, 2));
         radioButton8.setText("build - Changes that affect the build system or external dependencies (example scopes: gulp, broccoli, npm)");
         radioButton8.setVisible(true);
-        panel4.add(radioButton8, new GridConstraints(8, 0, 1, 6, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        panel4.add(radioButton8, new GridConstraints(8, 0, 1, 3, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         radioButton9 = new JRadioButton();
         radioButton9.setActionCommand("9");
         Font radioButton9Font = UIManager.getFont("Label.font");
@@ -511,7 +513,7 @@ public class CommitTemplateDialog extends JDialog {
         radioButton9.setMargin(new Insets(2, 2, 2, 2));
         radioButton9.setText("ci - Changes to our CI configuration files and scripts (example scopes: Travis, Circle, BrowserStack, SauceLabs)");
         radioButton9.setVisible(true);
-        panel4.add(radioButton9, new GridConstraints(9, 0, 1, 6, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        panel4.add(radioButton9, new GridConstraints(9, 0, 1, 3, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         radioButton10 = new JRadioButton();
         radioButton10.setActionCommand("10");
         Font radioButton10Font = UIManager.getFont("Label.font");
@@ -519,7 +521,7 @@ public class CommitTemplateDialog extends JDialog {
         radioButton10.setMargin(new Insets(2, 2, 2, 2));
         radioButton10.setText("chore - Other changes that don't modify src or test files");
         radioButton10.setVisible(true);
-        panel4.add(radioButton10, new GridConstraints(10, 0, 1, 6, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        panel4.add(radioButton10, new GridConstraints(10, 0, 1, 3, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         radioButton11 = new JRadioButton();
         radioButton11.setActionCommand("11");
         Font radioButton11Font = UIManager.getFont("Label.font");
@@ -527,7 +529,7 @@ public class CommitTemplateDialog extends JDialog {
         radioButton11.setMargin(new Insets(2, 2, 2, 2));
         radioButton11.setText("revert - Reverts a previous commit");
         radioButton11.setVisible(true);
-        panel4.add(radioButton11, new GridConstraints(11, 0, 1, 6, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        panel4.add(radioButton11, new GridConstraints(11, 0, 1, 3, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         labelCommitTypeNoData = new JLabel();
         labelCommitTypeNoData.setEnabled(true);
         Font labelCommitTypeNoDataFont = UIManager.getFont("Label.font");

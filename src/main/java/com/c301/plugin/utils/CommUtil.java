@@ -2,9 +2,7 @@ package com.c301.plugin.utils;
 
 import com.c301.plugin.config.StoreCommitTemplateState;
 import com.c301.plugin.constant.Constant;
-import com.c301.plugin.model.CommitTypeDomain;
-import com.c301.plugin.model.GitmojiDomain;
-import com.c301.plugin.model.LanguageDomain;
+import com.c301.plugin.model.*;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.intellij.openapi.project.Project;
@@ -209,18 +207,18 @@ public class CommUtil {
      * 初始化Gitmoji事件
      */
     public static void handleInitGitmojiEvent() {
-        if (GitmojiDomain.GITMOJIS.isEmpty()) {
-            try (var inputStream = CommUtil.class.getResourceAsStream("/icons/gitmojis.json")) {
-                if (inputStream != null) {
-                    var json = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+        if (!GitmojiDomain.GITMOJIS.isEmpty()) return;
 
-                    var listType = new TypeToken<LinkedList<GitmojiDomain>>() {
-                    }.getType();
-                    List<GitmojiDomain> list = new Gson().fromJson(json, listType);
-                    GitmojiDomain.GITMOJIS.addAll(list);
-                }
-            } catch (IOException ignored) {
+        try (var inputStream = CommUtil.class.getResourceAsStream("/icons/gitmojis.json")) {
+            if (inputStream != null) {
+                var json = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+
+                var listType = new TypeToken<LinkedList<GitmojiDomain>>() {
+                }.getType();
+                List<GitmojiDomain> list = new Gson().fromJson(json, listType);
+                GitmojiDomain.GITMOJIS.addAll(list);
             }
+        } catch (IOException ignored) {
         }
     }
 
@@ -244,6 +242,39 @@ public class CommUtil {
         var value = properties.getProperty(key);
         if (StrUtil.isBlank(value)) return "-";
         return value;
+    }
+
+    /**
+     * 获取gitmoji预览内容
+     *
+     * @param cache 变更缓存配置
+     * @return 预览内容
+     */
+    public static String handlePreviewGitemojiLocation(SettingCacheDomain cache) {
+        //读取gitmoji信息
+        handleInitGitmojiEvent();
+        var gitemojiMap = new HashMap<String, GitmojiDomain>();
+        for (GitmojiDomain item : GitmojiDomain.GITMOJIS) gitemojiMap.put(item.getCode(), item);
+        var gitmoji = gitemojiMap.get(":sparkles:");
+
+        //设置提交类型、变更范围、短描述
+        var resourceBundle = i18nResourceBundle(cache.getLanguage().getKey());
+        var changeTypeText = resourceBundle.getString("plugin.label.typeOfChange");
+        var changeScopeText = resourceBundle.getString("plugin.label.scopeOfThisChange");
+        var shortDescriptionText = resourceBundle.getString("plugin.label.shortDescription");
+
+        //构建预览内容
+        var location = cache.getEmojiLocation();
+        if (location.equals(GitmojiLocationDomain.LOCATION1)) {
+            return gitmoji.getEmoji() + " " + changeTypeText + " (" + changeScopeText + "): " + shortDescriptionText;
+        }
+        if (location.equals(GitmojiLocationDomain.LOCATION2)) {
+            return changeTypeText + " (" + gitmoji.getEmoji() + " " + changeScopeText + "): " + shortDescriptionText;
+        }
+        if (location.equals(GitmojiLocationDomain.LOCATION3)) {
+            return changeTypeText + " (" + changeScopeText + "): " + gitmoji.getEmoji() + " " + shortDescriptionText;
+        }
+        return "Gitmoji";
     }
 
 }

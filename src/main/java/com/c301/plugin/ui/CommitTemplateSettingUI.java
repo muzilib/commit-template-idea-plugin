@@ -1,6 +1,7 @@
 package com.c301.plugin.ui;
 
 import com.c301.plugin.constant.Constant;
+import com.c301.plugin.model.GitmojiLocationDomain;
 import com.c301.plugin.model.LanguageDomain;
 import com.c301.plugin.model.SettingCacheDomain;
 import com.c301.plugin.ui.render.CustomTableCellRenderer;
@@ -59,6 +60,8 @@ public class CommitTemplateSettingUI {
     private JRadioButton radioGitmojiLocation1;
     private JRadioButton radioGitmojiLocation2;
     private JRadioButton radioGitmojiLocation3;
+    private JLabel labelLocationPreview;
+    private ButtonGroup locationButtonGroup;
 
     private final SettingCacheDomain cache;
 
@@ -106,9 +109,19 @@ public class CommitTemplateSettingUI {
         });
 
         //启用Gitmoji符号
+        labelLocationPreview.setFont(Constant.EMOJI_FONT);
+        labelLocationPreview.setEnabled(cache.isEmojiEnable());
         checkBoxGitmoji.addItemListener(e -> {
             var enable = (e.getStateChange() == ItemEvent.SELECTED);
             cache.setEmojiEnable(enable);
+
+            //是否开启位置设置按钮
+            labelLocationPreview.setEnabled(enable);
+            var localeButtonElements = locationButtonGroup.getElements();
+            while (localeButtonElements.hasMoreElements()) {
+                var button = localeButtonElements.nextElement();
+                button.setEnabled(enable);
+            }
 
             //自定义提交模板描述信息
             var resourceBundle = CommUtil.i18nResourceBundle(cache.getLanguage().getKey());
@@ -174,6 +187,20 @@ public class CommitTemplateSettingUI {
                 }
             }
         });
+
+        //添加Gitmoji位置选择事件
+        var localeButtonElements = locationButtonGroup.getElements();
+        while (localeButtonElements.hasMoreElements()) {
+            var button = localeButtonElements.nextElement();
+            button.setEnabled(cache.isEmojiEnable());
+
+            button.addActionListener(e -> {
+                var type = e.getActionCommand();
+                cache.setEmojiLocation(GitmojiLocationDomain.valueOf(type));
+                var textPreview = CommUtil.handlePreviewGitemojiLocation(cache);
+                labelLocationPreview.setText(textPreview);
+            });
+        }
     }
 
     /**
@@ -183,7 +210,18 @@ public class CommitTemplateSettingUI {
         optionLanguage.setSelectedItem(cache.getLanguage());
         checkBoxCommitType.setSelected(cache.isCustomEnable());
         checkBoxGitmoji.setSelected(cache.isEmojiEnable());
+        this.cache.setEmojiLocation(cache.getEmojiLocation());
         this.cache.setCustomCommitTypeList(cache.getCustomCommitTypeList());
+        var localeButtonElements = locationButtonGroup.getElements();
+        while (localeButtonElements.hasMoreElements()) {
+            var button = localeButtonElements.nextElement();
+            button.setEnabled(cache.isEmojiEnable());
+
+            //设置选中状态
+            if (button.getActionCommand().equals(cache.getEmojiLocation().getKey())) {
+                button.setSelected(true);
+            }
+        }
 
         handleDisplayLanguageEvent(cache.getLanguage());
     }
@@ -211,6 +249,14 @@ public class CommitTemplateSettingUI {
         //使用Gitmoji信息
         active = checkBoxGitmoji.isSelected() ? "active" : "deActive";
         checkBoxGitmoji.setText(resourceBundle.getString("plugin.setting.label.customGitmojiTips." + active));
+        var localeButtonElements = locationButtonGroup.getElements();
+        while (localeButtonElements.hasMoreElements()) {
+            var button = localeButtonElements.nextElement();
+            var key = button.getActionCommand();
+            button.setText(resourceBundle.getString("plugin.setting.location." + key));
+        }
+        var textPreview = CommUtil.handlePreviewGitemojiLocation(cache);
+        labelLocationPreview.setText(textPreview);
     }
 
     {
@@ -233,17 +279,17 @@ public class CommitTemplateSettingUI {
         tabbedPane = new JTabbedPane();
         mainPanel.add(tabbedPane, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, new Dimension(200, 200), null, 0, false));
         settingPanel = new JPanel();
-        settingPanel.setLayout(new GridLayoutManager(5, 6, new Insets(0, 0, 0, 0), -1, -1));
+        settingPanel.setLayout(new GridLayoutManager(5, 5, new Insets(0, 0, 0, 0), -1, -1));
         tabbedPane.addTab("设置", settingPanel);
         typeTablePanel = new JPanel();
         typeTablePanel.setLayout(new BorderLayout(0, 0));
         typeTablePanel.setEnabled(false);
         typeTablePanel.setToolTipText("");
-        settingPanel.add(typeTablePanel, new GridConstraints(4, 0, 1, 6, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
+        settingPanel.add(typeTablePanel, new GridConstraints(4, 0, 1, 5, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
         optionLanguage = new JComboBox();
         Font optionLanguageFont = UIManager.getFont("Label.font");
         if (optionLanguageFont != null) optionLanguage.setFont(optionLanguageFont);
-        settingPanel.add(optionLanguage, new GridConstraints(0, 1, 1, 5, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        settingPanel.add(optionLanguage, new GridConstraints(0, 1, 1, 4, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         labelLanguage = new JLabel();
         Font labelLanguageFont = UIManager.getFont("Label.font");
         if (labelLanguageFont != null) labelLanguage.setFont(labelLanguageFont);
@@ -253,7 +299,7 @@ public class CommitTemplateSettingUI {
         Font checkBoxCommitTypeFont = UIManager.getFont("Label.font");
         if (checkBoxCommitTypeFont != null) checkBoxCommitType.setFont(checkBoxCommitTypeFont);
         checkBoxCommitType.setText("使用自定义的Git提交类型");
-        settingPanel.add(checkBoxCommitType, new GridConstraints(1, 1, 1, 5, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        settingPanel.add(checkBoxCommitType, new GridConstraints(1, 1, 1, 4, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         labelCommitType = new JLabel();
         Font labelCommitTypeFont = UIManager.getFont("Label.font");
         if (labelCommitTypeFont != null) labelCommitType.setFont(labelCommitTypeFont);
@@ -270,81 +316,78 @@ public class CommitTemplateSettingUI {
         checkBoxGitmoji.setText("使用Gitmoji符号");
         settingPanel.add(checkBoxGitmoji, new GridConstraints(2, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         radioGitmojiLocation1 = new JRadioButton();
+        radioGitmojiLocation1.setActionCommand("location1");
+        radioGitmojiLocation1.setEnabled(true);
         Font radioGitmojiLocation1Font = UIManager.getFont("Label.font");
         if (radioGitmojiLocation1Font != null) radioGitmojiLocation1.setFont(radioGitmojiLocation1Font);
         radioGitmojiLocation1.setText("位置1");
         settingPanel.add(radioGitmojiLocation1, new GridConstraints(2, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        final JLabel label1 = new JLabel();
-        Font label1Font = UIManager.getFont("Label.font");
-        if (label1Font != null) label1.setFont(label1Font);
-        label1.setText("预览效果");
-        settingPanel.add(label1, new GridConstraints(3, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        final JLabel label2 = new JLabel();
-        Font label2Font = UIManager.getFont("Label.font");
-        if (label2Font != null) label2.setFont(label2Font);
-        label2.setText("feat(Type of change): Message");
-        settingPanel.add(label2, new GridConstraints(3, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        labelGitmojiWebsite = new JLabel();
-        Font labelGitmojiWebsiteFont = UIManager.getFont("Label.font");
-        if (labelGitmojiWebsiteFont != null) labelGitmojiWebsite.setFont(labelGitmojiWebsiteFont);
-        labelGitmojiWebsite.setForeground(new Color(-13273872));
-        labelGitmojiWebsite.setText("Gitmoji 网站");
-        settingPanel.add(labelGitmojiWebsite, new GridConstraints(3, 5, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        final Spacer spacer1 = new Spacer();
-        settingPanel.add(spacer1, new GridConstraints(3, 2, 1, 3, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
         radioGitmojiLocation2 = new JRadioButton();
+        radioGitmojiLocation2.setActionCommand("location2");
         Font radioGitmojiLocation2Font = UIManager.getFont("Label.font");
         if (radioGitmojiLocation2Font != null) radioGitmojiLocation2.setFont(radioGitmojiLocation2Font);
         radioGitmojiLocation2.setText("位置2");
         settingPanel.add(radioGitmojiLocation2, new GridConstraints(2, 3, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         radioGitmojiLocation3 = new JRadioButton();
+        radioGitmojiLocation3.setActionCommand("location3");
         Font radioGitmojiLocation3Font = UIManager.getFont("Label.font");
         if (radioGitmojiLocation3Font != null) radioGitmojiLocation3.setFont(radioGitmojiLocation3Font);
         radioGitmojiLocation3.setText("位置3");
         settingPanel.add(radioGitmojiLocation3, new GridConstraints(2, 4, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        labelLocationPreview = new JLabel();
+        Font labelLocationPreviewFont = UIManager.getFont("Label.font");
+        if (labelLocationPreviewFont != null) labelLocationPreview.setFont(labelLocationPreviewFont);
+        labelLocationPreview.setText("feat(Type of change): Message1");
+        settingPanel.add(labelLocationPreview, new GridConstraints(3, 1, 1, 3, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        labelGitmojiWebsite = new JLabel();
+        Font labelGitmojiWebsiteFont = UIManager.getFont("Label.font");
+        if (labelGitmojiWebsiteFont != null) labelGitmojiWebsite.setFont(labelGitmojiWebsiteFont);
+        labelGitmojiWebsite.setForeground(new Color(-13273872));
+        labelGitmojiWebsite.setText("Gitmoji 网站");
+        settingPanel.add(labelGitmojiWebsite, new GridConstraints(3, 4, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         aboutPanel = new JPanel();
         aboutPanel.setLayout(new GridLayoutManager(9, 3, new Insets(0, 0, 0, 0), -1, -1));
         tabbedPane.addTab("关于", aboutPanel);
-        final JLabel label3 = new JLabel();
-        Font label3Font = UIManager.getFont("Label.font");
-        if (label3Font != null) label3.setFont(label3Font);
-        label3.setText("Git Commit Template");
-        aboutPanel.add(label3, new GridConstraints(1, 0, 1, 2, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        final JLabel label4 = new JLabel();
-        Font label4Font = UIManager.getFont("Label.font");
-        if (label4Font != null) label4.setFont(label4Font);
-        label4.setText("Java Version");
-        aboutPanel.add(label4, new GridConstraints(4, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label1 = new JLabel();
+        Font label1Font = UIManager.getFont("Label.font");
+        if (label1Font != null) label1.setFont(label1Font);
+        label1.setText("Git Commit Template");
+        aboutPanel.add(label1, new GridConstraints(1, 0, 1, 2, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label2 = new JLabel();
+        Font label2Font = UIManager.getFont("Label.font");
+        if (label2Font != null) label2.setFont(label2Font);
+        label2.setText("Java Version");
+        aboutPanel.add(label2, new GridConstraints(4, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         labelJavaVersion = new JLabel();
         Font labelJavaVersionFont = UIManager.getFont("Label.font");
         if (labelJavaVersionFont != null) labelJavaVersion.setFont(labelJavaVersionFont);
         labelJavaVersion.setText("17");
         aboutPanel.add(labelJavaVersion, new GridConstraints(4, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label3 = new JLabel();
+        Font label3Font = UIManager.getFont("Label.font");
+        if (label3Font != null) label3.setFont(label3Font);
+        label3.setText("Tech Support");
+        aboutPanel.add(label3, new GridConstraints(6, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label4 = new JLabel();
+        Font label4Font = UIManager.getFont("Label.font");
+        if (label4Font != null) label4.setFont(label4Font);
+        label4.setText("_Chenbing");
+        aboutPanel.add(label4, new GridConstraints(6, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final JLabel label5 = new JLabel();
         Font label5Font = UIManager.getFont("Label.font");
         if (label5Font != null) label5.setFont(label5Font);
-        label5.setText("Tech Support");
-        aboutPanel.add(label5, new GridConstraints(6, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        final JLabel label6 = new JLabel();
-        Font label6Font = UIManager.getFont("Label.font");
-        if (label6Font != null) label6.setFont(label6Font);
-        label6.setText("_Chenbing");
-        aboutPanel.add(label6, new GridConstraints(6, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        final JLabel label7 = new JLabel();
-        Font label7Font = UIManager.getFont("Label.font");
-        if (label7Font != null) label7.setFont(label7Font);
-        label7.setText("Platform Version");
-        aboutPanel.add(label7, new GridConstraints(5, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        label5.setText("Platform Version");
+        aboutPanel.add(label5, new GridConstraints(5, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         labelPlatformVersion = new JLabel();
         Font labelPlatformVersionFont = UIManager.getFont("Label.font");
         if (labelPlatformVersionFont != null) labelPlatformVersion.setFont(labelPlatformVersionFont);
         labelPlatformVersion.setText("2023.3 (IC)");
         aboutPanel.add(labelPlatformVersion, new GridConstraints(5, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        final JLabel label8 = new JLabel();
-        Font label8Font = UIManager.getFont("Label.font");
-        if (label8Font != null) label8.setFont(label8Font);
-        label8.setText("Build Version");
-        aboutPanel.add(label8, new GridConstraints(2, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label6 = new JLabel();
+        Font label6Font = UIManager.getFont("Label.font");
+        if (label6Font != null) label6.setFont(label6Font);
+        label6.setText("Build Version");
+        aboutPanel.add(label6, new GridConstraints(2, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         labelBuildVersion = new JLabel();
         Font labelBuildVersionFont = UIManager.getFont("Label.font");
         if (labelBuildVersionFont != null) labelBuildVersion.setFont(labelBuildVersionFont);
@@ -352,28 +395,28 @@ public class CommitTemplateSettingUI {
         aboutPanel.add(labelBuildVersion, new GridConstraints(2, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         imageIcon = new JLabel();
         aboutPanel.add(imageIcon, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, new Dimension(128, 128), new Dimension(128, 128), new Dimension(128, 128), 0, false));
-        final JLabel label9 = new JLabel();
-        Font label9Font = UIManager.getFont("Label.font");
-        if (label9Font != null) label9.setFont(label9Font);
-        label9.setText("Build Time");
-        aboutPanel.add(label9, new GridConstraints(3, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label7 = new JLabel();
+        Font label7Font = UIManager.getFont("Label.font");
+        if (label7Font != null) label7.setFont(label7Font);
+        label7.setText("Build Time");
+        aboutPanel.add(label7, new GridConstraints(3, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         labelBuildTime = new JLabel();
         Font labelBuildTimeFont = UIManager.getFont("Label.font");
         if (labelBuildTimeFont != null) labelBuildTime.setFont(labelBuildTimeFont);
         labelBuildTime.setText("YYYYMMdd");
         aboutPanel.add(labelBuildTime, new GridConstraints(3, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final Spacer spacer1 = new Spacer();
+        aboutPanel.add(spacer1, new GridConstraints(2, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
         final Spacer spacer2 = new Spacer();
-        aboutPanel.add(spacer2, new GridConstraints(2, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
+        aboutPanel.add(spacer2, new GridConstraints(3, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
         final Spacer spacer3 = new Spacer();
-        aboutPanel.add(spacer3, new GridConstraints(3, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
+        aboutPanel.add(spacer3, new GridConstraints(6, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
         final Spacer spacer4 = new Spacer();
-        aboutPanel.add(spacer4, new GridConstraints(6, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
+        aboutPanel.add(spacer4, new GridConstraints(5, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
         final Spacer spacer5 = new Spacer();
-        aboutPanel.add(spacer5, new GridConstraints(5, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
+        aboutPanel.add(spacer5, new GridConstraints(4, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
         final Spacer spacer6 = new Spacer();
-        aboutPanel.add(spacer6, new GridConstraints(4, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
-        final Spacer spacer7 = new Spacer();
-        aboutPanel.add(spacer7, new GridConstraints(7, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        aboutPanel.add(spacer6, new GridConstraints(7, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         final JPanel panel1 = new JPanel();
         panel1.setLayout(new GridLayoutManager(1, 2, new Insets(0, 0, 0, 0), -1, -1));
         aboutPanel.add(panel1, new GridConstraints(8, 0, 1, 3, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
@@ -382,13 +425,12 @@ public class CommitTemplateSettingUI {
         if (buttonCopyFont != null) buttonCopy.setFont(buttonCopyFont);
         buttonCopy.setText("复制");
         panel1.add(buttonCopy, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        final Spacer spacer8 = new Spacer();
-        panel1.add(spacer8, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
-        ButtonGroup buttonGroup;
-        buttonGroup = new ButtonGroup();
-        buttonGroup.add(radioGitmojiLocation1);
-        buttonGroup.add(radioGitmojiLocation2);
-        buttonGroup.add(radioGitmojiLocation3);
+        final Spacer spacer7 = new Spacer();
+        panel1.add(spacer7, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
+        locationButtonGroup = new ButtonGroup();
+        locationButtonGroup.add(radioGitmojiLocation1);
+        locationButtonGroup.add(radioGitmojiLocation2);
+        locationButtonGroup.add(radioGitmojiLocation3);
     }
 
     /**

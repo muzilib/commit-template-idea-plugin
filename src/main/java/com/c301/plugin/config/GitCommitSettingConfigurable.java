@@ -52,6 +52,7 @@ public class GitCommitSettingConfigurable implements SearchableConfigurable {
         if (cache.isEmojiEnable() != store.isEmojiEnable()) return true;
         if (!cache.getLanguage().equals(store.getLanguage())) return true;
         if (cache.isCustomEnable() != store.isCustomEnable()) return true;
+        if (cache.getEmojiLocation() != store.getEmojiLocation()) return true;
         if (cache.getCustomCommitTypeList().size() != store.getCustomCommitTypeList().size()) return true;
 
         //比对内容文本是否编辑
@@ -73,6 +74,7 @@ public class GitCommitSettingConfigurable implements SearchableConfigurable {
         cache.setLanguage(store.getLanguage());
         cache.setEmojiEnable(store.isEmojiEnable());
         cache.setCustomEnable(store.isCustomEnable());
+        cache.setEmojiLocation(store.getEmojiLocation());
         cache.setCustomCommitTypeList(CommUtil.deepCopy(store.getCustomCommitTypeList()));
         commitSettingUI.handleResetEvent(cache);
     }
@@ -82,6 +84,7 @@ public class GitCommitSettingConfigurable implements SearchableConfigurable {
         store.setLanguage(cache.getLanguage());
         store.setEmojiEnable(cache.isEmojiEnable());
         store.setCustomEnable(cache.isCustomEnable());
+        store.setEmojiLocation(cache.getEmojiLocation());
         store.setCustomCommitTypeList(CommUtil.deepCopy(cache.getCustomCommitTypeList()));
     }
 
