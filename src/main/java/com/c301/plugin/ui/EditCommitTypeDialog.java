@@ -52,8 +52,8 @@ public class EditCommitTypeDialog extends JDialog {
 
         setContentPane(contentPane);
         getRootPane().setDefaultButton(buttonOK);
-        setPreferredSize(new Dimension(460, 270));
-        setMinimumSize(new Dimension(460, 270));
+        setPreferredSize(new Dimension(460, 400));
+        setMinimumSize(new Dimension(460, 400));
         pack();
         setModal(true);
 
@@ -277,8 +277,8 @@ public class EditCommitTypeDialog extends JDialog {
         if (window == null) window = new WindowsConfigDomain();
 
         //设置窗口宽高
-        var width = 400;
-        var height = 200;
+        var width = 460;
+        var height = 400;
         var storeWidth = window.getWindowWidth();
         if (storeWidth < width) window.setWindowWidth(width);
         var storeHeight = window.getWindowHeight();
@@ -305,6 +305,7 @@ public class EditCommitTypeDialog extends JDialog {
 
         inputType.setSelectedItem(commitType.getType());
         inputDescribe.setText(commitType.getDescription());
+        inputGitmoji.setSelectedItem(commitType.getEmoji());
     }
 
     /**

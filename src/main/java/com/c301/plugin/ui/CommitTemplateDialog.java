@@ -290,6 +290,7 @@ public class CommitTemplateDialog extends JDialog {
 
         //渲染提交类型按钮组信息
         var commitTypeList = CommUtil.getDefaultCommitTypeList(language.getKey());
+        if (store.isCustomEnable()) commitTypeList = store.getCustomCommitTypeList();
         var buttonElements = typeChangeGroup.getElements();
         if (commitTypeList.isEmpty()) {
             while (buttonElements.hasMoreElements()) {
