@@ -2,6 +2,7 @@ package com.c301.plugin.config;
 
 import com.c301.plugin.constant.Constant;
 import com.c301.plugin.model.CommitTypeDomain;
+import com.c301.plugin.model.GitmojiLocationDomain;
 import com.c301.plugin.model.LanguageDomain;
 import com.c301.plugin.model.WindowsConfigDomain;
 import com.intellij.openapi.application.ApplicationManager;
@@ -72,6 +73,10 @@ public class StoreCommitTemplateState implements PersistentStateComponent<StoreC
      * 自定义emoji启用状态
      */
     private boolean emojiEnable = false;
+    /**
+     * 自定义emoji位置
+     */
+    private GitmojiLocationDomain emojiLocation = GitmojiLocationDomain.LOCATION1;
     /**
      * 用户自定义 提交类型列表
      */

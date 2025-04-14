@@ -36,3 +36,72 @@ dependencies {
 tasks.withType(JavaCompile).configureEach {
     options.encoding = "UTF-8"
 }
+
+def updateVersionProperties(String channel) {
+    def propertiesFile = file('src/main/resources/version.properties')
+    def properties = new Properties()
+    properties.load(new FileInputStream(propertiesFile))
+
+    properties.setProperty('channelCode', channel)
+    properties.setProperty('builderTime', new Date().format('yyyyMMddHHmm'))
+
+    properties.store(new FileOutputStream(propertiesFile), null)
+    return properties.getProperty('builderTime')
+}
+
+tasks.register('buildStable') {
+    group = 'ct-idea-plugin'
+    description = '构建Stable版本'
+
+    doFirst {
+        def builderTime = updateVersionProperties('Stable')
+        println("构建Stable版本")
+        ext.builderTime = builderTime
+    }
+
+    dependsOn clean
+    finalizedBy buildPlugin
+}
+
+tasks.register('buildAlpha') {
+    group = 'ct-idea-plugin'
+    description = '构建Alpha版本'
+
+    doFirst {
+        def builderTime = updateVersionProperties('Alpha')
+        println("构建Alpha版本")
+        ext.builderTime = builderTime
+    }
+
+    dependsOn clean
+    finalizedBy buildPlugin
+}
+
+tasks.register('renameArtifact') {
+    group = 'ct-idea-plugin'
+    description = '重命名构建产物'
+
+    doLast {
+        def buildTask = gradle.taskGraph.allTasks.find { it.name == 'buildStable' || it.name == 'buildAlpha' }
+        def builderTime = buildTask.builderTime
+        def channel = buildTask.name == 'buildStable' ? 'stable' : 'alpha'
+
+        //修改jar文件名
+        def originalJar = file("build/libs/commit-template-idea-plugin-${project.version}.jar")
+        def newJar = file("build/libs/commit-template-idea-plugin-${project.version}-${channel}(${builderTime}).jar")
+        if (originalJar.exists()) {
+            originalJar.renameTo(newJar)
+            println("已重命名构建产物jar: ${newJar.name}")
+        }
+
+        //修改zip文件名
+        originalJar = file("build/distributions/commit-template-idea-plugin-${project.version}.zip")
+        newJar = file("build/distributions/commit-template-idea-plugin-${project.version}-${channel}(${builderTime}).zip")
+        if (originalJar.exists()) {
+            originalJar.renameTo(newJar)
+            println("已重命名构建产物zip: ${newJar.name}")
+        }
+    }
+}
+
+buildPlugin.finalizedBy renameArtifact

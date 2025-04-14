@@ -173,23 +173,32 @@ public class GitCommitDomain {
      *
      * @return 提交信息
      */
-    public String toStringMessage() {
+    public String toStringMessage(GitmojiLocationDomain location) {
         var builder = new StringBuilder();
 
         //提交类型
         if (commitType != null) {
-            builder.append(commitType.getEmoji().getEmoji())
-                    .append(commitType.getType());
+            if (location != null && location.equals(GitmojiLocationDomain.LOCATION1)) {
+                builder.append(commitType.getEmoji().getEmoji());
+            }
+            builder.append(commitType.getType());
         }
 
         //变更范围
         if (StrUtil.isNotBlank(changeScope)) {
             var value = changeScope.trim();
-            builder.append("(").append(value).append("): ");
+            builder.append("(");
+            if (location != null && location.equals(GitmojiLocationDomain.LOCATION2)) {
+                builder.append(commitType.getEmoji().getEmoji()).append(" ");
+            }
+            builder.append(value).append("): ");
         }
 
         //短说明
         if (StrUtil.isNotBlank(shortDescription)) {
+            if (location != null && location.equals(GitmojiLocationDomain.LOCATION3)) {
+                builder.append(commitType.getEmoji().getEmoji());
+            }
             builder.append(shortDescription.trim());
         }
 

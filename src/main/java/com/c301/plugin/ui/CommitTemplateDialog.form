@@ -187,7 +187,7 @@
               <text value="Type of change"/>
             </properties>
           </component>
-          <grid id="8613" layout-manager="GridLayoutManager" row-count="12" column-count="6" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+          <grid id="8613" layout-manager="GridLayoutManager" row-count="12" column-count="3" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
             <margin top="0" left="0" bottom="0" right="0"/>
             <constraints>
               <grid row="1" column="1" row-span="1" col-span="2" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
@@ -210,7 +210,7 @@
               </component>
               <component id="b26bf" class="javax.swing.JRadioButton" binding="radioButton2">
                 <constraints>
-                  <grid row="2" column="0" row-span="1" col-span="6" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                  <grid row="2" column="0" row-span="1" col-span="3" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
                   <actionCommand value="2"/>
@@ -223,7 +223,7 @@
               </component>
               <component id="5d905" class="javax.swing.JRadioButton" binding="radioButton3">
                 <constraints>
-                  <grid row="3" column="0" row-span="1" col-span="6" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                  <grid row="3" column="0" row-span="1" col-span="3" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
                   <actionCommand value="3"/>
@@ -235,7 +235,7 @@
               </component>
               <component id="e8066" class="javax.swing.JRadioButton" binding="radioButton4">
                 <constraints>
-                  <grid row="4" column="0" row-span="1" col-span="6" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                  <grid row="4" column="0" row-span="1" col-span="3" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
                   <actionCommand value="4"/>
@@ -247,7 +247,7 @@
               </component>
               <component id="1ff40" class="javax.swing.JRadioButton" binding="radioButton5">
                 <constraints>
-                  <grid row="5" column="0" row-span="1" col-span="6" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                  <grid row="5" column="0" row-span="1" col-span="3" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
                   <actionCommand value="5"/>
@@ -259,7 +259,7 @@
               </component>
               <component id="6a376" class="javax.swing.JRadioButton" binding="radioButton6">
                 <constraints>
-                  <grid row="6" column="0" row-span="1" col-span="6" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                  <grid row="6" column="0" row-span="1" col-span="3" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
                   <actionCommand value="6"/>
@@ -272,7 +272,7 @@
               </component>
               <component id="78469" class="javax.swing.JRadioButton" binding="radioButton7">
                 <constraints>
-                  <grid row="7" column="0" row-span="1" col-span="6" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                  <grid row="7" column="0" row-span="1" col-span="3" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
                   <actionCommand value="7"/>
@@ -284,7 +284,7 @@
               </component>
               <component id="7a3c5" class="javax.swing.JRadioButton" binding="radioButton8">
                 <constraints>
-                  <grid row="8" column="0" row-span="1" col-span="6" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                  <grid row="8" column="0" row-span="1" col-span="3" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
                   <actionCommand value="8"/>
@@ -296,7 +296,7 @@
               </component>
               <component id="ef72b" class="javax.swing.JRadioButton" binding="radioButton9">
                 <constraints>
-                  <grid row="9" column="0" row-span="1" col-span="6" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                  <grid row="9" column="0" row-span="1" col-span="3" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
                   <actionCommand value="9"/>
@@ -308,7 +308,7 @@
               </component>
               <component id="50ff3" class="javax.swing.JRadioButton" binding="radioButton10">
                 <constraints>
-                  <grid row="10" column="0" row-span="1" col-span="6" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                  <grid row="10" column="0" row-span="1" col-span="3" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
                   <actionCommand value="10"/>
@@ -320,7 +320,7 @@
               </component>
               <component id="2e4c5" class="javax.swing.JRadioButton" binding="radioButton11">
                 <constraints>
-                  <grid row="11" column="0" row-span="1" col-span="6" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                  <grid row="11" column="0" row-span="1" col-span="3" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
                   <actionCommand value="11"/>

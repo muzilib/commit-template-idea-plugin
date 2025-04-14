@@ -33,6 +33,10 @@ public class SettingCacheDomain {
      */
     private boolean emojiEnable = false;
     /**
+     * 自定义emoji位置
+     */
+    private GitmojiLocationDomain emojiLocation = GitmojiLocationDomain.LOCATION1;
+    /**
      * 用户自定义 提交类型列表
      */
     private LinkedList<CommitTypeDomain> customCommitTypeList = new LinkedList<>();
