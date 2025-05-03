@@ -98,72 +98,76 @@ public class GitCommitDomain {
      */
     public static GitCommitDomain parseRawMessage(String rawMessage) {
         var gitCommit = new GitCommitDomain();
-        if (StrUtil.isNotBlank(rawMessage)) {
-            try {
-                // 去除第一个emoji
-                var pattern = Pattern.compile("[\\x{1F300}-\\x{1F5FF}\\x{1F600}-\\x{1F64F}\\x{1F680}-\\x{1F6FF}\\x{2600}-\\x{26FF}\\x{2700}-\\x{27BF}\\x{FE00}-\\x{FE0F}]", Pattern.UNICODE_CHARACTER_CLASS);
-                var matcher = pattern.matcher(rawMessage);
-                if (matcher.find()) rawMessage = matcher.replaceAll("");
+        if (StrUtil.isBlank(rawMessage)) return gitCommit;
 
-                // 在正则前统一处理换行符
-                rawMessage = rawMessage.replaceAll("\\r\\n?", "\n");
-                pattern = Pattern.compile("^([a-zA-Z0-9\\u4e00-\\u9fa5-]+)?(?:\\(([^()]+)\\))?:\\s+([^\\n]+)", Pattern.UNICODE_CHARACTER_CLASS);
-                matcher = pattern.matcher(rawMessage);
-                if (!matcher.find()) return gitCommit;
+        try {
+            // 去除第一个emoji
+            var pattern = Pattern.compile("[\\x{1F300}-\\x{1F5FF}\\x{1F600}-\\x{1F64F}\\x{1F680}-\\x{1F6FF}\\x{2600}-\\x{26FF}\\x{2700}-\\x{27BF}\\x{FE00}-\\x{FE0F}]", Pattern.UNICODE_CHARACTER_CLASS);
+            var matcher = pattern.matcher(rawMessage);
+            if (matcher.find()) rawMessage = matcher.replaceAll("");
 
-                //解析第一行内容
-                gitCommit.setCommitType(CommUtil.parseCommitType(matcher.group(1)));
-                gitCommit.setChangeScope(matcher.group(2));
-                gitCommit.setShortDescription(matcher.group(3));
+            // 在正则前统一处理换行符
+            rawMessage = rawMessage.replaceAll("\\r\\n?", "\n");
+            // 修改正则表达式以支持两种格式：
+            // 1. style(搭建项目): 处理服务注册失败的问题
+            // 2. style: 处理服务注册失败的问题
+            pattern = Pattern.compile("^([a-zA-Z0-9\\u4e00-\\u9fa5-]+)(?:\\(([^()]+)\\))?:\\s+([^\\n]+)", Pattern.UNICODE_CHARACTER_CLASS);
+            matcher = pattern.matcher(rawMessage);
+            if (!matcher.find()) return gitCommit;
 
-                //解析剩余信息
-                var strings = rawMessage.split(CHAR_LINE);
-                if (strings.length < 2) return gitCommit;
+            //解析第一行内容
+            gitCommit.setCommitType(CommUtil.parseCommitType(matcher.group(1)));
+            // 如果group(2)为null，说明没有括号部分
+            gitCommit.setChangeScope(matcher.group(2) != null ? matcher.group(2) : "");
+            gitCommit.setShortDescription(matcher.group(3));
 
-                //设置长描述
-                var index = 2;
-                var builder = new StringBuilder();
-                for (; index < strings.length; index++) {
-                    var line = strings[index];
-                    if (line.startsWith("BREAKING") || line.startsWith("Closes") || line.equalsIgnoreCase("[skip ci]")) {
-                        break;
-                    }
-                    builder.append(line);
-                    if (StrUtil.isNotBlank(line)) builder.append('\n');
+            //解析剩余信息
+            var strings = rawMessage.split(CHAR_LINE);
+            if (strings.length < 2) return gitCommit;
+
+            //设置长描述
+            var index = 2;
+            var builder = new StringBuilder();
+            for (; index < strings.length; index++) {
+                var line = strings[index];
+                if (line.startsWith("BREAKING") || line.startsWith("Closes") || line.equalsIgnoreCase("[skip ci]")) {
+                    break;
                 }
-                if (!builder.isEmpty()) builder.deleteCharAt(builder.length() - 1);
-                gitCommit.setLongDescription(builder.toString());
-
-                //设置重大变化
-                builder = new StringBuilder();
-                for (; index < strings.length; index++) {
-                    var line = strings[index];
-                    if (line.startsWith("Closes") || line.equalsIgnoreCase("[skip ci]")) {
-                        break;
-                    }
-                    if (line.startsWith("BREAKING CHANGE: ")) line = line.replace("BREAKING CHANGE: ", "");
-                    builder.append(line);
-                    if (StrUtil.isNotBlank(line)) builder.append('\n');
-                }
-                if (!builder.isEmpty()) builder.deleteCharAt(builder.length() - 1);
-                gitCommit.setBreakingChanges(builder.toString());
-
-                //获取关闭问题列表
-                var closeIssuesList = new LinkedList<Integer>();
-                matcher = COMMIT_CLOSES_FORMAT.matcher(rawMessage);
-                while (matcher.find()) {
-                    var issue = matcher.group(1);
-                    issue = issue.trim().replaceAll("#", "");
-
-                    if (!StrUtil.isNumeric(issue)) continue;
-                    closeIssuesList.add(Integer.parseInt(issue));
-                }
-                gitCommit.setClosedIssues(closeIssuesList);
-
-                gitCommit.setSkipCI(rawMessage.contains(SKIP_CI));
-                gitCommit.setWrapText(false);
-            } catch (Exception ignored) {
+                builder.append(line);
+                if (StrUtil.isNotBlank(line)) builder.append('\n');
             }
+            if (!builder.isEmpty()) builder.deleteCharAt(builder.length() - 1);
+            gitCommit.setLongDescription(builder.toString());
+
+            //设置重大变化
+            builder = new StringBuilder();
+            for (; index < strings.length; index++) {
+                var line = strings[index];
+                if (line.startsWith("Closes") || line.equalsIgnoreCase("[skip ci]")) {
+                    break;
+                }
+                if (line.startsWith("BREAKING CHANGE: ")) line = line.replace("BREAKING CHANGE: ", "");
+                builder.append(line);
+                if (StrUtil.isNotBlank(line)) builder.append('\n');
+            }
+            if (!builder.isEmpty()) builder.deleteCharAt(builder.length() - 1);
+            gitCommit.setBreakingChanges(builder.toString());
+
+            //获取关闭问题列表
+            var closeIssuesList = new LinkedList<Integer>();
+            matcher = COMMIT_CLOSES_FORMAT.matcher(rawMessage);
+            while (matcher.find()) {
+                var issue = matcher.group(1);
+                issue = issue.trim().replaceAll("#", "");
+
+                if (!StrUtil.isNumeric(issue)) continue;
+                closeIssuesList.add(Integer.parseInt(issue));
+            }
+            gitCommit.setClosedIssues(closeIssuesList);
+
+            gitCommit.setSkipCI(rawMessage.contains(SKIP_CI));
+            gitCommit.setWrapText(false);
+        } catch (Exception ignored) {
         }
         return gitCommit;
     }
@@ -192,6 +196,8 @@ public class GitCommitDomain {
                 builder.append(commitType.getEmoji().getEmoji()).append(" ");
             }
             builder.append(value).append("): ");
+        } else {
+            builder.append(": ");
         }
 
         //短说明
