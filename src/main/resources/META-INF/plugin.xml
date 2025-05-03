@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>commit-template-plugin</id>
     <name>Git Commit Template</name>
-    <version>1.0.7</version>
+    <version>1.0.8-B1</version>
     <vendor email="muzi@muzilib.com" url="https://github.com/muzilib">Chenbing</vendor>
 
     <description>
@@ -25,6 +25,15 @@
 
     <change-notes>
         <![CDATA[
+        <p>
+            <h4>V250503-1202</h4>
+            <p>1. Fixed the error that the position of multiple monitors exceeds the visible range
+            <a href="https://github.com/muzilib/commit-template-idea-plugin/issues/17">Issue #17</a>
+            </p>
+            <p>2. Optimized Git submission template to support optional configuration of Scope
+            <a href="https://github.com/muzilib/commit-template-idea-plugin/issues/16">Issue #16</a>
+            </p>
+        </p>
         <p>
             <h4>V250326-2342</h4>
             <p>1. Added a settings interface. You can go to "Settings > Tools > Commit Template Idea Plugin" to customize the settings.</p>
