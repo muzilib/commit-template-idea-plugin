@@ -242,6 +242,31 @@ public class EditCommitTypeDialog extends JDialog {
     }
 
     /**
+     * 检查窗口位置是否在屏幕范围内
+     *
+     * @param x      窗口X坐标
+     * @param y      窗口Y坐标
+     * @param width  窗口宽度
+     * @param height 窗口高度
+     * @return 是否在屏幕范围内
+     */
+    private boolean isWindowInScreenBounds(int x, int y, int width, int height) {
+        GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+        GraphicsDevice[] screens = ge.getScreenDevices();
+
+        for (GraphicsDevice screen : screens) {
+            Rectangle screenBounds = screen.getDefaultConfiguration().getBounds();
+            if (screenBounds.contains(x, y) &&
+                    screenBounds.contains(x + width, y) &&
+                    screenBounds.contains(x, y + height) &&
+                    screenBounds.contains(x + width, y + height)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * 初始化弹窗配置
      */
     public void handleUIInit() {
@@ -289,7 +314,15 @@ public class EditCommitTypeDialog extends JDialog {
         //设置窗口坐标
         var x = window.getWindowX();
         var y = window.getWindowY();
-        if (x != -1 && y != -1) setBounds(x, y, storeWidth, storeHeight);
+        if (x != -1 && y != -1) {
+            if (isWindowInScreenBounds(x, y, storeWidth, storeHeight)) {
+                setBounds(x, y, storeWidth, storeHeight);
+            } else {
+                // 如果窗口位置不在屏幕范围内，则显示在父窗口中心
+                var parentWindow = WindowManager.getInstance().getMostRecentFocusedWindow();
+                setLocationRelativeTo(parentWindow);
+            }
+        }
     }
 
     /**

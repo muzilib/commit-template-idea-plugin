@@ -259,6 +259,31 @@ public class CommitTemplateDialog extends JDialog {
     }
 
     /**
+     * 检查窗口位置是否在屏幕范围内
+     *
+     * @param x      窗口X坐标
+     * @param y      窗口Y坐标
+     * @param width  窗口宽度
+     * @param height 窗口高度
+     * @return 是否在屏幕范围内
+     */
+    private boolean isWindowInScreenBounds(int x, int y, int width, int height) {
+        GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+        GraphicsDevice[] screens = ge.getScreenDevices();
+
+        for (GraphicsDevice screen : screens) {
+            Rectangle screenBounds = screen.getDefaultConfiguration().getBounds();
+            if (screenBounds.contains(x, y) &&
+                    screenBounds.contains(x + width, y) &&
+                    screenBounds.contains(x, y + height) &&
+                    screenBounds.contains(x + width, y + height)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * 处理语言显示事件
      *
      * @param language 语言对象
@@ -350,7 +375,16 @@ public class CommitTemplateDialog extends JDialog {
         //设置窗口坐标
         var x = window.getWindowX();
         var y = window.getWindowY();
-        if (x != -1 && y != -1) setBounds(x, y, storeWidth, storeHeight);
+        if (x != -1 && y != -1) {
+            if (isWindowInScreenBounds(x, y, storeWidth, storeHeight)) {
+                setBounds(x, y, storeWidth, storeHeight);
+            } else {
+                // 如果窗口位置不在屏幕范围内，则显示在父窗口中心
+                var project = ((CommitProjectPanelAdapter) commitMessageI).getProject();
+                var parentWindow = WindowManager.getInstance().getFrame(project);
+                setLocationRelativeTo(parentWindow);
+            }
+        }
     }
 
     /**
@@ -533,7 +567,7 @@ public class CommitTemplateDialog extends JDialog {
         labelCommitTypeNoData.setEnabled(true);
         Font labelCommitTypeNoDataFont = UIManager.getFont("Label.font");
         if (labelCommitTypeNoDataFont != null) labelCommitTypeNoData.setFont(labelCommitTypeNoDataFont);
-        labelCommitTypeNoData.setText("没有配置“提交类型”，请前往设置页面配置: ");
+        labelCommitTypeNoData.setText("没有配置\"提交类型\"，请前往设置页面配置: ");
         panel4.add(labelCommitTypeNoData, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final Spacer spacer2 = new Spacer();
         panel4.add(spacer2, new GridConstraints(0, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
