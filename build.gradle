@@ -22,6 +22,7 @@ intellij {
     version = project.platformVersion
     type = project.platformType
 
+    plugins = ["Git4Idea"]
     downloadSources = true
     updateSinceUntilBuild = false
     buildSearchableOptions.enabled = false

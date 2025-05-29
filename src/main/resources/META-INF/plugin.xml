@@ -80,6 +80,7 @@
      Read more: https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html -->
     <depends>com.intellij.modules.platform</depends>
     <depends>com.intellij.modules.vcs</depends>
+    <depends>Git4Idea</depends>
 
     <!-- Extension points defined by the plugin.
      Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
@@ -103,6 +104,14 @@
             <keyboard-shortcut keymap="$default" first-keystroke="alt shift Q"/>
             <keyboard-shortcut keymap="Mac OS X" first-keystroke="alt shift Q"/>
             <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="alt shift Q"/>
+            <add-to-group group-id="Vcs.MessageActionGroup" anchor="first"/>
+        </action>
+        <action id="plugin_commit_ai_button"
+                class="com.c301.plugin.config.GitCommitAiWriteAction"
+                icon="/icons/load.png">
+            <keyboard-shortcut keymap="$default" first-keystroke="alt shift W"/>
+            <keyboard-shortcut keymap="Mac OS X" first-keystroke="alt shift W"/>
+            <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="alt shift W"/>
             <add-to-group group-id="Vcs.MessageActionGroup" anchor="first"/>
         </action>
     </actions>
