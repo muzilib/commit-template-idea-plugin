@@ -2,9 +2,12 @@ package com.c301.plugin.config;
 
 import com.alibaba.fastjson.JSONObject;
 import com.c301.plugin.utils.GitFileUtil;
+import com.intellij.notification.NotificationGroupManager;
+import com.intellij.notification.NotificationType;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.project.DumbAware;
+import com.intellij.openapi.project.Project;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 
@@ -26,11 +29,20 @@ public class GitCommitAiWriteAction extends AnAction implements DumbAware {
             return;
         }
 
+        //弹窗提示信息
+
         var gitCommitChangeList = GitFileUtil.loadGitCommitFileChangeList(actionEvent, changeList);
         System.out.println(JSONObject.toJSONString(gitCommitChangeList));
         for (String gitCommitChange : gitCommitChangeList) {
             System.out.println("actionPerformed => " + gitCommitChange);
         }
+
+        // project 可以为 null，如果没有特定项目
+        Project project = actionEvent.getProject();
+        NotificationGroupManager.getInstance()
+                .getNotificationGroup("commit-template-notify")
+                .createNotification("通义灵码", "没有文件变更，或所选择的文件不符合条件", NotificationType.INFORMATION)
+                .notify(project);
     }
 
 }
