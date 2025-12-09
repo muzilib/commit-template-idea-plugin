@@ -22,7 +22,7 @@ import java.util.Map;
  * @version 1.0
  */
 public class LlmUtil {
-    private static final String API_KEY = "sk-fc9bcd70c79c4b5e934b1cd6443dd341";
+    private static final String API_KEY = "";
     private static final String BASE_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1";
     private static final String MODEL = "qwen-max-latest";
     private static final ObjectMapper objectMapper = new ObjectMapper();

@@ -108,14 +108,14 @@
             <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="alt shift Q"/>
             <add-to-group group-id="Vcs.MessageActionGroup" anchor="first"/>
         </action>
-        <action id="plugin_commit_ai_button"
+        <!--<action id="plugin_commit_ai_button"
                 class="com.c301.plugin.config.GitCommitAiWriteAction"
                 icon="/icons/load.png">
             <keyboard-shortcut keymap="$default" first-keystroke="alt shift W"/>
             <keyboard-shortcut keymap="Mac OS X" first-keystroke="alt shift W"/>
             <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="alt shift W"/>
             <add-to-group group-id="Vcs.MessageActionGroup" anchor="first"/>
-        </action>
+        </action>-->
     </actions>
 
 </idea-plugin>

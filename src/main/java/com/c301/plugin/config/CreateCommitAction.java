@@ -10,10 +10,12 @@ import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ModalityState;
 import com.intellij.openapi.project.DumbAware;
+import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vcs.CheckinProjectPanel;
 import com.intellij.openapi.vcs.CommitMessageI;
 import com.intellij.openapi.vcs.VcsDataKeys;
 import com.intellij.openapi.vcs.ui.Refreshable;
+import com.intellij.vcs.commit.CommitProjectPanelAdapter;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.event.KeyEvent;
@@ -73,8 +75,14 @@ public class CreateCommitAction extends AnAction implements DumbAware {
             gitCommit = GitCommitDomain.parseRawMessage(content);
         }
 
+        // 获取 Project，优先从 actionEvent 获取，如果为 null 则尝试从 commitMessageI 获取
+        Project project = actionEvent.getProject();
+        if (project == null && commitMessageI instanceof CommitProjectPanelAdapter) {
+            project = ((CommitProjectPanelAdapter) commitMessageI).getProject();
+        }
+
         //java传递回调方法
-        var dialog = new CommitTemplateDialog(commitMessageI);
+        var dialog = new CommitTemplateDialog(commitMessageI, project);
         dialog.handleUIInit();
         dialog.resetUIFrom(gitCommit);
         dialog.setVisible(true);
