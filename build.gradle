@@ -31,7 +31,6 @@ intellij {
 dependencies {
     compileOnly 'org.projectlombok:lombok:1.18.34'
     annotationProcessor 'org.projectlombok:lombok:1.18.34'
-    implementation 'com.alibaba:fastjson:1.2.83'
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.0'
     implementation 'org.apache.httpcomponents:httpclient:4.5.14'
 }

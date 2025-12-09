@@ -1,7 +1,7 @@
 package com.c301.plugin.config;
 
-import com.alibaba.fastjson.JSONObject;
 import com.c301.plugin.utils.GitFileUtil;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.intellij.notification.NotificationGroupManager;
 import com.intellij.notification.NotificationType;
 import com.intellij.openapi.actionSystem.AnAction;
@@ -21,6 +21,8 @@ import org.jetbrains.annotations.NotNull;
 @Slf4j
 public class GitCommitAiWriteAction extends AnAction implements DumbAware {
 
+    private static final ObjectMapper objectMapper = new ObjectMapper();
+
     @Override
     public void actionPerformed(@NotNull AnActionEvent actionEvent) {
         var changeList = GitFileUtil.loadActiveGitChangeList(actionEvent);
@@ -32,7 +34,11 @@ public class GitCommitAiWriteAction extends AnAction implements DumbAware {
         //弹窗提示信息
 
         var gitCommitChangeList = GitFileUtil.loadGitCommitFileChangeList(actionEvent, changeList);
-        System.out.println(JSONObject.toJSONString(gitCommitChangeList));
+        try {
+            System.out.println(objectMapper.writeValueAsString(gitCommitChangeList));
+        } catch (Exception e) {
+            log.error("Failed to serialize gitCommitChangeList", e);
+        }
         for (String gitCommitChange : gitCommitChangeList) {
             System.out.println("actionPerformed => " + gitCommitChange);
         }

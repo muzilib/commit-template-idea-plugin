@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>commit-template-plugin</id>
     <name>Git Commit Template</name>
-    <version>1.0.8-B1</version>
+    <version>1.0.8-B2</version>
     <vendor email="muzi@muzilib.com" url="https://github.com/muzilib">Chenbing</vendor>
 
     <description>
@@ -25,6 +25,13 @@
 
     <change-notes>
         <![CDATA[
+        <p>
+            <h4>V251209-1422</h4>
+            <p>1. A type conversion error occurred in the commit message editing window of Squish commits,
+            causing the main functionality of the plugin to fail to load and display correctly.
+            <a href="https://github.com/muzilib/commit-template-idea-plugin/issues/19">Issue #19</a>
+            </p>
+        </p>
         <p>
             <h4>V250503-1202</h4>
             <p>1. Fixed the error that the position of multiple monitors exceeds the visible range
