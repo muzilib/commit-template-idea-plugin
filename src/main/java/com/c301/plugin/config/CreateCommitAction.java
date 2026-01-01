@@ -81,11 +81,16 @@ public class CreateCommitAction extends AnAction implements DumbAware {
             project = ((CommitProjectPanelAdapter) commitMessageI).getProject();
         }
 
-        //java传递回调方法
-        var dialog = new CommitTemplateDialog(commitMessageI, project);
-        dialog.handleUIInit();
-        dialog.resetUIFrom(gitCommit);
-        dialog.setVisible(true);
+        // 使用 invokeLater 确保在 EDT 线程上创建和显示对话框，避免协程上下文冲突
+        Project finalProject = project;
+        GitCommitDomain finalGitCommit = gitCommit;
+        ApplicationManager.getApplication().invokeLater(() -> {
+            //java传递回调方法
+            var dialog = new CommitTemplateDialog(commitMessageI, finalProject);
+            dialog.handleUIInit();
+            dialog.resetUIFrom(finalGitCommit);
+            dialog.setVisible(true);
+        }, ModalityState.current());
     }
 
     /**

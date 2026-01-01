@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>commit-template-plugin</id>
     <name>Git Commit Template</name>
-    <version>1.0.8-B2</version>
+    <version>1.0.8-B3</version>
     <vendor email="muzi@muzilib.com" url="https://github.com/muzilib">Chenbing</vendor>
 
     <description>
@@ -25,6 +25,12 @@
 
     <change-notes>
         <![CDATA[
+        <p>
+            <h4>V260102-0123</h4>
+            <p>1. Fixed UI anomalies caused by coroutine context conflicts.
+            <a href="https://github.com/muzilib/commit-template-idea-plugin/issues/20">Issue #20</a>
+            </p>
+        </p>
         <p>
             <h4>V251209-1422</h4>
             <p>1. A type conversion error occurred in the commit message editing window of Squish commits,
