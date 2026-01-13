@@ -86,8 +86,25 @@ tasks.register('renameArtifact') {
 
     doLast {
         def buildTask = gradle.taskGraph.allTasks.find { it.name == 'buildStable' || it.name == 'buildAlpha' }
-        def builderTime = buildTask.builderTime
-        def channel = buildTask.name == 'buildStable' ? 'stable' : 'alpha'
+        def builderTime
+        def channel
+
+        if (buildTask != null) {
+            builderTime = buildTask.builderTime
+            channel = buildTask.name == 'buildStable' ? 'stable' : 'alpha'
+        } else {
+            // Fallback for direct buildPlugin execution
+            def propertiesFile = file('src/main/resources/version.properties')
+            def properties = new Properties()
+            if (propertiesFile.exists()) {
+                properties.load(new FileInputStream(propertiesFile))
+                builderTime = properties.getProperty('builderTime')
+            }
+            if (builderTime == null) {
+                builderTime = new Date().format('yyyyMMddHHmm')
+            }
+            channel = 'release'
+        }
 
         //修改jar文件名
         def originalJar = file("build/libs/commit-template-idea-plugin-${project.version}.jar")
