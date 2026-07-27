@@ -108,13 +108,19 @@ public final class AiIncludedChangesCollector {
     /**
      * 在用户确认发送 Diff 后才调用。Diff 不落盘，并在达到总字符限制时停止继续加入文件。
      */
-    public static String collectDiff(Project project, CollectionResult result) {
+    public static DiffCollectionResult collectDiff(Project project, CollectionResult result) {
         StringBuilder allDiffs = new StringBuilder();
-        for (Change change : result.acceptedChanges()) {
+        List<String> excluded = new ArrayList<>();
+        int includedFileCount = 0;
+        boolean truncated = false;
+        for (int index = 0; index < result.acceptedChanges().size(); index++) {
+            Change change = result.acceptedChanges().get(index);
+            String path = pathOf(project, change);
             try {
                 var patches = IdeaTextPatchBuilder.buildPatch(project, List.of(change),
                         Path.of(project.getBasePath()), false, false);
                 if (patches.isEmpty()) {
+                    excluded.add((path == null ? "未知文件" : path) + "：无法生成文本 Diff");
                     continue;
                 }
                 try (StringWriter writer = new StringWriter()) {
@@ -122,15 +128,23 @@ public final class AiIncludedChangesCollector {
                             patches, writer, "\n", null, List.of());
                     String diff = writer.toString();
                     if (allDiffs.length() + diff.length() > MAX_DIFF_CHARACTERS) {
+                        truncated = true;
+                        excluded.add("其余 " + (result.acceptedChanges().size() - index) + " 个文件：超过 Diff 总字符限制");
                         break;
                     }
                     allDiffs.append(diff);
+                    includedFileCount++;
                 }
             } catch (VcsException | IOException | RuntimeException ignored) {
                 // 单个文件无法生成 Diff 时跳过，避免失败文件阻断其余已确认变更。
+                excluded.add((path == null ? "未知文件" : path) + "：无法生成 Diff");
             }
         }
-        return allDiffs.toString();
+        return new DiffCollectionResult(allDiffs.toString(), includedFileCount, allDiffs.length(), truncated, excluded);
+    }
+
+    public record DiffCollectionResult(String diff, int includedFileCount, int characterCount,
+                                       boolean truncated, List<String> excludedChanges) {
     }
 
     public record CollectionResult(List<String> includedMetadata, List<String> excludedChanges,

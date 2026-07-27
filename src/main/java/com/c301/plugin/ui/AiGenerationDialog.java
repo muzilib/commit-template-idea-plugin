@@ -39,7 +39,11 @@ public final class AiGenerationDialog extends JDialog {
     private final JButton close = new JButton();
     private final JCheckBox sendDiff = new JCheckBox();
     private final StringBuilder response = new StringBuilder();
+    private static final boolean DEVELOPMENT_DIFF_PREVIEW = ApplicationManager.getApplication().isInternal()
+            || Boolean.getBoolean("commit.template.ai.diff.preview");
+
     private final AtomicBoolean completed = new AtomicBoolean();
+    private AiIncludedChangesCollector.DiffCollectionResult preparedDiff;
     private String applicationTarget = "表单";
 
 
@@ -72,6 +76,7 @@ public final class AiGenerationDialog extends JDialog {
         pack();
         setLocationRelativeTo(null);
         generate.addActionListener(event -> generate());
+        sendDiff.addActionListener(event -> clearPreparedDiff());
         apply.addActionListener(event -> applySuggestion());
         close.addActionListener(event -> dispose());
     }
@@ -126,8 +131,13 @@ public final class AiGenerationDialog extends JDialog {
         }
         EffectiveCommitTemplateSettings settings = CommitTemplateSettingsResolver.getInstance(project).resolve();
         AiTransferMode transferMode = sendDiff.isSelected() ? AiTransferMode.DIFF : AiTransferMode.METADATA;
+        if (transferMode == AiTransferMode.DIFF && DEVELOPMENT_DIFF_PREVIEW && preparedDiff == null) {
+            prepareDiffPreview();
+            return;
+        }
         String changeContent = transferMode == AiTransferMode.DIFF
-                ? AiIncludedChangesCollector.collectDiff(project, changes)
+                ? (preparedDiff != null ? preparedDiff.diff()
+                : AiIncludedChangesCollector.collectDiff(project, changes).diff())
                 : changes.asPromptContent();
         if (changeContent.isBlank()) {
             output.setText(transferMode == AiTransferMode.DIFF
@@ -156,6 +166,44 @@ public final class AiGenerationDialog extends JDialog {
                         new Listener(settings));
             }
         });
+    }
+
+    /** 开发环境中，先在内存中构建并审阅实际发送的 Diff，避免将未展示的内容直接发往远程服务。 */
+    private void prepareDiffPreview() {
+        generate.setEnabled(false);
+        output.setText(text("plugin.ai.diffPreviewPreparing"));
+        com.intellij.openapi.progress.ProgressManager.getInstance().run(new Task.Backgroundable(project,
+                text("plugin.ai.generationTaskTitle"), true) {
+            @Override
+            public void run(@NotNull ProgressIndicator progressIndicator) {
+                AiIncludedChangesCollector.DiffCollectionResult result = AiIncludedChangesCollector.collectDiff(project, changes);
+                ApplicationManager.getApplication().invokeLater(() -> {
+                    preparedDiff = result;
+                    generate.setEnabled(true);
+                    generate.setText(text("plugin.ai.confirmAndGenerate"));
+                    output.setText(renderDiffPreview(result));
+                });
+            }
+        });
+    }
+
+    private String renderDiffPreview(AiIncludedChangesCollector.DiffCollectionResult result) {
+        String preview = text("plugin.ai.diffPreviewReady")
+                .replace("{files}", String.valueOf(result.includedFileCount()))
+                .replace("{characters}", String.valueOf(result.characterCount()));
+        if (result.truncated()) {
+            preview += "\n" + text("plugin.ai.diffPreviewTruncated");
+        }
+        if (!result.excludedChanges().isEmpty()) {
+            preview += "\n\n" + text("plugin.ai.summary.excludedList") + "\n"
+                    + String.join("\n", result.excludedChanges());
+        }
+        return preview + "\n\n" + result.diff();
+    }
+
+    private void clearPreparedDiff() {
+        preparedDiff = null;
+        generate.setText(text("plugin.ai.generate"));
     }
 
     private void applySuggestion() {
