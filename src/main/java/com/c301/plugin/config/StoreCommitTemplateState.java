@@ -1,6 +1,7 @@
 package com.c301.plugin.config;
 
 import com.c301.plugin.constant.Constant;
+
 import com.c301.plugin.model.CommitTypeDomain;
 import com.c301.plugin.model.GitmojiLocationDomain;
 import com.c301.plugin.model.LanguageDomain;
@@ -81,5 +82,9 @@ public class StoreCommitTemplateState implements PersistentStateComponent<StoreC
      * 用户自定义 提交类型列表
      */
     private LinkedList<CommitTypeDomain> customCommitTypeList = new LinkedList<>();
+    /**
+     * Global defaults for commit-message validation and formatting.
+     */
+    private CommitMessageRulesState commitMessageRules = new CommitMessageRulesState();
 
 }

@@ -40,6 +40,8 @@ public class GitCommitSettingConfigurable implements SearchableConfigurable {
     @Override
     public @Nullable JComponent createComponent() {
         cache.setLanguage(store.getLanguage());
+        cache.setEmojiEnable(store.isEmojiEnable());
+        cache.setEmojiLocation(store.getEmojiLocation());
         cache.setCustomEnable(store.isCustomEnable());
         cache.setCustomCommitTypeList(CommUtil.deepCopy(store.getCustomCommitTypeList()));
 
@@ -47,12 +49,16 @@ public class GitCommitSettingConfigurable implements SearchableConfigurable {
         return commitSettingUI.getMainPanel();
     }
 
+    public CommitTemplateSettingUI getSettingUI() {
+        return commitSettingUI;
+    }
+
     @Override
     public boolean isModified() {
         if (cache.isEmojiEnable() != store.isEmojiEnable()) return true;
         if (!cache.getLanguage().equals(store.getLanguage())) return true;
         if (cache.isCustomEnable() != store.isCustomEnable()) return true;
-        if (cache.getEmojiLocation() != store.getEmojiLocation()) return true;
+        if (!cache.getEmojiLocation().equals(store.getEmojiLocation())) return true;
         if (cache.getCustomCommitTypeList().size() != store.getCustomCommitTypeList().size()) return true;
 
         //比对内容文本是否编辑

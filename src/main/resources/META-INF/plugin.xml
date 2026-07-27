@@ -103,11 +103,15 @@
 
         <applicationService
                 serviceImplementation="com.c301.plugin.config.StoreCommitTemplateState"/>
+        <projectService
+                serviceImplementation="com.c301.plugin.config.ProjectCommitTemplateOverrideState"/>
+        <projectService
+                serviceImplementation="com.c301.plugin.config.CommitTemplateSettingsResolver"/>
 
-        <applicationConfigurable groupId="tools"
-                                 id="plugins.muzilib.commit.template"
-                                 displayName="Commit Template Idea Plugin"
-                                 instance="com.c301.plugin.config.GitCommitSettingConfigurable"/>
+        <projectConfigurable groupId="tools"
+                             id="plugins.muzilib.commit.template"
+                             displayName="Commit Template Idea Plugin"
+                             instance="com.c301.plugin.config.UnifiedCommitTemplateSettingsConfigurable"/>
 
         <vcsLogCustomColumn implementation="com.c301.plugin.config.GitmojiVcsLogCustomColumn" />
     </extensions>

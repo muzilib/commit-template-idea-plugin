@@ -37,10 +37,15 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok:1.18.34'
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.0'
     implementation 'org.apache.httpcomponents:httpclient:4.5.14'
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
 }
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
+}
+
+tasks.withType(Test).configureEach {
+    useJUnitPlatform()
 }
 
 // `-Pchannel` takes precedence; the convenience tasks select their matching channel.

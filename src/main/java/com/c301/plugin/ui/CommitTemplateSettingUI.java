@@ -204,6 +204,22 @@ public class CommitTemplateSettingUI {
     }
 
     /**
+     * Detaches the global-defaults panel so a parent configurable can compose it with project settings.
+     */
+    public JComponent detachSettingsPanel() {
+        tabbedPane.remove(settingPanel);
+        return settingPanel;
+    }
+
+    /**
+     * Detaches the About panel so a parent configurable can own the top-level tabs.
+     */
+    public JComponent detachAboutPanel() {
+        tabbedPane.remove(aboutPanel);
+        return aboutPanel;
+    }
+
+    /**
      * 处理页面重置事件
      */
     public void handleResetEvent(SettingCacheDomain cache) {
@@ -235,8 +251,10 @@ public class CommitTemplateSettingUI {
         var resourceBundle = CommUtil.i18nResourceBundle(language.getKey());
 
         //显示语言控制
-        tabbedPane.setTitleAt(0, resourceBundle.getString("plugin.setting.label.setting"));
-        tabbedPane.setTitleAt(1, resourceBundle.getString("plugin.setting.label.about"));
+        if (tabbedPane.getTabCount() >= 2) {
+            tabbedPane.setTitleAt(0, resourceBundle.getString("plugin.setting.label.setting"));
+            tabbedPane.setTitleAt(1, resourceBundle.getString("plugin.setting.label.about"));
+        }
         labelLanguage.setText(resourceBundle.getString("plugin.setting.label.language"));
         labelCommitType.setText(resourceBundle.getString("plugin.setting.label.customTemplate"));
         labelGitmojiWebsite.setText(resourceBundle.getString("plugin.setting.label.gitmoji.website"));

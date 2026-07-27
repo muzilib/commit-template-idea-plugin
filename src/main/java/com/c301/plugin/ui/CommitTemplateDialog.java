@@ -1,8 +1,13 @@
 package com.c301.plugin.ui;
 
-import com.c301.plugin.config.GitCommitSettingConfigurable;
+import com.c301.plugin.config.CommitTemplateSettingsResolver;
+import com.c301.plugin.config.EffectiveCommitTemplateSettings;
+
+import com.c301.plugin.config.ProjectCommitTemplateOverrideState;
 import com.c301.plugin.config.StoreCommitTemplateState;
 import com.c301.plugin.constant.Constant;
+import com.c301.plugin.domain.commit.CommitMessageFormatter;
+import com.c301.plugin.domain.commit.CommitMessageValidator;
 import com.c301.plugin.model.CommitTypeDomain;
 import com.c301.plugin.model.GitCommitDomain;
 import com.c301.plugin.model.LanguageDomain;
@@ -10,6 +15,7 @@ import com.c301.plugin.model.WindowsConfigDomain;
 import com.c301.plugin.ui.render.LanguageListCellRendererRender;
 import com.c301.plugin.utils.CommUtil;
 import com.c301.plugin.utils.StrUtil;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.options.ShowSettingsUtil;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManager;
@@ -20,6 +26,8 @@ import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
 
 import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.LinkedList;
@@ -67,10 +75,13 @@ public class CommitTemplateDialog extends JDialog {
     private JLabel labelCommitTypeNoData;
     private JLabel labelCommitTypeSetting;
     private ButtonGroup typeChangeGroup;
+    private JLabel labelPreview;
+    private JTextArea previewCommitMessage;
 
     private final StoreCommitTemplateState store = StoreCommitTemplateState.getInstance();
     private final CommitMessageI commitMessageI;
     private final Project project;
+    private final EffectiveCommitTemplateSettings effectiveSettings;
 
     /**
      * 创建弹窗信息
@@ -78,16 +89,19 @@ public class CommitTemplateDialog extends JDialog {
     public CommitTemplateDialog(CommitMessageI commitMessageI, Project project) {
         $$$setupUI$$$();
         setModal(true);
-        setContentPane(contentPane);
+        setContentPane(createDialogContent());
         getRootPane().setDefaultButton(buttonOK);
         labelCommitTypeNoData.setVisible(false);
         labelCommitTypeSetting.setVisible(false);
         this.commitMessageI = commitMessageI;
         this.project = project;
+        this.effectiveSettings = resolveEffectiveSettings(project);
         optionScopeChange.setFont(Constant.EMOJI_FONT);
         inputShortDescription.setFont(Constant.EMOJI_FONT);
         inputLongDescription.setFont(Constant.EMOJI_FONT);
         inputBreakingChanges.setFont(Constant.EMOJI_FONT);
+        previewCommitMessage.setFont(Constant.EMOJI_FONT);
+        installPreviewListeners();
 
         //设置显示窗口大小
         pack();
@@ -116,50 +130,17 @@ public class CommitTemplateDialog extends JDialog {
      */
     private void handleOKEvent() {
         if (commitMessageI != null) {
-            //处理提交类型
-            CommitTypeDomain commitType = null;
-            var buttonElements = typeChangeGroup.getElements();
-            while (buttonElements.hasMoreElements()) {
-                var button = buttonElements.nextElement();
-                if (!button.isSelected()) continue;
-
-                commitType = CommUtil.parseCommitType(button.getActionCommand());
-                break;
+            var gitCommit = createCommitFromForm();
+            var validation = CommitMessageValidator.validate(gitCommit.getCommitType(), gitCommit.getChangeScope(),
+                    inputShortDescription.getText(), effectiveSettings.commitMessageRules());
+            if (!validation.isValid()) {
+                var resourceBundle = CommUtil.i18nResourceBundle(effectiveSettings.language().getKey());
+                JOptionPane.showMessageDialog(this, validationMessage(resourceBundle, validation),
+                        resourceBundle.getString("plugin.setting.dialog.warning"), JOptionPane.WARNING_MESSAGE);
+                return;
             }
 
-            //处理变更范围
-            var changeScopeValue = "";
-            if (optionScopeChange.getSelectedItem() != null) {
-                changeScopeValue = optionScopeChange.getSelectedItem().toString();
-            }
-
-            //处理关闭问题
-            var closedIssuesValue = new LinkedList<Integer>();
-            if (StrUtil.isNotBlank(inputClosedIssues.getText())) {
-                try {
-                    var arrays = inputClosedIssues.getText().trim().replaceAll("，", ",").split(",");
-                    for (var item : arrays) {
-                        item = item.trim();
-                        if (!StrUtil.isNumeric(item)) item = item.replace("#", "");
-                        closedIssuesValue.add(Integer.parseInt(item));
-                    }
-                } catch (Exception ignored) {
-                }
-            }
-
-            var gitCommit = new GitCommitDomain() {{
-                setShortDescription(inputShortDescription.getText());
-                setLongDescription(inputLongDescription.getText());
-                setBreakingChanges(inputBreakingChanges.getText());
-                setWrapText(checkBoxWrapText.isSelected());
-                setSkipCI(checkBoxSkipCI.isSelected());
-            }};
-            gitCommit.setCommitType(commitType);
-            gitCommit.setChangeScope(changeScopeValue);
-            gitCommit.setClosedIssues(closedIssuesValue);
-
-            var location = store.isEmojiEnable() ? store.getEmojiLocation() : null;
-            commitMessageI.setCommitMessage(gitCommit.toStringMessage(location));
+            commitMessageI.setCommitMessage(formatCommit(gitCommit));
         }
 
         handleCancelEvent();
@@ -169,8 +150,7 @@ public class CommitTemplateDialog extends JDialog {
      * 处理取消事件
      */
     private void handleCancelEvent() {
-        var language = CommUtil.convertLanguageDomain(optionLanguage);
-        store.setLanguage(language);
+        saveSelectedLanguage(CommUtil.convertLanguageDomain(optionLanguage));
         dispose();
     }
 
@@ -208,10 +188,8 @@ public class CommitTemplateDialog extends JDialog {
         optionLanguage.addActionListener(e -> {
             optionLanguage.hidePopup();
             var language = CommUtil.convertLanguageDomain(optionLanguage);
-            if (!language.equals(store.getLanguage())) {
-                store.setLanguage(language);
-                handleDisplayLanguageEvent(language);
-            }
+            saveSelectedLanguage(language);
+            handleDisplayLanguageEvent(language);
         });
 
         //设置窗口打开位置为屏幕中心
@@ -220,9 +198,16 @@ public class CommitTemplateDialog extends JDialog {
             var parentWindow = WindowManager.getInstance().getFrame(project);
             if (parentWindow != null) setLocationRelativeTo(parentWindow);
 
-            //设置git提交更改范围历史记录
-            var scopeList = CommUtil.loadGitCommitScopeHistory(project);
-            scopeList.forEach(optionScopeChange::addItem);
+            // 后台读取 Git 历史，避免大仓库阻塞提交窗口。
+            ApplicationManager.getApplication().executeOnPooledThread(() -> {
+                var scopeList = CommUtil.loadGitCommitScopeHistory(project);
+                ApplicationManager.getApplication().invokeLater(() -> {
+                    if (!isDisplayable()) {
+                        return;
+                    }
+                    scopeList.forEach(optionScopeChange::addItem);
+                });
+            });
         }
     }
 
@@ -232,14 +217,10 @@ public class CommitTemplateDialog extends JDialog {
     public void resetUIFrom(GitCommitDomain gitCommit) {
         //提交类型回显
         if (gitCommit.getCommitType() != null) {
-            var commitTypeList = CommUtil.getDefaultCommitTypeList();
             var buttonElements = typeChangeGroup.getElements();
-            while (!commitTypeList.isEmpty() && buttonElements.hasMoreElements()) {
+            while (buttonElements.hasMoreElements()) {
                 var button = buttonElements.nextElement();
-                var index = Integer.parseInt(button.getActionCommand());
-                var changeType = commitTypeList.get(index - 1);
-
-                if (changeType.getType().equalsIgnoreCase(gitCommit.getCommitType().getType())) {
+                if (button.getActionCommand().equalsIgnoreCase(gitCommit.getCommitType().getType())) {
                     button.setSelected(true);
                     break;
                 }
@@ -247,11 +228,10 @@ public class CommitTemplateDialog extends JDialog {
         }
 
         //语言类型回显
-        optionLanguage.setSelectedItem(store.getLanguage());
-        handleDisplayLanguageEvent(store.getLanguage());
+        optionLanguage.setSelectedItem(effectiveSettings.language());
+        handleDisplayLanguageEvent(effectiveSettings.language());
 
         //文本内容回显
-        optionScopeChange.setSelectedItem(gitCommit.getChangeScope());
         optionScopeChange.setSelectedItem(gitCommit.getChangeScope());
         inputShortDescription.setText(gitCommit.getShortDescription());
         inputLongDescription.setText(gitCommit.getLongDescription());
@@ -259,6 +239,7 @@ public class CommitTemplateDialog extends JDialog {
         inputBreakingChanges.setText(gitCommit.getBreakingChanges());
         checkBoxSkipCI.setSelected(gitCommit.isSkipCI());
         checkBoxWrapText.setSelected(gitCommit.isWrapText());
+        refreshPreview();
     }
 
     /**
@@ -307,6 +288,7 @@ public class CommitTemplateDialog extends JDialog {
         labelLongDescription.setText(resourceBundle.getString("plugin.label.longDescription"));
         labelBreakingChange.setText(resourceBundle.getString("plugin.label.breakingChanges"));
         labelClosedIssues.setText(resourceBundle.getString("plugin.label.closedIssues"));
+        labelPreview.setText(resourceBundle.getString("plugin.label.preview"));
 
         //复选框信息
         checkBoxWrapText.setText(resourceBundle.getString("plugin.checkbox.wrapAt72Characters"));
@@ -318,7 +300,7 @@ public class CommitTemplateDialog extends JDialog {
 
         //渲染提交类型按钮组信息
         var commitTypeList = CommUtil.getDefaultCommitTypeList(language.getKey());
-        if (store.isCustomEnable()) commitTypeList = store.getCustomCommitTypeList();
+        if (effectiveSettings.customEnable()) commitTypeList = effectiveSettings.customCommitTypeList();
         var buttonElements = typeChangeGroup.getElements();
         if (commitTypeList.isEmpty()) {
             while (buttonElements.hasMoreElements()) {
@@ -342,15 +324,18 @@ public class CommitTemplateDialog extends JDialog {
                         }
                     }
                     if (targetProject != null) {
-                        ShowSettingsUtil.getInstance().showSettingsDialog(targetProject, GitCommitSettingConfigurable.class);
+                        ShowSettingsUtil.getInstance().showSettingsDialog(targetProject,
+                                com.c301.plugin.config.UnifiedCommitTemplateSettingsConfigurable.class);
                     }
                 }
             });
         } else {
-            buttonElements.nextElement();
+            labelCommitTypeNoData.setVisible(false);
+            labelCommitTypeSetting.setVisible(false);
             var index = 0;
             while (buttonElements.hasMoreElements()) {
                 var button = buttonElements.nextElement();
+                button.setSelected(false);
                 button.setVisible(false);
                 if (index >= commitTypeList.size()) continue;
 
@@ -358,7 +343,7 @@ public class CommitTemplateDialog extends JDialog {
                 button.setFont(Constant.EMOJI_FONT);
                 var commitType = commitTypeList.get(index++);
                 button.setActionCommand(commitType.getType());
-                button.setText(commitType.toString(store.isEmojiEnable()));
+                button.setText(commitType.toString(effectiveSettings.emojiEnable()));
             }
         }
 
@@ -386,6 +371,8 @@ public class CommitTemplateDialog extends JDialog {
         //设置窗口坐标
         var x = window.getWindowX();
         var y = window.getWindowY();
+        refreshPreview();
+
         if (x != -1 && y != -1) {
             if (isWindowInScreenBounds(x, y, storeWidth, storeHeight)) {
                 setBounds(x, y, storeWidth, storeHeight);
@@ -399,6 +386,156 @@ public class CommitTemplateDialog extends JDialog {
                 }
             }
         }
+    }
+
+    private String validationMessage(java.util.ResourceBundle resourceBundle,
+                                     CommitMessageValidator.ValidationResult validation) {
+        return switch (validation) {
+            case MISSING_SCOPE -> resourceBundle.getString("plugin.dialog.error.scopeRequired");
+            case SUBJECT_TOO_LONG -> resourceBundle.getString("plugin.dialog.error.subjectTooLong")
+                    .replace("{max}", String.valueOf(effectiveSettings.commitMessageRules().subjectMaxLength()));
+            case SUBJECT_TRAILING_PERIOD -> resourceBundle.getString("plugin.dialog.error.subjectTrailingPeriod");
+            default -> resourceBundle.getString("plugin.dialog.error.commitRequired");
+        };
+    }
+
+    private JPanel createDialogContent() {
+        var dialogContent = new JPanel(new BorderLayout(0, 8));
+        dialogContent.add(contentPane, BorderLayout.CENTER);
+
+        var previewPanel = new JPanel(new BorderLayout(0, 4));
+        labelPreview = new JLabel();
+        previewCommitMessage = new JTextArea(5, 0);
+        previewCommitMessage.setEditable(false);
+        previewCommitMessage.setLineWrap(false);
+        previewCommitMessage.setWrapStyleWord(false);
+        previewPanel.add(labelPreview, BorderLayout.NORTH);
+        previewPanel.add(new JScrollPane(previewCommitMessage), BorderLayout.CENTER);
+        dialogContent.add(previewPanel, BorderLayout.SOUTH);
+        return dialogContent;
+    }
+
+    private void installPreviewListeners() {
+        var documentListener = new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                refreshPreview();
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                refreshPreview();
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                refreshPreview();
+            }
+        };
+        inputShortDescription.getDocument().addDocumentListener(documentListener);
+        inputLongDescription.getDocument().addDocumentListener(documentListener);
+        inputBreakingChanges.getDocument().addDocumentListener(documentListener);
+        inputClosedIssues.getDocument().addDocumentListener(documentListener);
+        ((JTextField) optionScopeChange.getEditor().getEditorComponent()).getDocument().addDocumentListener(documentListener);
+        optionScopeChange.addActionListener(e -> refreshPreview());
+        checkBoxWrapText.addActionListener(e -> refreshPreview());
+        checkBoxSkipCI.addActionListener(e -> refreshPreview());
+
+        var buttons = typeChangeGroup.getElements();
+        while (buttons.hasMoreElements()) {
+            buttons.nextElement().addActionListener(e -> refreshPreview());
+        }
+    }
+
+    private void refreshPreview() {
+        if (previewCommitMessage == null) {
+            return;
+        }
+        var commit = createCommitFromForm();
+        var resourceBundle = CommUtil.i18nResourceBundle(effectiveSettings.language().getKey());
+        if (!CommitMessageValidator.validate(commit.getCommitType(), commit.getChangeScope(),
+                commit.getShortDescription(), effectiveSettings.commitMessageRules()).isValid()) {
+            previewCommitMessage.setText(resourceBundle.getString("plugin.preview.empty"));
+            return;
+        }
+        previewCommitMessage.setText(formatCommit(commit));
+        previewCommitMessage.setCaretPosition(0);
+    }
+
+    private GitCommitDomain createCommitFromForm() {
+        var gitCommit = new GitCommitDomain();
+        gitCommit.setCommitType(selectedCommitType());
+        gitCommit.setChangeScope(optionScopeChange.getSelectedItem() == null ? "" : optionScopeChange.getSelectedItem().toString());
+        gitCommit.setShortDescription(inputShortDescription.getText());
+        gitCommit.setLongDescription(inputLongDescription.getText());
+        gitCommit.setBreakingChanges(inputBreakingChanges.getText());
+        gitCommit.setClosedIssues(parseClosedIssues(inputClosedIssues.getText()));
+        gitCommit.setWrapText(checkBoxWrapText.isSelected());
+        gitCommit.setSkipCI(checkBoxSkipCI.isSelected());
+        return gitCommit;
+    }
+
+    private CommitTypeDomain selectedCommitType() {
+        var buttons = typeChangeGroup.getElements();
+        while (buttons.hasMoreElements()) {
+            var button = buttons.nextElement();
+            if (!button.isSelected()) {
+                continue;
+            }
+            return effectiveSettings.customEnable()
+                    ? effectiveSettings.customCommitTypeList().stream()
+                    .filter(item -> item.getType().equals(button.getActionCommand()))
+                    .findFirst()
+                    .orElse(null)
+                    : CommUtil.parseCommitType(button.getActionCommand());
+        }
+        return null;
+    }
+
+    private String formatCommit(GitCommitDomain commit) {
+        var location = effectiveSettings.emojiEnable() ? effectiveSettings.emojiLocation() : null;
+        return CommitMessageFormatter.format(commit, location, effectiveSettings.commitMessageRules());
+    }
+
+    private LinkedList<Integer> parseClosedIssues(String input) {
+        var issues = new LinkedList<Integer>();
+        if (StrUtil.isBlank(input)) {
+            return issues;
+        }
+        for (String item : input.trim().replace('，', ',').split(",")) {
+            String issue = item.trim().replace("#", "");
+            if (StrUtil.isNumeric(issue)) {
+                issues.add(Integer.parseInt(issue));
+            }
+        }
+        return issues;
+    }
+
+    private void saveSelectedLanguage(LanguageDomain language) {
+        if (project != null) {
+            var override = ProjectCommitTemplateOverrideState.getInstance(project);
+            if (override.getLanguage() != null) {
+                override.setLanguage(language);
+                return;
+            }
+        }
+        store.setLanguage(language);
+    }
+
+    private EffectiveCommitTemplateSettings resolveEffectiveSettings(Project project) {
+        if (project != null) {
+            return CommitTemplateSettingsResolver.getInstance(project).resolve();
+        }
+        return new EffectiveCommitTemplateSettings(
+                store.getLanguage(),
+                store.isCustomEnable(),
+                store.isEmojiEnable(),
+                store.getEmojiLocation(),
+                CommUtil.deepCopy(store.getCustomCommitTypeList()),
+                store.getCommitMessageRules() == null
+                        ? com.c301.plugin.domain.commit.CommitMessageRules.defaults()
+                        : store.getCommitMessageRules().toDomain()
+        );
     }
 
     /**

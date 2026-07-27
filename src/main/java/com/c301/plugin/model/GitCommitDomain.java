@@ -1,6 +1,7 @@
 package com.c301.plugin.model;
 
 import com.c301.plugin.constant.Constant;
+import com.c301.plugin.domain.commit.CommitMessageFormatter;
 import com.c301.plugin.utils.CommUtil;
 import com.c301.plugin.utils.StrUtil;
 import lombok.AllArgsConstructor;
@@ -101,13 +102,11 @@ public class GitCommitDomain {
         if (StrUtil.isBlank(rawMessage)) return gitCommit;
 
         try {
-            // 去除第一个emoji
-            var pattern = Pattern.compile("[\\x{1F300}-\\x{1F5FF}\\x{1F600}-\\x{1F64F}\\x{1F680}-\\x{1F6FF}\\x{2600}-\\x{26FF}\\x{2700}-\\x{27BF}\\x{FE00}-\\x{FE0F}]", Pattern.UNICODE_CHARACTER_CLASS);
-            var matcher = pattern.matcher(rawMessage);
-            if (matcher.find()) rawMessage = matcher.replaceAll("");
-
-            // 在正则前统一处理换行符
+            // 统一换行符后，仅移除首行开头的 Gitmoji 前缀，保留正文中的合法 Emoji。
             rawMessage = rawMessage.replaceAll("\\r\\n?", "\n");
+            var pattern = Pattern.compile("^(?:[\\x{1F300}-\\x{1F5FF}\\x{1F600}-\\x{1F64F}\\x{1F680}-\\x{1F6FF}\\x{2600}-\\x{26FF}\\x{2700}-\\x{27BF}\\x{FE00}-\\x{FE0F}])\\s*", Pattern.UNICODE_CHARACTER_CLASS);
+            var matcher = pattern.matcher(rawMessage);
+            if (matcher.find()) rawMessage = matcher.replaceFirst("");
             // 修改正则表达式以支持两种格式：
             // 1. style(搭建项目): 处理服务注册失败的问题
             // 2. style: 处理服务注册失败的问题
@@ -178,77 +177,7 @@ public class GitCommitDomain {
      * @return 提交信息
      */
     public String toStringMessage(GitmojiLocationDomain location) {
-        var builder = new StringBuilder();
-
-        //提交类型
-        if (commitType != null) {
-            if (location != null && location.equals(GitmojiLocationDomain.LOCATION1)) {
-                builder.append(commitType.getEmoji().getEmoji());
-            }
-            builder.append(commitType.getType());
-        }
-
-        //变更范围
-        if (StrUtil.isNotBlank(changeScope)) {
-            var value = changeScope.trim();
-            builder.append("(");
-            if (location != null && location.equals(GitmojiLocationDomain.LOCATION2)) {
-                builder.append(commitType.getEmoji().getEmoji()).append(" ");
-            }
-            builder.append(value).append("): ");
-        } else {
-            builder.append(": ");
-        }
-
-        //短说明
-        if (StrUtil.isNotBlank(shortDescription)) {
-            if (location != null && location.equals(GitmojiLocationDomain.LOCATION3)) {
-                builder.append(commitType.getEmoji().getEmoji());
-            }
-            builder.append(shortDescription.trim());
-        }
-
-        //长说明
-        if (StrUtil.isNotBlank(longDescription)) {
-            var value = longDescription.trim();
-            if (wrapText) value = StrUtil.wrap(value, MAX_LINE_LENGTH);
-
-            builder.append(System.lineSeparator())
-                    .append(System.lineSeparator())
-                    .append(value);
-        }
-
-        //重大变化
-        if (StrUtil.isNotBlank(breakingChanges)) {
-            var value = "BREAKING CHANGE: " + breakingChanges.trim();
-            if (wrapText) value = StrUtil.wrap(value, MAX_LINE_LENGTH);
-
-            builder.append(System.lineSeparator())
-                    .append(System.lineSeparator())
-                    .append(value);
-        }
-
-        //关闭问题
-        if (!closedIssues.isEmpty()) {
-            builder.append(System.lineSeparator());
-
-            for (Integer closedIssue : closedIssues) {
-                var value = "#" + closedIssue.toString();
-
-                builder.append(System.lineSeparator())
-                        .append(STR_CLOSES)
-                        .append(" ")
-                        .append(value);
-            }
-        }
-
-        //跳过CI
-        if (skipCI) {
-            builder.append(System.lineSeparator())
-                    .append(System.lineSeparator())
-                    .append("[skip ci]");
-        }
-        return builder.toString();
+        return CommitMessageFormatter.format(this, location);
     }
 
 }
