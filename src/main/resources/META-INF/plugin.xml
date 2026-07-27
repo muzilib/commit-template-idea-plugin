@@ -99,7 +99,8 @@
      Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
     <extensions defaultExtensionNs="com.intellij">
         <!-- Add your extensions here -->
-        <notificationGroup id="commit-template-notify" displayType="BALLOON" key="action.plugin_commit_button.text" isLogByDefault="false"/>
+        <notificationGroup id="commit-template-notify" displayType="BALLOON" key="action.plugin_commit_button.text"
+                           isLogByDefault="false"/>
 
         <applicationService
                 serviceImplementation="com.c301.plugin.config.StoreCommitTemplateState"/>
@@ -113,7 +114,7 @@
                              displayName="Commit Template Idea Plugin"
                              instance="com.c301.plugin.config.UnifiedCommitTemplateSettingsConfigurable"/>
 
-        <vcsLogCustomColumn implementation="com.c301.plugin.config.GitmojiVcsLogCustomColumn" />
+        <vcsLogCustomColumn implementation="com.c301.plugin.config.GitmojiVcsLogCustomColumn"/>
     </extensions>
 
     <actions resource-bundle="i18n.data">

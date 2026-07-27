@@ -43,6 +43,10 @@ import java.util.LinkedList;
  **/
 public class CommitTemplateDialog extends JDialog {
 
+    private final StoreCommitTemplateState store = StoreCommitTemplateState.getInstance();
+    private final CommitMessageI commitMessageI;
+    private final Project project;
+    private final EffectiveCommitTemplateSettings effectiveSettings;
     private JPanel contentPane;
     private JButton buttonOK;
     private JButton buttonCancel;
@@ -77,11 +81,6 @@ public class CommitTemplateDialog extends JDialog {
     private ButtonGroup typeChangeGroup;
     private JLabel labelPreview;
     private JTextArea previewCommitMessage;
-
-    private final StoreCommitTemplateState store = StoreCommitTemplateState.getInstance();
-    private final CommitMessageI commitMessageI;
-    private final Project project;
-    private final EffectiveCommitTemplateSettings effectiveSettings;
 
     /**
      * 创建弹窗信息
@@ -182,7 +181,6 @@ public class CommitTemplateDialog extends JDialog {
                 store.setCommitWindowConfig(windows);
             }
         });
-
 
 
         //设置窗口打开位置为屏幕中心
@@ -515,7 +513,6 @@ public class CommitTemplateDialog extends JDialog {
         }
         return issues;
     }
-
 
 
     private EffectiveCommitTemplateSettings resolveEffectiveSettings(Project project) {

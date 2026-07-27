@@ -21,10 +21,6 @@ import java.util.List;
 @AllArgsConstructor
 public class GitmojiLocationDomain {
 
-    public static GitmojiLocationDomain LOCATION1 = new GitmojiLocationDomain("location1");
-    public static GitmojiLocationDomain LOCATION2 = new GitmojiLocationDomain("location2");
-    public static GitmojiLocationDomain LOCATION3 = new GitmojiLocationDomain("location3");
-
     /**
      * 系统默认gitmoji位置数据
      */
@@ -33,7 +29,9 @@ public class GitmojiLocationDomain {
         add(LOCATION2);
         add(LOCATION3);
     }};
-
+    public static GitmojiLocationDomain LOCATION1 = new GitmojiLocationDomain("location1");
+    public static GitmojiLocationDomain LOCATION2 = new GitmojiLocationDomain("location2");
+    public static GitmojiLocationDomain LOCATION3 = new GitmojiLocationDomain("location3");
     /**
      * 位置Key
      */

@@ -8,7 +8,9 @@ import com.intellij.util.ui.JBUI;
 import javax.swing.*;
 import java.awt.*;
 
-/** Global validation and formatting settings shared by every project. */
+/**
+ * Global validation and formatting settings shared by every project.
+ */
 final class CommitMessageRulesConfigurable {
     private final StoreCommitTemplateState globalState = StoreCommitTemplateState.getInstance();
 
@@ -23,6 +25,25 @@ final class CommitMessageRulesConfigurable {
     private JLabel subjectLengthLabel;
     private JLabel wrapLengthLabel;
     private JLabel issueKeywordLabel;
+
+    private static JSpinner spinner(int value) {
+        return new JSpinner(new SpinnerNumberModel(value, 1, 500, 1));
+    }
+
+    private static GridBagConstraints constraints(int y) {
+        GridBagConstraints constraints = new GridBagConstraints();
+        constraints.gridx = 0;
+        constraints.gridy = y;
+        constraints.weightx = 1;
+        constraints.anchor = GridBagConstraints.NORTHWEST;
+        constraints.fill = GridBagConstraints.HORIZONTAL;
+        constraints.insets = JBUI.insets(4, 0);
+        return constraints;
+    }
+
+    private static String text(String key) {
+        return CommUtil.i18nResourceBundle(null).getString(key);
+    }
 
     JComponent createComponent() {
         if (panel == null) {
@@ -126,24 +147,5 @@ final class CommitMessageRulesConfigurable {
         return globalState.getCommitMessageRules() == null
                 ? CommitMessageRules.defaults()
                 : globalState.getCommitMessageRules().toDomain();
-    }
-
-    private static JSpinner spinner(int value) {
-        return new JSpinner(new SpinnerNumberModel(value, 1, 500, 1));
-    }
-
-    private static GridBagConstraints constraints(int y) {
-        GridBagConstraints constraints = new GridBagConstraints();
-        constraints.gridx = 0;
-        constraints.gridy = y;
-        constraints.weightx = 1;
-        constraints.anchor = GridBagConstraints.NORTHWEST;
-        constraints.fill = GridBagConstraints.HORIZONTAL;
-        constraints.insets = JBUI.insets(4, 0);
-        return constraints;
-    }
-
-    private static String text(String key) {
-        return CommUtil.i18nResourceBundle(null).getString(key);
     }
 }

@@ -27,6 +27,24 @@ import java.awt.event.KeyEvent;
  */
 public class CreateCommitAction extends AnAction implements DumbAware {
 
+    /**
+     * 获取CommitMessageI
+     *
+     * @param event AnActionEvent
+     * @return CommitMessageI
+     */
+    private static CommitMessageI getCommitMessagePanel(AnActionEvent event) {
+        if (event == null) return null;
+        var dataContext = event.getDataContext();
+
+        var refreshable = Refreshable.PANEL_KEY.getData(dataContext);
+        if (refreshable instanceof CommitMessageI) {
+            return (CommitMessageI) refreshable;
+        }
+
+        return VcsDataKeys.COMMIT_MESSAGE_CONTROL.getData(dataContext);
+    }
+
     @Override
     public void actionPerformed(@NotNull AnActionEvent actionEvent) {
         CommUtil.handleInitGitmojiEvent();
@@ -91,24 +109,6 @@ public class CreateCommitAction extends AnAction implements DumbAware {
             dialog.resetUIFrom(finalGitCommit);
             dialog.setVisible(true);
         }, ModalityState.current());
-    }
-
-    /**
-     * 获取CommitMessageI
-     *
-     * @param event AnActionEvent
-     * @return CommitMessageI
-     */
-    private static CommitMessageI getCommitMessagePanel(AnActionEvent event) {
-        if (event == null) return null;
-        var dataContext = event.getDataContext();
-
-        var refreshable = Refreshable.PANEL_KEY.getData(dataContext);
-        if (refreshable instanceof CommitMessageI) {
-            return (CommitMessageI) refreshable;
-        }
-
-        return VcsDataKeys.COMMIT_MESSAGE_CONTROL.getData(dataContext);
     }
 
 }

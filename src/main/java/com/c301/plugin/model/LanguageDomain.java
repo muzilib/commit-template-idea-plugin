@@ -16,9 +16,6 @@ import lombok.Data;
 @AllArgsConstructor
 public class LanguageDomain {
 
-    private LanguageDomain() {
-    }
-
     /**
      * en_US US 美国
      */
@@ -55,7 +52,6 @@ public class LanguageDomain {
      * ko_KR KOREA 韩国
      */
     public static final LanguageDomain KO_KR = new LanguageDomain("ko_KR", "조선어");
-
     /**
      * 语言Key
      */
@@ -64,5 +60,7 @@ public class LanguageDomain {
      * 显示文字
      */
     private String label;
+    private LanguageDomain() {
+    }
 
 }

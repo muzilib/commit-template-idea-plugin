@@ -6,7 +6,9 @@ import com.intellij.DynamicBundle;
 
 import java.util.Locale;
 
-/** Resolves the language used by plugin settings and dialogs independently from commit content language. */
+/**
+ * Resolves the language used by plugin settings and dialogs independently from commit content language.
+ */
 public final class PluginUiLanguageSettings {
     private PluginUiLanguageSettings() {
     }

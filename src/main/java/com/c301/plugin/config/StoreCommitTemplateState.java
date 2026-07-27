@@ -35,25 +35,6 @@ import java.util.LinkedList;
 public class StoreCommitTemplateState implements PersistentStateComponent<StoreCommitTemplateState> {
 
     /**
-     * 对象访问构造器
-     *
-     * @return instance instance
-     */
-    public static StoreCommitTemplateState getInstance() {
-        return ApplicationManager.getApplication().getService(StoreCommitTemplateState.class);
-    }
-
-    @Override
-    public @Nullable StoreCommitTemplateState getState() {
-        return this;
-    }
-
-    @Override
-    public void loadState(@NotNull StoreCommitTemplateState state) {
-        XmlSerializerUtil.copyBean(state, this);
-    }
-
-    /**
      * 提交窗口的配置信息
      */
     private WindowsConfigDomain commitWindowConfig = null;
@@ -61,7 +42,6 @@ public class StoreCommitTemplateState implements PersistentStateComponent<StoreC
      * 编辑提交类型窗口的配置信息
      */
     private WindowsConfigDomain settingCommitTypeWindowConfig = null;
-
     /**
      * 语言配置信息
      */
@@ -103,6 +83,25 @@ public class StoreCommitTemplateState implements PersistentStateComponent<StoreC
      * Global defaults for commit-message validation and formatting.
      */
     private CommitMessageRulesState commitMessageRules = new CommitMessageRulesState();
+
+    /**
+     * 对象访问构造器
+     *
+     * @return instance instance
+     */
+    public static StoreCommitTemplateState getInstance() {
+        return ApplicationManager.getApplication().getService(StoreCommitTemplateState.class);
+    }
+
+    @Override
+    public @Nullable StoreCommitTemplateState getState() {
+        return this;
+    }
+
+    @Override
+    public void loadState(@NotNull StoreCommitTemplateState state) {
+        XmlSerializerUtil.copyBean(state, this);
+    }
 
     public boolean isSyncUiLanguageWithIde() {
         return syncUiLanguageWithOs != null ? syncUiLanguageWithOs : syncUiLanguageWithIde;

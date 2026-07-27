@@ -8,7 +8,9 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.ResourceBundle;
 
-/** Global preferences that control optional commit-message presentation. */
+/**
+ * Global preferences that control optional commit-message presentation.
+ */
 final class PluginPresentationConfigurable {
     private final StoreCommitTemplateState state = StoreCommitTemplateState.getInstance();
     private JPanel panel;
@@ -19,6 +21,17 @@ final class PluginPresentationConfigurable {
     private JRadioButton location1;
     private JRadioButton location2;
     private JRadioButton location3;
+
+    private static GridBagConstraints constraints(int y) {
+        GridBagConstraints constraints = new GridBagConstraints();
+        constraints.gridx = 0;
+        constraints.gridy = y;
+        constraints.weightx = 1;
+        constraints.anchor = GridBagConstraints.NORTHWEST;
+        constraints.fill = GridBagConstraints.HORIZONTAL;
+        constraints.insets = JBUI.insets(4, 0);
+        return constraints;
+    }
 
     JComponent createComponent() {
         if (panel == null) {
@@ -119,16 +132,5 @@ final class PluginPresentationConfigurable {
         } else {
             location1.setSelected(true);
         }
-    }
-
-    private static GridBagConstraints constraints(int y) {
-        GridBagConstraints constraints = new GridBagConstraints();
-        constraints.gridx = 0;
-        constraints.gridy = y;
-        constraints.weightx = 1;
-        constraints.anchor = GridBagConstraints.NORTHWEST;
-        constraints.fill = GridBagConstraints.HORIZONTAL;
-        constraints.insets = JBUI.insets(4, 0);
-        return constraints;
     }
 }

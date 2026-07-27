@@ -22,17 +22,6 @@ import java.util.List;
 public class CommitTypeDomain {
 
     /**
-     * 最小化构造函数
-     *
-     * @param type  类型
-     * @param emoji emoji文字
-     */
-    public CommitTypeDomain(String type, GitmojiDomain emoji) {
-        this.type = type;
-        this.emoji = emoji;
-    }
-
-    /**
      * 系统默认的11个提交类型
      */
     public static final List<String> TYPES = new LinkedList<>() {
@@ -50,7 +39,6 @@ public class CommitTypeDomain {
             add("revert");
         }
     };
-
     /**
      * 提交类型类型
      */
@@ -63,6 +51,16 @@ public class CommitTypeDomain {
      * 提交类型说明
      */
     private String description;
+    /**
+     * 最小化构造函数
+     *
+     * @param type  类型
+     * @param emoji emoji文字
+     */
+    public CommitTypeDomain(String type, GitmojiDomain emoji) {
+        this.type = type;
+        this.emoji = emoji;
+    }
 
     /**
      * 提交类型说明文字描述

@@ -23,6 +23,20 @@ public final class CommitTemplateSettingsResolver {
         return project.getService(CommitTemplateSettingsResolver.class);
     }
 
+    private static List<CommitTypeDomain> copyCommitTypes(List<CommitTypeDomain> source) {
+        List<CommitTypeDomain> copy = new LinkedList<>();
+        if (source == null) {
+            return copy;
+        }
+        for (CommitTypeDomain commitType : source) {
+            if (commitType == null) {
+                continue;
+            }
+            copy.add(new CommitTypeDomain(commitType.getType(), commitType.getEmoji(), commitType.getDescription()));
+        }
+        return copy;
+    }
+
     public @NotNull EffectiveCommitTemplateSettings resolve() {
         StoreCommitTemplateState global = StoreCommitTemplateState.getInstance();
         ProjectCommitTemplateOverrideState override = ProjectCommitTemplateOverrideState.getInstance(project);
@@ -49,19 +63,5 @@ public final class CommitTemplateSettingsResolver {
                 rules,
                 previewEnabled
         );
-    }
-
-    private static List<CommitTypeDomain> copyCommitTypes(List<CommitTypeDomain> source) {
-        List<CommitTypeDomain> copy = new LinkedList<>();
-        if (source == null) {
-            return copy;
-        }
-        for (CommitTypeDomain commitType : source) {
-            if (commitType == null) {
-                continue;
-            }
-            copy.add(new CommitTypeDomain(commitType.getType(), commitType.getEmoji(), commitType.getDescription()));
-        }
-        return copy;
     }
 }

@@ -10,7 +10,9 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.ResourceBundle;
 
-/** Global configuration for plugin UI language, kept separate from commit-content language. */
+/**
+ * Global configuration for plugin UI language, kept separate from commit-content language.
+ */
 final class PluginUiLanguageConfigurable {
     private final StoreCommitTemplateState state = StoreCommitTemplateState.getInstance();
     private JPanel panel;
@@ -18,6 +20,17 @@ final class PluginUiLanguageConfigurable {
     private JCheckBox syncWithIde;
     private JLabel uiLanguageLabel;
     private JComboBox<LanguageDomain> uiLanguage;
+
+    private static GridBagConstraints constraints(int y) {
+        GridBagConstraints constraints = new GridBagConstraints();
+        constraints.gridx = 0;
+        constraints.gridy = y;
+        constraints.weightx = 1;
+        constraints.anchor = GridBagConstraints.NORTHWEST;
+        constraints.fill = GridBagConstraints.HORIZONTAL;
+        constraints.insets = JBUI.insets(4, 0);
+        return constraints;
+    }
 
     JComponent createComponent() {
         if (panel == null) {
@@ -88,16 +101,5 @@ final class PluginUiLanguageConfigurable {
 
     private void updateEnabledState() {
         uiLanguage.setEnabled(!syncWithIde.isSelected());
-    }
-
-    private static GridBagConstraints constraints(int y) {
-        GridBagConstraints constraints = new GridBagConstraints();
-        constraints.gridx = 0;
-        constraints.gridy = y;
-        constraints.weightx = 1;
-        constraints.anchor = GridBagConstraints.NORTHWEST;
-        constraints.fill = GridBagConstraints.HORIZONTAL;
-        constraints.insets = JBUI.insets(4, 0);
-        return constraints;
     }
 }

@@ -62,36 +62,6 @@ public class GitCommitDomain {
     private boolean skipCI = false;
 
     /**
-     * 获取关闭问题Git提交字符串格式
-     *
-     * @return 返回 Closes #1234
-     */
-    public String getClosedIssuesText() {
-        var builder = new StringBuilder();
-        for (Integer issue : closedIssues) {
-            builder.append(Constant.STR_CLOSES).append(" #").append(issue).append(System.lineSeparator());
-        }
-
-        if (!builder.isEmpty()) builder.deleteCharAt(builder.length() - 1);
-        return builder.toString();
-    }
-
-    /**
-     * 获取关闭问题数值列表字符串
-     *
-     * @return 返回14, 134, 34
-     */
-    public String getClosedIssuesNumbers() {
-        var builder = new StringBuilder();
-        for (Integer issue : closedIssues) {
-            builder.append(issue).append(", ");
-        }
-
-        if (!builder.isEmpty()) builder.deleteCharAt(builder.length() - 2);
-        return builder.toString().trim();
-    }
-
-    /**
      * 解析原始提交信息
      *
      * @param rawMessage 原始提交信息
@@ -169,6 +139,36 @@ public class GitCommitDomain {
         } catch (Exception ignored) {
         }
         return gitCommit;
+    }
+
+    /**
+     * 获取关闭问题Git提交字符串格式
+     *
+     * @return 返回 Closes #1234
+     */
+    public String getClosedIssuesText() {
+        var builder = new StringBuilder();
+        for (Integer issue : closedIssues) {
+            builder.append(Constant.STR_CLOSES).append(" #").append(issue).append(System.lineSeparator());
+        }
+
+        if (!builder.isEmpty()) builder.deleteCharAt(builder.length() - 1);
+        return builder.toString();
+    }
+
+    /**
+     * 获取关闭问题数值列表字符串
+     *
+     * @return 返回14, 134, 34
+     */
+    public String getClosedIssuesNumbers() {
+        var builder = new StringBuilder();
+        for (Integer issue : closedIssues) {
+            builder.append(issue).append(", ");
+        }
+
+        if (!builder.isEmpty()) builder.deleteCharAt(builder.length() - 2);
+        return builder.toString().trim();
     }
 
     /**

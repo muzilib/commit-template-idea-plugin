@@ -48,6 +48,10 @@ public class ProjectGitCommitSettingConfigurable implements SearchableConfigurab
         this.state = ProjectCommitTemplateOverrideState.getInstance(project);
     }
 
+    private static String text(String key) {
+        return CommUtil.i18nResourceBundle(null).getString(key);
+    }
+
     @Override
     public @NotNull @NonNls String getId() {
         return "plugins.muzilib.commit.template.project";
@@ -218,10 +222,6 @@ public class ProjectGitCommitSettingConfigurable implements SearchableConfigurab
         insertSystemDefaultsButton.setEnabled(typeListEnabled);
         cache.setEmojiEnable(CommitTemplateSettingsResolver.getInstance(project).resolve().emojiEnable());
         commitTypeTable.handleRefreshEvent();
-    }
-
-    private static String text(String key) {
-        return CommUtil.i18nResourceBundle(null).getString(key);
     }
 
     private boolean sameCommitTypes(LinkedList<CommitTypeDomain> left, LinkedList<CommitTypeDomain> right) {

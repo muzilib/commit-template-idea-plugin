@@ -75,14 +75,6 @@ public class LlmUtil {
         }
     }
 
-    public interface StreamResponseHandler {
-        void onMessage(String message);
-
-        void onComplete();
-
-        void onError(Exception e);
-    }
-
     public static void main(String[] args) {
         // 测试示例
         streamChat("你是谁？", new StreamResponseHandler() {
@@ -101,5 +93,13 @@ public class LlmUtil {
                 System.err.println("发生错误: " + e.getMessage());
             }
         });
+    }
+
+    public interface StreamResponseHandler {
+        void onMessage(String message);
+
+        void onComplete();
+
+        void onError(Exception e);
     }
 }
