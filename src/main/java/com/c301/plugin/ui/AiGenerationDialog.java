@@ -8,6 +8,7 @@ import com.c301.plugin.domain.ai.*;
 import com.c301.plugin.infrastructure.ai.AiSuggestionParser;
 import com.c301.plugin.infrastructure.ai.OpenAiCompatibleProvider;
 import com.c301.plugin.infrastructure.credentials.PasswordSafeAiCredentialStore;
+import com.c301.plugin.model.GitCommitDomain;
 import com.c301.plugin.platform.vcs.AiIncludedChangesCollector;
 import com.c301.plugin.utils.CommUtil;
 import com.intellij.openapi.application.ApplicationManager;
@@ -22,28 +23,41 @@ import org.jetbrains.annotations.NotNull;
 import javax.swing.*;
 import java.awt.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
 
 /**
  * AI 快速生成弹窗：显示发送摘要、流式原文和最终候选预览；仅用户确认后回填 Commit Message。
  */
 public final class AiGenerationDialog extends JDialog {
     private final Project project;
-    private final CommitMessageI commitMessage;
+    private final Consumer<GitCommitDomain> suggestionConsumer;
     private final AiPreferencesState preferences;
     private final AiIncludedChangesCollector.CollectionResult changes;
     private final JTextArea output = new JTextArea();
     private final JButton generate = new JButton("开始生成");
-    private final JButton apply = new JButton("应用到提交信息");
+    private final JButton apply = new JButton("应用到表单");
     private final JButton close = new JButton("关闭");
     private final JCheckBox sendDiff = new JCheckBox("本次发送经过筛选的 Diff");
     private final StringBuilder response = new StringBuilder();
     private final AtomicBoolean completed = new AtomicBoolean();
+    private String applicationTarget = "表单";
 
 
     public AiGenerationDialog(Project project, CommitMessageI commitMessage,
                               AiIncludedChangesCollector.CollectionResult changes) {
+        this(project, changes, commit -> {
+            EffectiveCommitTemplateSettings settings = CommitTemplateSettingsResolver.getInstance(project).resolve();
+            commitMessage.setCommitMessage(com.c301.plugin.domain.commit.CommitMessageFormatter.format(
+                    commit, settings.emojiEnable() ? settings.emojiLocation() : null, settings.commitMessageRules()));
+        });
+        applicationTarget = "提交信息";
+        apply.setText("应用到提交信息");
+    }
+
+    public AiGenerationDialog(Project project, AiIncludedChangesCollector.CollectionResult changes,
+                              Consumer<GitCommitDomain> suggestionConsumer) {
         this.project = project;
-        this.commitMessage = commitMessage;
+        this.suggestionConsumer = suggestionConsumer;
         this.preferences = AiPreferencesState.getInstance();
         this.changes = changes;
         setTitle("AI 生成提交信息");
@@ -141,8 +155,7 @@ public final class AiGenerationDialog extends JDialog {
             EffectiveCommitTemplateSettings settings = CommitTemplateSettingsResolver.getInstance(project).resolve();
             var suggestion = AiSuggestionParser.parse(response.toString());
             var commit = AiSuggestionValidator.validateAndConvert(suggestion, settings, allowedTypes(settings));
-            commitMessage.setCommitMessage(com.c301.plugin.domain.commit.CommitMessageFormatter.format(
-                    commit, settings.emojiEnable() ? settings.emojiLocation() : null, settings.commitMessageRules()));
+            suggestionConsumer.accept(commit);
             dispose();
         } catch (Exception exception) {
             Messages.showErrorDialog(this, exception.getMessage(), "无法应用 AI 建议");
@@ -177,7 +190,7 @@ public final class AiGenerationDialog extends JDialog {
                 try {
                     AiSuggestionValidator.validateAndConvert(AiSuggestionParser.parse(response.toString()), settings, allowedTypes(settings));
                     apply.setEnabled(true);
-                    output.append("\n\n—— 已完成，可应用到提交信息。——");
+                    output.append("\n\n—— 已完成，可应用到" + applicationTarget + "。——");
                 } catch (Exception exception) {
                     output.append("\n\n—— AI 返回内容无法通过本地提交规则校验。——");
                 }

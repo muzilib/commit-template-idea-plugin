@@ -104,7 +104,7 @@ public class CreateCommitAction extends AnAction implements DumbAware {
         GitCommitDomain finalGitCommit = gitCommit;
         ApplicationManager.getApplication().invokeLater(() -> {
             //java传递回调方法
-            var dialog = new CommitTemplateDialog(commitMessageI, finalProject);
+            var dialog = new CommitTemplateDialog(commitMessageI, finalProject, actionEvent);
             dialog.handleUIInit();
             dialog.resetUIFrom(finalGitCommit);
             dialog.setVisible(true);

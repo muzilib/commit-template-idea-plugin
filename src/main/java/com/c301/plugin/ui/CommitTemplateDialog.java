@@ -1,10 +1,6 @@
 package com.c301.plugin.ui;
 
-import com.c301.plugin.config.CommitTemplateSettingsResolver;
-import com.c301.plugin.config.EffectiveCommitTemplateSettings;
-import com.c301.plugin.config.PluginUiLanguageSettings;
-
-import com.c301.plugin.config.StoreCommitTemplateState;
+import com.c301.plugin.config.*;
 import com.c301.plugin.constant.Constant;
 import com.c301.plugin.domain.commit.CommitMessageFormatter;
 import com.c301.plugin.domain.commit.CommitMessageValidator;
@@ -12,9 +8,10 @@ import com.c301.plugin.model.CommitTypeDomain;
 import com.c301.plugin.model.GitCommitDomain;
 import com.c301.plugin.model.LanguageDomain;
 import com.c301.plugin.model.WindowsConfigDomain;
-
+import com.c301.plugin.platform.vcs.AiIncludedChangesCollector;
 import com.c301.plugin.utils.CommUtil;
 import com.c301.plugin.utils.StrUtil;
+import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.options.ShowSettingsUtil;
 import com.intellij.openapi.project.Project;
@@ -54,6 +51,7 @@ public class CommitTemplateDialog extends JDialog {
     private final StoreCommitTemplateState store = StoreCommitTemplateState.getInstance();
     private final CommitMessageI commitMessageI;
     private final Project project;
+    private final AnActionEvent actionEvent;
     private final EffectiveCommitTemplateSettings effectiveSettings;
     /**
      * 保存本地化后的纯文本标签，与依赖宽度的 HTML 渲染结果分离。
@@ -100,11 +98,12 @@ public class CommitTemplateDialog extends JDialog {
     /**
      * 创建弹窗信息
      */
-    public CommitTemplateDialog(CommitMessageI commitMessageI, Project project) {
+    public CommitTemplateDialog(CommitMessageI commitMessageI, Project project, AnActionEvent actionEvent) {
         $$$setupUI$$$();
         setModal(true);
         this.commitMessageI = commitMessageI;
         this.project = project;
+        this.actionEvent = actionEvent;
         this.effectiveSettings = resolveEffectiveSettings(project);
         setContentPane(createDialogContent());
         configureResponsiveCommitTypeList();
@@ -474,6 +473,15 @@ public class CommitTemplateDialog extends JDialog {
         var dialogContent = new JPanel(new BorderLayout(0, 8));
         dialogContent.add(contentPane, BorderLayout.CENTER);
 
+        var bottomPanel = new JPanel(new BorderLayout(0, 6));
+        if (AiPreferencesState.getInstance().isEnabled() && actionEvent != null) {
+            JButton generateAiSuggestion = new JButton("AI 生成并应用到表单");
+            generateAiSuggestion.addActionListener(event -> openAiGenerationDialog());
+            JPanel aiActions = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+            aiActions.add(generateAiSuggestion);
+            bottomPanel.add(aiActions, BorderLayout.NORTH);
+        }
+
         var previewPanel = new JPanel(new BorderLayout(0, 6));
         previewPanel.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createTitledBorder(""),
@@ -493,9 +501,37 @@ public class CommitTemplateDialog extends JDialog {
         previewPanel.add(labelPreview, BorderLayout.NORTH);
         previewPanel.add(previewScrollPane, BorderLayout.CENTER);
         if (effectiveSettings.previewEnabled()) {
-            dialogContent.add(previewPanel, BorderLayout.SOUTH);
+            bottomPanel.add(previewPanel, BorderLayout.CENTER);
+        }
+        if (bottomPanel.getComponentCount() > 0) {
+            dialogContent.add(bottomPanel, BorderLayout.SOUTH);
         }
         return dialogContent;
+    }
+
+    private void openAiGenerationDialog() {
+        var changes = AiIncludedChangesCollector.collectMetadata(actionEvent, AiPreferencesState.getInstance());
+        new AiGenerationDialog(project, changes, this::applyAiSuggestionToForm).setVisible(true);
+    }
+
+    /** 用户在 AI 对话框中确认后才回填表单，且不触发提交、暂存或任何 Git 操作。 */
+    private void applyAiSuggestionToForm(GitCommitDomain suggestion) {
+        if (suggestion.getCommitType() != null) {
+            var buttons = typeChangeGroup.getElements();
+            while (buttons.hasMoreElements()) {
+                var button = buttons.nextElement();
+                if (suggestion.getCommitType().getType().equalsIgnoreCase(button.getActionCommand())) {
+                    button.setSelected(true);
+                    break;
+                }
+            }
+        }
+        optionScopeChange.setSelectedItem(suggestion.getChangeScope());
+        inputShortDescription.setText(suggestion.getShortDescription());
+        inputLongDescription.setText(suggestion.getLongDescription() == null ? "" : suggestion.getLongDescription());
+        inputBreakingChanges.setText(suggestion.getBreakingChanges() == null ? "" : suggestion.getBreakingChanges());
+        inputClosedIssues.setText(suggestion.getClosedIssuesNumbers());
+        refreshPreview();
     }
 
     private void installPreviewListeners() {
