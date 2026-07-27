@@ -2,7 +2,7 @@ package com.c301.plugin.config;
 
 import com.c301.plugin.constant.Constant;
 import com.c301.plugin.model.CommitTypeDomain;
-import com.c301.plugin.model.GitmojiLocationDomain;
+
 import com.c301.plugin.model.LanguageDomain;
 import com.c301.plugin.model.SettingCacheDomain;
 import com.c301.plugin.ui.render.CustomTableCellRenderer;
@@ -42,12 +42,6 @@ public class ProjectGitCommitSettingConfigurable implements SearchableConfigurab
     private JBCommitTypeTable commitTypeTable;
     private JComponent commitTypeEditor;
     private JButton insertSystemDefaultsButton;
-    private JCheckBox overrideGitmoji;
-    private JCheckBox gitmoji;
-    private JCheckBox overrideGitmojiLocation;
-    private JRadioButton location1;
-    private JRadioButton location2;
-    private JRadioButton location3;
 
     public ProjectGitCommitSettingConfigurable(@NotNull Project project) {
         this.project = project;
@@ -87,11 +81,7 @@ public class ProjectGitCommitSettingConfigurable implements SearchableConfigurab
                 || overrideCustomTemplate.isSelected() == (state.getCustomEnable() == null)
                 || (overrideCustomTemplate.isSelected() && customTemplate.isSelected() != state.getCustomEnable())
                 || overrideCommitTypeList.isSelected() != Boolean.TRUE.equals(state.getCustomCommitTypeListConfigured())
-                || (overrideCommitTypeList.isSelected() && !sameCommitTypes(cache.getCustomCommitTypeList(), state.getCustomCommitTypeList()))
-                || overrideGitmoji.isSelected() == (state.getEmojiEnable() == null)
-                || (overrideGitmoji.isSelected() && gitmoji.isSelected() != state.getEmojiEnable())
-                || overrideGitmojiLocation.isSelected() == (state.getEmojiLocation() == null)
-                || (overrideGitmojiLocation.isSelected() && !selectedLocation().equals(state.getEmojiLocation()));
+                || (overrideCommitTypeList.isSelected() && !sameCommitTypes(cache.getCustomCommitTypeList(), state.getCustomCommitTypeList()));
     }
 
     @Override
@@ -102,8 +92,6 @@ public class ProjectGitCommitSettingConfigurable implements SearchableConfigurab
         state.setCustomCommitTypeList(overrideCommitTypeList.isSelected()
                 ? CommUtil.deepCopy(cache.getCustomCommitTypeList())
                 : new LinkedList<>());
-        state.setEmojiEnable(overrideGitmoji.isSelected() ? gitmoji.isSelected() : null);
-        state.setEmojiLocation(overrideGitmojiLocation.isSelected() ? selectedLocation() : null);
     }
 
     @Override
@@ -126,10 +114,6 @@ public class ProjectGitCommitSettingConfigurable implements SearchableConfigurab
         overrideCustomTemplate.setSelected(state.getCustomEnable() != null);
         customTemplate.setSelected(state.getCustomEnable() != null ? state.getCustomEnable() : effective.customEnable());
         overrideCommitTypeList.setSelected(Boolean.TRUE.equals(state.getCustomCommitTypeListConfigured()));
-        overrideGitmoji.setSelected(state.getEmojiEnable() != null);
-        gitmoji.setSelected(state.getEmojiEnable() != null ? state.getEmojiEnable() : effective.emojiEnable());
-        overrideGitmojiLocation.setSelected(state.getEmojiLocation() != null);
-        selectLocation(state.getEmojiLocation() != null ? state.getEmojiLocation() : effective.emojiLocation());
         commitTypeTable.handleRefreshEvent();
         updateEnabledState();
     }
@@ -213,45 +197,11 @@ public class ProjectGitCommitSettingConfigurable implements SearchableConfigurab
         commitTypePanel.add(commitTypeEditorPanel, BorderLayout.CENTER);
         content.add(commitTypePanel, constraints);
 
-        constraints.gridy++;
-        constraints.insets = JBUI.insets(8, 0, 2, 0);
-        overrideGitmoji = new JCheckBox(text("plugin.project.overrideGitmoji"));
-        content.add(overrideGitmoji, constraints);
-        constraints.gridy++;
-        constraints.insets = JBUI.insets(0, 24, 8, 0);
-        gitmoji = new JCheckBox(text("plugin.project.useGitmoji"));
-        content.add(gitmoji, constraints);
-
-        constraints.gridy++;
-        constraints.insets = JBUI.insets(8, 0, 2, 0);
-        overrideGitmojiLocation = new JCheckBox(text("plugin.project.overrideGitmojiLocation"));
-        content.add(overrideGitmojiLocation, constraints);
-        constraints.gridy++;
-        constraints.insets = JBUI.insets(0, 24, 2, 0);
-        location1 = new JRadioButton(text("plugin.setting.location.location1"));
-        content.add(location1, constraints);
-        constraints.gridy++;
-        location2 = new JRadioButton(text("plugin.setting.location.location2"));
-        content.add(location2, constraints);
-        constraints.gridy++;
-        constraints.insets = JBUI.insets(0, 24, 8, 0);
-        location3 = new JRadioButton(text("plugin.setting.location.location3"));
-        content.add(location3, constraints);
-        ButtonGroup locations = new ButtonGroup();
-        locations.add(location1);
-        locations.add(location2);
-        locations.add(location3);
 
         overrideLanguage.addActionListener(e -> updateEnabledState());
         overrideCustomTemplate.addActionListener(e -> updateEnabledState());
         overrideCommitTypeList.addActionListener(e -> updateEnabledState());
         customTemplate.addActionListener(e -> updateEnabledState());
-        overrideGitmoji.addActionListener(e -> updateEnabledState());
-        overrideGitmojiLocation.addActionListener(e -> updateEnabledState());
-        gitmoji.addActionListener(e -> {
-            cache.setEmojiEnable(gitmoji.isSelected());
-            commitTypeTable.handleRefreshEvent();
-        });
         root.add(content, BorderLayout.CENTER);
         return root;
     }
@@ -266,14 +216,8 @@ public class ProjectGitCommitSettingConfigurable implements SearchableConfigurab
         commitTypeTable.setEnabled(typeListEnabled);
         commitTypeEditor.setEnabled(typeListEnabled);
         insertSystemDefaultsButton.setEnabled(typeListEnabled);
-        gitmoji.setEnabled(overrideGitmoji.isSelected());
-        cache.setEmojiEnable(overrideGitmoji.isSelected() ? gitmoji.isSelected()
-                : CommitTemplateSettingsResolver.getInstance(project).resolve().emojiEnable());
+        cache.setEmojiEnable(CommitTemplateSettingsResolver.getInstance(project).resolve().emojiEnable());
         commitTypeTable.handleRefreshEvent();
-        boolean locationEnabled = overrideGitmojiLocation.isSelected();
-        location1.setEnabled(locationEnabled);
-        location2.setEnabled(locationEnabled);
-        location3.setEnabled(locationEnabled);
     }
 
     private static String text(String key) {
@@ -295,23 +239,4 @@ public class ProjectGitCommitSettingConfigurable implements SearchableConfigurab
         return true;
     }
 
-    private GitmojiLocationDomain selectedLocation() {
-        if (location2.isSelected()) {
-            return GitmojiLocationDomain.LOCATION2;
-        }
-        if (location3.isSelected()) {
-            return GitmojiLocationDomain.LOCATION3;
-        }
-        return GitmojiLocationDomain.LOCATION1;
-    }
-
-    private void selectLocation(GitmojiLocationDomain location) {
-        if (GitmojiLocationDomain.LOCATION2.equals(location)) {
-            location2.setSelected(true);
-        } else if (GitmojiLocationDomain.LOCATION3.equals(location)) {
-            location3.setSelected(true);
-        } else {
-            location1.setSelected(true);
-        }
-    }
 }

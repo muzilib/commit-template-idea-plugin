@@ -2,7 +2,7 @@ package com.c301.plugin.config;
 
 
 import com.c301.plugin.model.CommitTypeDomain;
-import com.c301.plugin.model.GitmojiLocationDomain;
+
 import com.c301.plugin.model.LanguageDomain;
 import com.intellij.openapi.components.PersistentStateComponent;
 import com.intellij.openapi.components.State;
@@ -22,8 +22,6 @@ import java.util.LinkedList;
 public class ProjectCommitTemplateOverrideState implements PersistentStateComponent<ProjectCommitTemplateOverrideState> {
     private LanguageDomain language;
     private Boolean customEnable;
-    private Boolean emojiEnable;
-    private GitmojiLocationDomain emojiLocation;
     private Boolean customCommitTypeListConfigured;
     private LinkedList<CommitTypeDomain> customCommitTypeList = new LinkedList<>();
 
@@ -44,8 +42,6 @@ public class ProjectCommitTemplateOverrideState implements PersistentStateCompon
     public void clearOverrides() {
         language = null;
         customEnable = null;
-        emojiEnable = null;
-        emojiLocation = null;
         customCommitTypeListConfigured = null;
         customCommitTypeList.clear();
     }

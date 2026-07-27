@@ -71,6 +71,13 @@ public class CommitTemplateSettingUI {
 
     public CommitTemplateSettingUI(SettingCacheDomain cache) {
         this.cache = cache;
+        settingPanel.remove(labelGitmoji);
+        settingPanel.remove(checkBoxGitmoji);
+        settingPanel.remove(radioGitmojiLocation1);
+        settingPanel.remove(radioGitmojiLocation2);
+        settingPanel.remove(radioGitmojiLocation3);
+        settingPanel.remove(labelLocationPreview);
+        settingPanel.remove(labelGitmojiWebsite);
         var commitTypeTable = new JBCommitTypeTable(cache);
 
         //初始化语言列表

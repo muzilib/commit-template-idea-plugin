@@ -20,7 +20,6 @@ final class CommitMessageRulesConfigurable {
     private JSpinner wrapLength;
     private JTextField issueKeyword;
     private JCheckBox forbidPeriod;
-    private JCheckBox previewEnabled;
     private JLabel subjectLengthLabel;
     private JLabel wrapLengthLabel;
     private JLabel issueKeywordLabel;
@@ -61,9 +60,6 @@ final class CommitMessageRulesConfigurable {
             constraints.gridy++;
             forbidPeriod = new JCheckBox(text("plugin.rules.forbidTrailingPeriod"));
             panel.add(forbidPeriod, constraints);
-            constraints.gridy++;
-            previewEnabled = new JCheckBox(text("plugin.rules.showPreview"));
-            panel.add(previewEnabled, constraints);
 
             GridBagConstraints filler = constraints(constraints.gridy + 1);
             filler.weighty = 1;
@@ -84,8 +80,7 @@ final class CommitMessageRulesConfigurable {
                 || (Integer) subjectLength.getValue() != rules.subjectMaxLength()
                 || (Integer) wrapLength.getValue() != rules.bodyWrapLength()
                 || !issueKeyword.getText().trim().equals(rules.issueFooterKeyword())
-                || forbidPeriod.isSelected() != rules.forbidSubjectTrailingPeriod()
-                || previewEnabled.isSelected() != globalState.isPreviewEnabled();
+                || forbidPeriod.isSelected() != rules.forbidSubjectTrailingPeriod();
     }
 
     void apply() throws ConfigurationException {
@@ -93,7 +88,6 @@ final class CommitMessageRulesConfigurable {
         if (keyword.isEmpty()) {
             throw new ConfigurationException(text("plugin.rules.error.issueKeywordRequired"));
         }
-        globalState.setPreviewEnabled(previewEnabled.isSelected());
         globalState.setCommitMessageRules(CommitMessageRulesState.fromDomain(new CommitMessageRules(
                 requireType.isSelected(), requireScope.isSelected(),
                 (Integer) subjectLength.getValue(), (Integer) wrapLength.getValue(),
@@ -111,7 +105,6 @@ final class CommitMessageRulesConfigurable {
         wrapLengthLabel.setText(text("plugin.rules.bodyWrapLength"));
         issueKeywordLabel.setText(text("plugin.rules.issueFooterKeyword"));
         forbidPeriod.setText(text("plugin.rules.forbidTrailingPeriod"));
-        previewEnabled.setText(text("plugin.rules.showPreview"));
         panel.revalidate();
         panel.repaint();
     }
@@ -127,7 +120,6 @@ final class CommitMessageRulesConfigurable {
         wrapLength.setValue(rules.bodyWrapLength());
         issueKeyword.setText(rules.issueFooterKeyword());
         forbidPeriod.setSelected(rules.forbidSubjectTrailingPeriod());
-        previewEnabled.setSelected(globalState.isPreviewEnabled());
     }
 
     private CommitMessageRules effectiveRules() {

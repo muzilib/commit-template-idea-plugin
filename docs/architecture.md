@@ -45,7 +45,7 @@ This preserves existing user configuration. It owns global defaults and user/mac
 .idea/commit-template.xml
 ```
 
-Every nullable field means "inherit global default". It may contain commit rules and display preferences, but **must never contain API keys, passwords, tokens, cookies, or other credentials**.
+Every nullable field means "inherit global default". It may contain commit-content language, custom templates, and commit type lists, but **must never contain API keys, passwords, tokens, cookies, or other credentials**. Commit rules, UI language, commit-message preview, and Gitmoji presentation are global-only preferences.
 
 The effective settings are obtained only through `CommitTemplateSettingsResolver` when a `Project` is available.
 

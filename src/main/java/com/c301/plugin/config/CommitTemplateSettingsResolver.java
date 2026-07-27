@@ -29,8 +29,8 @@ public final class CommitTemplateSettingsResolver {
 
         LanguageDomain language = override.getLanguage() != null ? override.getLanguage() : global.getLanguage();
         boolean customEnable = override.getCustomEnable() != null ? override.getCustomEnable() : global.isCustomEnable();
-        boolean emojiEnable = override.getEmojiEnable() != null ? override.getEmojiEnable() : global.isEmojiEnable();
-        GitmojiLocationDomain emojiLocation = override.getEmojiLocation() != null ? override.getEmojiLocation() : global.getEmojiLocation();
+        boolean emojiEnable = global.isEmojiEnable();
+        GitmojiLocationDomain emojiLocation = global.getEmojiLocation();
         List<CommitTypeDomain> commitTypes = Boolean.TRUE.equals(override.getCustomCommitTypeListConfigured())
                 ? override.getCustomCommitTypeList()
                 : global.getCustomCommitTypeList();
