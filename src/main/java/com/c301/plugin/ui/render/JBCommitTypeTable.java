@@ -1,12 +1,15 @@
 package com.c301.plugin.ui.render;
 
 import com.c301.plugin.constant.Constant;
+import com.c301.plugin.model.LanguageDomain;
 import com.c301.plugin.model.SettingCacheDomain;
 import com.c301.plugin.ui.EditCommitTypeDialog;
 import com.c301.plugin.utils.CommUtil;
 import com.intellij.ui.table.JBTable;
 
 import javax.swing.*;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * 提交类型表格渲染组件
@@ -24,6 +27,32 @@ public class JBCommitTypeTable extends JBTable {
     public JBCommitTypeTable(SettingCacheDomain cache) {
         this.cache = cache;
         handleRefreshEvent();
+    }
+
+    /**
+     * Inserts missing built-in commit types in the requested commit-content language.
+     *
+     * @return number of types added, limited by the configured maximum.
+     */
+    public int insertSystemDefaults(LanguageDomain language) {
+        Set<String> existingTypes = new HashSet<>();
+        for (var commitType : cache.getCustomCommitTypeList()) {
+            if (commitType != null && commitType.getType() != null) {
+                existingTypes.add(commitType.getType());
+            }
+        }
+        int inserted = 0;
+        for (var defaultType : CommUtil.getDefaultCommitTypeList(language.getKey())) {
+            if (cache.getCustomCommitTypeList().size() >= Constant.MAX_COMMIT_TYPE_LENGTH) {
+                break;
+            }
+            if (existingTypes.add(defaultType.getType())) {
+                cache.getCustomCommitTypeList().add(CommUtil.deepCopy(defaultType));
+                inserted++;
+            }
+        }
+        handleRefreshEvent();
+        return inserted;
     }
 
     /**

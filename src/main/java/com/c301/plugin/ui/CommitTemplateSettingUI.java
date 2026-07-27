@@ -1,5 +1,7 @@
 package com.c301.plugin.ui;
 
+import com.c301.plugin.config.PluginUiLanguageSettings;
+import com.c301.plugin.config.StoreCommitTemplateState;
 import com.c301.plugin.constant.Constant;
 import com.c301.plugin.model.GitmojiLocationDomain;
 import com.c301.plugin.model.LanguageDomain;
@@ -8,6 +10,8 @@ import com.c301.plugin.ui.render.CustomTableCellRenderer;
 import com.c301.plugin.ui.render.JBCommitTypeTable;
 import com.c301.plugin.ui.render.LanguageListCellRendererRender;
 import com.c301.plugin.utils.CommUtil;
+import com.intellij.notification.NotificationGroupManager;
+import com.intellij.notification.NotificationType;
 import com.intellij.ui.DoubleClickListener;
 import com.intellij.ui.ToolbarDecorator;
 import com.intellij.uiDesigner.core.GridConstraints;
@@ -91,7 +95,23 @@ public class CommitTemplateSettingUI {
                 .setMoveUpAction(button -> commitTypeTable.handlesMoveUpActionEvent())
                 .setMoveDownAction(button -> commitTypeTable.handlesMoveDownActionEvent())
                 .createPanel();
-        typeTablePanel.add(editCommitTypePanel, BorderLayout.CENTER);
+        var commitTypeEditorPanel = new JPanel(new BorderLayout(0, 4));
+        var insertSystemDefaults = new JButton();
+        insertSystemDefaults.addActionListener(e -> {
+            var resourceBundle = CommUtil.i18nResourceBundle(null);
+            int inserted = commitTypeTable.insertSystemDefaults(cache.getLanguage());
+            String message = inserted == 0
+                    ? resourceBundle.getString("plugin.setting.insertSystemDefaults.none")
+                    : resourceBundle.getString("plugin.setting.insertSystemDefaults.result")
+                    .replace("{count}", String.valueOf(inserted));
+            JOptionPane.showMessageDialog(mainPanel, message, resourceBundle.getString("plugin.setting.dialog.warning"),
+                    JOptionPane.INFORMATION_MESSAGE);
+        });
+        var commitTypeActions = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        commitTypeActions.add(insertSystemDefaults);
+        commitTypeEditorPanel.add(commitTypeActions, BorderLayout.NORTH);
+        commitTypeEditorPanel.add(editCommitTypePanel, BorderLayout.CENTER);
+        typeTablePanel.add(commitTypeEditorPanel, BorderLayout.CENTER);
 
         //设置自定义语言模板开启状态
         checkBoxCommitType.addItemListener(e -> {
@@ -103,7 +123,7 @@ public class CommitTemplateSettingUI {
             editCommitTypePanel.setEnabled(enable);
 
             //自定义提交模板描述信息
-            var resourceBundle = CommUtil.i18nResourceBundle(cache.getLanguage().getKey());
+            var resourceBundle = CommUtil.i18nResourceBundle(null);
             var active = enable ? "active" : "deActive";
             checkBoxCommitType.setText(resourceBundle.getString("plugin.setting.label.customTemplateTips." + active));
         });
@@ -124,7 +144,7 @@ public class CommitTemplateSettingUI {
             }
 
             //自定义提交模板描述信息
-            var resourceBundle = CommUtil.i18nResourceBundle(cache.getLanguage().getKey());
+            var resourceBundle = CommUtil.i18nResourceBundle(null);
             var active = enable ? "active" : "deActive";
             checkBoxGitmoji.setText(resourceBundle.getString("plugin.setting.label.customGitmojiTips." + active));
             commitTypeTable.handleRefreshEvent();
@@ -146,32 +166,36 @@ public class CommitTemplateSettingUI {
         icon.setImage(image);
         imageIcon.setIcon(icon);
 
-        //设置版本信息
-        var platformVersion = CommUtil.handleReadProperties("platformVersion");
-        platformVersion += " (" + CommUtil.handleReadProperties("platformType") + ")";
+        //设置版本信息。version.properties only exists in packaged builds, so development runs use a clear fallback.
+        var platformVersion = formatBuildProperty("platformVersion", "platformType");
+        var buildVersion = formatBuildProperty("pluginVersion", "channelCode");
+        var buildTime = buildPropertyOrFallback("builderTime");
+        var javaVersion = buildPropertyOrFallback("javaVersion");
         labelPlatformVersion.setText(platformVersion);
-        var buildVersion = CommUtil.handleReadProperties("pluginVersion");
-        buildVersion += " (" + CommUtil.handleReadProperties("channelCode") + ")";
         labelBuildVersion.setText(buildVersion);
-        labelBuildTime.setText(CommUtil.handleReadProperties("builderTime"));
-        labelJavaVersion.setText(CommUtil.handleReadProperties("javaVersion"));
+        labelBuildTime.setText(buildTime);
+        labelJavaVersion.setText(javaVersion);
 
-        //复制版本信息
-        String finalBuildVersion = buildVersion;
-        String finalPlatformVersion = platformVersion;
         buttonCopy.addActionListener(e -> {
             var information = """
-                    Build Version: {buildVersion}
-                    Build Time: {buildTime}
-                    Java Version: {javaVersion}
-                    Platform Version: {platformVersion}""";
-            information = information.replace("{buildVersion}", finalBuildVersion);
-            information = information.replace("{buildTime}", CommUtil.handleReadProperties("builderTime"));
-            information = information.replace("{javaVersion}", CommUtil.handleReadProperties("javaVersion"));
-            information = information.replace("{platformVersion}", finalPlatformVersion);
-
-            var clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-            clipboard.setContents(new StringSelection(information), null);
+                    Plugin: Git Commit Template
+                    Version: {buildVersion}
+                    Build time: {buildTime}
+                    Java: {javaVersion}
+                    Platform: {platformVersion}
+                    Support: https://gitmoji.dev"""
+                    .replace("{buildVersion}", buildVersion)
+                    .replace("{buildTime}", buildTime)
+                    .replace("{javaVersion}", javaVersion)
+                    .replace("{platformVersion}", platformVersion);
+            try {
+                Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(information), null);
+                NotificationGroupManager.getInstance().getNotificationGroup("commit-template-notify")
+                        .createNotification("Plugin information copied to the clipboard.", NotificationType.INFORMATION).notify(null);
+            } catch (IllegalStateException | HeadlessException ex) {
+                NotificationGroupManager.getInstance().getNotificationGroup("commit-template-notify")
+                        .createNotification("Unable to access the system clipboard.", NotificationType.WARNING).notify(null);
+            }
         });
 
         //点击Gitmoji网站打开链接
@@ -248,9 +272,17 @@ public class CommitTemplateSettingUI {
      * @param language 语言对象
      */
     private void handleDisplayLanguageEvent(LanguageDomain language) {
-        var resourceBundle = CommUtil.i18nResourceBundle(language.getKey());
+        var uiLanguage = PluginUiLanguageSettings.resolve(StoreCommitTemplateState.getInstance());
+        var resourceBundle = CommUtil.i18nResourceBundle(uiLanguage.getKey());
 
         //显示语言控制
+        if (typeTablePanel.getComponentCount() > 0
+                && typeTablePanel.getComponent(0) instanceof JPanel editorPanel
+                && editorPanel.getComponent(0) instanceof JPanel actionsPanel
+                && actionsPanel.getComponentCount() > 0
+                && actionsPanel.getComponent(0) instanceof JButton insertButton) {
+            insertButton.setText(resourceBundle.getString("plugin.setting.insertSystemDefaults"));
+        }
         if (tabbedPane.getTabCount() >= 2) {
             tabbedPane.setTitleAt(0, resourceBundle.getString("plugin.setting.label.setting"));
             tabbedPane.setTitleAt(1, resourceBundle.getString("plugin.setting.label.about"));
@@ -275,6 +307,17 @@ public class CommitTemplateSettingUI {
         }
         var textPreview = CommUtil.handlePreviewGitemojiLocation(cache);
         labelLocationPreview.setText(textPreview);
+    }
+
+    private String buildPropertyOrFallback(String key) {
+        String value = CommUtil.handleReadProperties(key);
+        return value == null || value.isBlank() || "-".equals(value) ? "Not available" : value;
+    }
+
+    private String formatBuildProperty(String primaryKey, String detailKey) {
+        String primary = buildPropertyOrFallback(primaryKey);
+        String detail = buildPropertyOrFallback(detailKey);
+        return "Not available".equals(detail) ? primary : primary + " (" + detail + ")";
     }
 
     {

@@ -1,5 +1,6 @@
 package com.c301.plugin.utils;
 
+import com.c301.plugin.config.PluginUiLanguageSettings;
 import com.c301.plugin.config.StoreCommitTemplateState;
 import com.c301.plugin.constant.Constant;
 import com.c301.plugin.model.*;
@@ -38,7 +39,7 @@ public class CommUtil {
      */
     public static ResourceBundle i18nResourceBundle(String languageKey) {
         if (StrUtil.isBlank(languageKey)) {
-            languageKey = StoreCommitTemplateState.getInstance().getLanguage().getKey();
+            languageKey = PluginUiLanguageSettings.resolve(StoreCommitTemplateState.getInstance()).getKey();
         }
 
         var locale = switch (languageKey) {
@@ -240,6 +241,9 @@ public class CommUtil {
             }
         }
 
+        if (properties == null) {
+            return "-";
+        }
         var value = properties.getProperty(key);
         if (StrUtil.isBlank(value)) return "-";
         return value;

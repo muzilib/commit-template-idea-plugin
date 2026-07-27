@@ -26,12 +26,6 @@ public class ProjectCommitTemplateOverrideState implements PersistentStateCompon
     private GitmojiLocationDomain emojiLocation;
     private Boolean customCommitTypeListConfigured;
     private LinkedList<CommitTypeDomain> customCommitTypeList = new LinkedList<>();
-    private Boolean requireCommitType;
-    private Boolean requireScope;
-    private Integer subjectMaxLength;
-    private Integer bodyWrapLength;
-    private String issueFooterKeyword;
-    private Boolean forbidSubjectTrailingPeriod;
 
     public static ProjectCommitTemplateOverrideState getInstance(@NotNull Project project) {
         return project.getService(ProjectCommitTemplateOverrideState.class);
@@ -54,11 +48,5 @@ public class ProjectCommitTemplateOverrideState implements PersistentStateCompon
         emojiLocation = null;
         customCommitTypeListConfigured = null;
         customCommitTypeList.clear();
-        requireCommitType = null;
-        requireScope = null;
-        subjectMaxLength = null;
-        bodyWrapLength = null;
-        issueFooterKeyword = null;
-        forbidSubjectTrailingPeriod = null;
     }
 }

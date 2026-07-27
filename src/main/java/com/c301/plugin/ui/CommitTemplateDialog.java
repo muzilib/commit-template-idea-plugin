@@ -2,8 +2,8 @@ package com.c301.plugin.ui;
 
 import com.c301.plugin.config.CommitTemplateSettingsResolver;
 import com.c301.plugin.config.EffectiveCommitTemplateSettings;
+import com.c301.plugin.config.PluginUiLanguageSettings;
 
-import com.c301.plugin.config.ProjectCommitTemplateOverrideState;
 import com.c301.plugin.config.StoreCommitTemplateState;
 import com.c301.plugin.constant.Constant;
 import com.c301.plugin.domain.commit.CommitMessageFormatter;
@@ -12,7 +12,7 @@ import com.c301.plugin.model.CommitTypeDomain;
 import com.c301.plugin.model.GitCommitDomain;
 import com.c301.plugin.model.LanguageDomain;
 import com.c301.plugin.model.WindowsConfigDomain;
-import com.c301.plugin.ui.render.LanguageListCellRendererRender;
+
 import com.c301.plugin.utils.CommUtil;
 import com.c301.plugin.utils.StrUtil;
 import com.intellij.openapi.application.ApplicationManager;
@@ -89,13 +89,13 @@ public class CommitTemplateDialog extends JDialog {
     public CommitTemplateDialog(CommitMessageI commitMessageI, Project project) {
         $$$setupUI$$$();
         setModal(true);
+        this.commitMessageI = commitMessageI;
+        this.project = project;
+        this.effectiveSettings = resolveEffectiveSettings(project);
         setContentPane(createDialogContent());
         getRootPane().setDefaultButton(buttonOK);
         labelCommitTypeNoData.setVisible(false);
         labelCommitTypeSetting.setVisible(false);
-        this.commitMessageI = commitMessageI;
-        this.project = project;
-        this.effectiveSettings = resolveEffectiveSettings(project);
         optionScopeChange.setFont(Constant.EMOJI_FONT);
         inputShortDescription.setFont(Constant.EMOJI_FONT);
         inputLongDescription.setFont(Constant.EMOJI_FONT);
@@ -105,11 +105,12 @@ public class CommitTemplateDialog extends JDialog {
 
         //设置显示窗口大小
         pack();
-        setMinimumSize(new Dimension(880, 650));
+        setMinimumSize(new Dimension(880, 560));
 
         buttonOK.addActionListener(e -> handleOKEvent());
         buttonCancel.addActionListener(e -> handleCancelEvent());
-        optionLanguage.setRenderer(new LanguageListCellRendererRender());
+        labelLanguage.setVisible(false);
+        optionLanguage.setVisible(false);
 
         // call onCancel() when cross is clicked
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
@@ -134,7 +135,7 @@ public class CommitTemplateDialog extends JDialog {
             var validation = CommitMessageValidator.validate(gitCommit.getCommitType(), gitCommit.getChangeScope(),
                     inputShortDescription.getText(), effectiveSettings.commitMessageRules());
             if (!validation.isValid()) {
-                var resourceBundle = CommUtil.i18nResourceBundle(effectiveSettings.language().getKey());
+                var resourceBundle = CommUtil.i18nResourceBundle(null);
                 JOptionPane.showMessageDialog(this, validationMessage(resourceBundle, validation),
                         resourceBundle.getString("plugin.setting.dialog.warning"), JOptionPane.WARNING_MESSAGE);
                 return;
@@ -150,7 +151,6 @@ public class CommitTemplateDialog extends JDialog {
      * 处理取消事件
      */
     private void handleCancelEvent() {
-        saveSelectedLanguage(CommUtil.convertLanguageDomain(optionLanguage));
         dispose();
     }
 
@@ -183,14 +183,7 @@ public class CommitTemplateDialog extends JDialog {
             }
         });
 
-        //语言下拉列表显示
-        Constant.LANGUAGES.forEach(optionLanguage::addItem);
-        optionLanguage.addActionListener(e -> {
-            optionLanguage.hidePopup();
-            var language = CommUtil.convertLanguageDomain(optionLanguage);
-            saveSelectedLanguage(language);
-            handleDisplayLanguageEvent(language);
-        });
+
 
         //设置窗口打开位置为屏幕中心
         setLocationRelativeTo(null);
@@ -227,9 +220,7 @@ public class CommitTemplateDialog extends JDialog {
             }
         }
 
-        //语言类型回显
-        optionLanguage.setSelectedItem(effectiveSettings.language());
-        handleDisplayLanguageEvent(effectiveSettings.language());
+        handleDisplayLanguageEvent(PluginUiLanguageSettings.resolve(store));
 
         //文本内容回显
         optionScopeChange.setSelectedItem(gitCommit.getChangeScope());
@@ -299,7 +290,7 @@ public class CommitTemplateDialog extends JDialog {
         labelCommitTypeSetting.setText(resourceBundle.getString("plugin.setting.label.tipsGoSetting"));
 
         //渲染提交类型按钮组信息
-        var commitTypeList = CommUtil.getDefaultCommitTypeList(language.getKey());
+        var commitTypeList = CommUtil.getDefaultCommitTypeList(effectiveSettings.language().getKey());
         if (effectiveSettings.customEnable()) commitTypeList = effectiveSettings.customCommitTypeList();
         var buttonElements = typeChangeGroup.getElements();
         if (commitTypeList.isEmpty()) {
@@ -403,15 +394,26 @@ public class CommitTemplateDialog extends JDialog {
         var dialogContent = new JPanel(new BorderLayout(0, 8));
         dialogContent.add(contentPane, BorderLayout.CENTER);
 
-        var previewPanel = new JPanel(new BorderLayout(0, 4));
+        var previewPanel = new JPanel(new BorderLayout(0, 6));
+        previewPanel.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createTitledBorder(""),
+                BorderFactory.createEmptyBorder(2, 6, 6, 6)));
+        previewPanel.setPreferredSize(new Dimension(0, 108));
+        previewPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 108));
         labelPreview = new JLabel();
-        previewCommitMessage = new JTextArea(5, 0);
+        labelPreview.setFont(labelPreview.getFont().deriveFont(Font.BOLD));
+        previewCommitMessage = new JTextArea(3, 0);
         previewCommitMessage.setEditable(false);
-        previewCommitMessage.setLineWrap(false);
-        previewCommitMessage.setWrapStyleWord(false);
+        previewCommitMessage.setLineWrap(true);
+        previewCommitMessage.setWrapStyleWord(true);
+        previewCommitMessage.setRows(3);
+        var previewScrollPane = new JScrollPane(previewCommitMessage);
+        previewScrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         previewPanel.add(labelPreview, BorderLayout.NORTH);
-        previewPanel.add(new JScrollPane(previewCommitMessage), BorderLayout.CENTER);
-        dialogContent.add(previewPanel, BorderLayout.SOUTH);
+        previewPanel.add(previewScrollPane, BorderLayout.CENTER);
+        if (effectiveSettings.previewEnabled()) {
+            dialogContent.add(previewPanel, BorderLayout.SOUTH);
+        }
         return dialogContent;
     }
 
@@ -452,7 +454,7 @@ public class CommitTemplateDialog extends JDialog {
             return;
         }
         var commit = createCommitFromForm();
-        var resourceBundle = CommUtil.i18nResourceBundle(effectiveSettings.language().getKey());
+        var resourceBundle = CommUtil.i18nResourceBundle(null);
         if (!CommitMessageValidator.validate(commit.getCommitType(), commit.getChangeScope(),
                 commit.getShortDescription(), effectiveSettings.commitMessageRules()).isValid()) {
             previewCommitMessage.setText(resourceBundle.getString("plugin.preview.empty"));
@@ -487,7 +489,10 @@ public class CommitTemplateDialog extends JDialog {
                     .filter(item -> item.getType().equals(button.getActionCommand()))
                     .findFirst()
                     .orElse(null)
-                    : CommUtil.parseCommitType(button.getActionCommand());
+                    : CommUtil.getDefaultCommitTypeList(effectiveSettings.language().getKey()).stream()
+                    .filter(item -> item.getType().equals(button.getActionCommand()))
+                    .findFirst()
+                    .orElse(null);
         }
         return null;
     }
@@ -511,16 +516,7 @@ public class CommitTemplateDialog extends JDialog {
         return issues;
     }
 
-    private void saveSelectedLanguage(LanguageDomain language) {
-        if (project != null) {
-            var override = ProjectCommitTemplateOverrideState.getInstance(project);
-            if (override.getLanguage() != null) {
-                override.setLanguage(language);
-                return;
-            }
-        }
-        store.setLanguage(language);
-    }
+
 
     private EffectiveCommitTemplateSettings resolveEffectiveSettings(Project project) {
         if (project != null) {
@@ -534,7 +530,8 @@ public class CommitTemplateDialog extends JDialog {
                 CommUtil.deepCopy(store.getCustomCommitTypeList()),
                 store.getCommitMessageRules() == null
                         ? com.c301.plugin.domain.commit.CommitMessageRules.defaults()
-                        : store.getCommitMessageRules().toDomain()
+                        : store.getCommitMessageRules().toDomain(),
+                store.isPreviewEnabled()
         );
     }
 

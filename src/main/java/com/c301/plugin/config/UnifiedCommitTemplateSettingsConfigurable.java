@@ -19,11 +19,12 @@ public class UnifiedCommitTemplateSettingsConfigurable implements SearchableConf
     private final GitCommitSettingConfigurable globalConfigurable = new GitCommitSettingConfigurable();
     private final ProjectGitCommitSettingConfigurable projectConfigurable;
     private final CommitMessageRulesConfigurable rulesConfigurable;
+    private final PluginPreferencesConfigurable preferencesConfigurable = new PluginPreferencesConfigurable();
     private JTabbedPane tabs;
 
     public UnifiedCommitTemplateSettingsConfigurable(@NotNull Project project) {
         projectConfigurable = new ProjectGitCommitSettingConfigurable(project);
-        rulesConfigurable = new CommitMessageRulesConfigurable(ProjectCommitTemplateOverrideState.getInstance(project));
+        rulesConfigurable = new CommitMessageRulesConfigurable();
     }
 
     @Override
@@ -46,6 +47,7 @@ public class UnifiedCommitTemplateSettingsConfigurable implements SearchableConf
             tabs.addTab("", globalUI.detachSettingsPanel());
             tabs.addTab("", projectConfigurable.getSettingsPanel());
             tabs.addTab("", rulesConfigurable.createComponent());
+            tabs.addTab("", preferencesConfigurable.createComponent());
             tabs.addTab("", globalUI.detachAboutPanel());
         }
         resetTabTitles();
@@ -54,7 +56,8 @@ public class UnifiedCommitTemplateSettingsConfigurable implements SearchableConf
 
     @Override
     public boolean isModified() {
-        return globalConfigurable.isModified() || projectConfigurable.isModified() || rulesConfigurable.isModified();
+        return globalConfigurable.isModified() || projectConfigurable.isModified() || rulesConfigurable.isModified()
+                || preferencesConfigurable.isModified();
     }
 
     @Override
@@ -62,10 +65,14 @@ public class UnifiedCommitTemplateSettingsConfigurable implements SearchableConf
         globalConfigurable.apply();
         projectConfigurable.apply();
         rulesConfigurable.apply();
+        preferencesConfigurable.apply();
         globalConfigurable.reset();
         projectConfigurable.reset();
-        rulesConfigurable.reset();
+        rulesConfigurable.refreshLanguage();
+        preferencesConfigurable.refreshLanguage();
         resetTabTitles();
+        tabs.revalidate();
+        tabs.repaint();
     }
 
     @Override
@@ -73,6 +80,7 @@ public class UnifiedCommitTemplateSettingsConfigurable implements SearchableConf
         globalConfigurable.reset();
         projectConfigurable.reset();
         rulesConfigurable.reset();
+        preferencesConfigurable.reset();
         resetTabTitles();
     }
 
@@ -80,11 +88,12 @@ public class UnifiedCommitTemplateSettingsConfigurable implements SearchableConf
         if (tabs == null) {
             return;
         }
-        var language = StoreCommitTemplateState.getInstance().getLanguage();
-        var resourceBundle = CommUtil.i18nResourceBundle(language == null ? null : language.getKey());
-        tabs.setTitleAt(0, resourceBundle.getString("plugin.setting.tab.globalDefaults"));
+        var language = PluginUiLanguageSettings.resolve(StoreCommitTemplateState.getInstance());
+        var resourceBundle = CommUtil.i18nResourceBundle(language.getKey());
+        tabs.setTitleAt(0, resourceBundle.getString("plugin.setting.tab.commitTemplate"));
         tabs.setTitleAt(1, resourceBundle.getString("plugin.setting.tab.projectOverrides"));
         tabs.setTitleAt(2, resourceBundle.getString("plugin.setting.tab.commitRules"));
-        tabs.setTitleAt(3, resourceBundle.getString("plugin.setting.label.about"));
+        tabs.setTitleAt(3, resourceBundle.getString("plugin.setting.tab.preferences"));
+        tabs.setTitleAt(4, resourceBundle.getString("plugin.setting.label.about"));
     }
 }

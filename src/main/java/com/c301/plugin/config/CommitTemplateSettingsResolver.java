@@ -37,16 +37,8 @@ public final class CommitTemplateSettingsResolver {
         CommitMessageRules globalRules = global.getCommitMessageRules() == null
                 ? CommitMessageRules.defaults()
                 : global.getCommitMessageRules().toDomain();
-        CommitMessageRules rules = new CommitMessageRules(
-                override.getRequireCommitType() == null ? globalRules.requireCommitType() : override.getRequireCommitType(),
-                override.getRequireScope() == null ? globalRules.requireScope() : override.getRequireScope(),
-                override.getSubjectMaxLength() == null ? globalRules.subjectMaxLength() : override.getSubjectMaxLength(),
-                override.getBodyWrapLength() == null ? globalRules.bodyWrapLength() : override.getBodyWrapLength(),
-                override.getIssueFooterKeyword() == null ? globalRules.issueFooterKeyword() : override.getIssueFooterKeyword(),
-                override.getForbidSubjectTrailingPeriod() == null
-                        ? globalRules.forbidSubjectTrailingPeriod()
-                        : override.getForbidSubjectTrailingPeriod()
-        );
+        boolean previewEnabled = global.isPreviewEnabled();
+        CommitMessageRules rules = globalRules;
 
         return new EffectiveCommitTemplateSettings(
                 language == null ? LanguageDomain.EN_US : language,
@@ -54,7 +46,8 @@ public final class CommitTemplateSettingsResolver {
                 emojiEnable,
                 emojiLocation == null ? GitmojiLocationDomain.LOCATION1 : emojiLocation,
                 copyCommitTypes(commitTypes),
-                rules
+                rules,
+                previewEnabled
         );
     }
 

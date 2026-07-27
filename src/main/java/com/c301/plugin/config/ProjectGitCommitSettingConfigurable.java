@@ -41,6 +41,7 @@ public class ProjectGitCommitSettingConfigurable implements SearchableConfigurab
     private JPanel commitTypePanel;
     private JBCommitTypeTable commitTypeTable;
     private JComponent commitTypeEditor;
+    private JButton insertSystemDefaultsButton;
     private JCheckBox overrideGitmoji;
     private JCheckBox gitmoji;
     private JCheckBox overrideGitmojiLocation;
@@ -60,7 +61,7 @@ public class ProjectGitCommitSettingConfigurable implements SearchableConfigurab
 
     @Override
     public @NotNull String getDisplayName() {
-        return "Commit Template (Project)";
+        return text("plugin.project.displayName");
     }
 
     @Override
@@ -137,8 +138,8 @@ public class ProjectGitCommitSettingConfigurable implements SearchableConfigurab
         JPanel root = new JPanel(new BorderLayout());
         root.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
         JPanel header = new JPanel(new BorderLayout(8, 0));
-        header.add(new JBLabel("Project overrides are stored in .idea/commit-template.xml. Never store API keys here."), BorderLayout.CENTER);
-        JButton resetOverrides = new JButton("Restore global defaults");
+        header.add(new JBLabel(text("plugin.project.securityHint")), BorderLayout.CENTER);
+        JButton resetOverrides = new JButton(text("plugin.project.restoreDefaults"));
         resetOverrides.addActionListener(e -> {
             state.clearOverrides();
             reset();
@@ -156,7 +157,7 @@ public class ProjectGitCommitSettingConfigurable implements SearchableConfigurab
         constraints.weightx = 1;
         constraints.insets = JBUI.insets(8, 0, 2, 0);
 
-        overrideLanguage = new JCheckBox("Override display language");
+        overrideLanguage = new JCheckBox(text("plugin.project.overrideContentLanguage"));
         content.add(overrideLanguage, constraints);
         constraints.gridy++;
         constraints.insets = JBUI.insets(0, 24, 8, 0);
@@ -167,16 +168,16 @@ public class ProjectGitCommitSettingConfigurable implements SearchableConfigurab
 
         constraints.gridy++;
         constraints.insets = JBUI.insets(8, 0, 2, 0);
-        overrideCustomTemplate = new JCheckBox("Override custom commit template setting");
+        overrideCustomTemplate = new JCheckBox(text("plugin.project.overrideCustomTemplate"));
         content.add(overrideCustomTemplate, constraints);
         constraints.gridy++;
         constraints.insets = JBUI.insets(0, 24, 8, 0);
-        customTemplate = new JCheckBox("Use custom commit types");
+        customTemplate = new JCheckBox(text("plugin.project.useCustomTypes"));
         content.add(customTemplate, constraints);
 
         constraints.gridy++;
         constraints.insets = JBUI.insets(8, 0, 2, 0);
-        overrideCommitTypeList = new JCheckBox("Override project commit type list");
+        overrideCommitTypeList = new JCheckBox(text("plugin.project.overrideTypeList"));
         content.add(overrideCommitTypeList, constraints);
         constraints.gridy++;
         constraints.insets = JBUI.insets(0, 24, 8, 0);
@@ -191,32 +192,50 @@ public class ProjectGitCommitSettingConfigurable implements SearchableConfigurab
                 .setMoveUpAction(button -> commitTypeTable.handlesMoveUpActionEvent())
                 .setMoveDownAction(button -> commitTypeTable.handlesMoveDownActionEvent())
                 .createPanel();
-        commitTypePanel.add(commitTypeEditor, BorderLayout.CENTER);
+        var commitTypeEditorPanel = new JPanel(new BorderLayout(0, 4));
+        insertSystemDefaultsButton = new JButton(text("plugin.setting.insertSystemDefaults"));
+        insertSystemDefaultsButton.addActionListener(e -> {
+            LanguageDomain selectedLanguage = (LanguageDomain) language.getSelectedItem();
+            int inserted = commitTypeTable.insertSystemDefaults(selectedLanguage == null
+                    ? CommitTemplateSettingsResolver.getInstance(project).resolve().language() : selectedLanguage);
+            var resourceBundle = CommUtil.i18nResourceBundle(null);
+            String message = inserted == 0
+                    ? resourceBundle.getString("plugin.setting.insertSystemDefaults.none")
+                    : resourceBundle.getString("plugin.setting.insertSystemDefaults.result")
+                    .replace("{count}", String.valueOf(inserted));
+            JOptionPane.showMessageDialog(panel, message, resourceBundle.getString("plugin.setting.dialog.warning"),
+                    JOptionPane.INFORMATION_MESSAGE);
+        });
+        var commitTypeActions = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        commitTypeActions.add(insertSystemDefaultsButton);
+        commitTypeEditorPanel.add(commitTypeActions, BorderLayout.NORTH);
+        commitTypeEditorPanel.add(commitTypeEditor, BorderLayout.CENTER);
+        commitTypePanel.add(commitTypeEditorPanel, BorderLayout.CENTER);
         content.add(commitTypePanel, constraints);
 
         constraints.gridy++;
         constraints.insets = JBUI.insets(8, 0, 2, 0);
-        overrideGitmoji = new JCheckBox("Override Gitmoji setting");
+        overrideGitmoji = new JCheckBox(text("plugin.project.overrideGitmoji"));
         content.add(overrideGitmoji, constraints);
         constraints.gridy++;
         constraints.insets = JBUI.insets(0, 24, 8, 0);
-        gitmoji = new JCheckBox("Use Gitmoji");
+        gitmoji = new JCheckBox(text("plugin.project.useGitmoji"));
         content.add(gitmoji, constraints);
 
         constraints.gridy++;
         constraints.insets = JBUI.insets(8, 0, 2, 0);
-        overrideGitmojiLocation = new JCheckBox("Override Gitmoji location");
+        overrideGitmojiLocation = new JCheckBox(text("plugin.project.overrideGitmojiLocation"));
         content.add(overrideGitmojiLocation, constraints);
         constraints.gridy++;
         constraints.insets = JBUI.insets(0, 24, 2, 0);
-        location1 = new JRadioButton("Location 1");
+        location1 = new JRadioButton(text("plugin.setting.location.location1"));
         content.add(location1, constraints);
         constraints.gridy++;
-        location2 = new JRadioButton("Location 2");
+        location2 = new JRadioButton(text("plugin.setting.location.location2"));
         content.add(location2, constraints);
         constraints.gridy++;
         constraints.insets = JBUI.insets(0, 24, 8, 0);
-        location3 = new JRadioButton("Location 3");
+        location3 = new JRadioButton(text("plugin.setting.location.location3"));
         content.add(location3, constraints);
         ButtonGroup locations = new ButtonGroup();
         locations.add(location1);
@@ -246,6 +265,7 @@ public class ProjectGitCommitSettingConfigurable implements SearchableConfigurab
         commitTypePanel.setEnabled(typeListEnabled);
         commitTypeTable.setEnabled(typeListEnabled);
         commitTypeEditor.setEnabled(typeListEnabled);
+        insertSystemDefaultsButton.setEnabled(typeListEnabled);
         gitmoji.setEnabled(overrideGitmoji.isSelected());
         cache.setEmojiEnable(overrideGitmoji.isSelected() ? gitmoji.isSelected()
                 : CommitTemplateSettingsResolver.getInstance(project).resolve().emojiEnable());
@@ -254,6 +274,10 @@ public class ProjectGitCommitSettingConfigurable implements SearchableConfigurab
         location1.setEnabled(locationEnabled);
         location2.setEnabled(locationEnabled);
         location3.setEnabled(locationEnabled);
+    }
+
+    private static String text(String key) {
+        return CommUtil.i18nResourceBundle(null).getString(key);
     }
 
     private boolean sameCommitTypes(LinkedList<CommitTypeDomain> left, LinkedList<CommitTypeDomain> right) {

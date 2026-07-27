@@ -10,5 +10,6 @@ import java.util.List;
 public record EffectiveCommitTemplateSettings(LanguageDomain language, boolean customEnable, boolean emojiEnable,
                                               GitmojiLocationDomain emojiLocation,
                                               List<CommitTypeDomain> customCommitTypeList,
-                                              CommitMessageRules commitMessageRules) {
+                                              CommitMessageRules commitMessageRules,
+                                              boolean previewEnabled) {
 }

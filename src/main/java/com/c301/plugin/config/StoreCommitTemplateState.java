@@ -67,6 +67,23 @@ public class StoreCommitTemplateState implements PersistentStateComponent<StoreC
      */
     private LanguageDomain language = LanguageDomain.EN_US;
     /**
+     * Whether plugin UI text follows the IntelliJ IDEA interface locale.
+     */
+    private boolean syncUiLanguageWithIde = true;
+    /**
+     * Compatibility field for settings persisted before the option was renamed to IDEA synchronization.
+     */
+    @Deprecated
+    private Boolean syncUiLanguageWithOs;
+    /**
+     * Plugin UI language used when synchronization with IntelliJ IDEA is disabled.
+     */
+    private LanguageDomain uiLanguage = LanguageDomain.EN_US;
+    /**
+     * Global default for showing the generated commit-message preview in the commit dialog.
+     */
+    private boolean previewEnabled = true;
+    /**
      * 自定义模板启用状态
      */
     private boolean customEnable = false;
@@ -86,5 +103,14 @@ public class StoreCommitTemplateState implements PersistentStateComponent<StoreC
      * Global defaults for commit-message validation and formatting.
      */
     private CommitMessageRulesState commitMessageRules = new CommitMessageRulesState();
+
+    public boolean isSyncUiLanguageWithIde() {
+        return syncUiLanguageWithOs != null ? syncUiLanguageWithOs : syncUiLanguageWithIde;
+    }
+
+    public void setSyncUiLanguageWithIde(boolean syncUiLanguageWithIde) {
+        this.syncUiLanguageWithIde = syncUiLanguageWithIde;
+        this.syncUiLanguageWithOs = null;
+    }
 
 }
