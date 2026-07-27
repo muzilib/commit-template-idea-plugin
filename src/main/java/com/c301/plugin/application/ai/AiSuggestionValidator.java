@@ -17,8 +17,8 @@ public final class AiSuggestionValidator {
     }
 
     public static GitCommitDomain validateAndConvert(AiCommitSuggestion suggestion,
-                                                      EffectiveCommitTemplateSettings settings,
-                                                      List<CommitTypeDomain> allowedTypes) {
+                                                     EffectiveCommitTemplateSettings settings,
+                                                     List<CommitTypeDomain> allowedTypes) {
         CommitTypeDomain type = allowedTypes.stream()
                 .filter(item -> item.getType().equalsIgnoreCase(suggestion.type()))
                 .findFirst()

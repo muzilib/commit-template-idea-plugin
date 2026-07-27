@@ -29,6 +29,8 @@ import java.util.function.Consumer;
  * AI 快速生成弹窗：显示发送摘要、流式原文和最终候选预览；仅用户确认后回填 Commit Message。
  */
 public final class AiGenerationDialog extends JDialog {
+    private static final boolean DEVELOPMENT_DIFF_PREVIEW = ApplicationManager.getApplication().isInternal()
+            || Boolean.getBoolean("commit.template.ai.diff.preview");
     private final Project project;
     private final Consumer<GitCommitDomain> suggestionConsumer;
     private final AiPreferencesState preferences;
@@ -39,9 +41,6 @@ public final class AiGenerationDialog extends JDialog {
     private final JButton close = new JButton();
     private final JCheckBox sendDiff = new JCheckBox();
     private final StringBuilder response = new StringBuilder();
-    private static final boolean DEVELOPMENT_DIFF_PREVIEW = ApplicationManager.getApplication().isInternal()
-            || Boolean.getBoolean("commit.template.ai.diff.preview");
-
     private final AtomicBoolean completed = new AtomicBoolean();
     private AiIncludedChangesCollector.DiffCollectionResult preparedDiff;
     private String applicationTarget = "表单";
@@ -79,6 +78,10 @@ public final class AiGenerationDialog extends JDialog {
         sendDiff.addActionListener(event -> clearPreparedDiff());
         apply.addActionListener(event -> applySuggestion());
         close.addActionListener(event -> dispose());
+    }
+
+    private static String text(String key) {
+        return CommUtil.i18nResourceBundle(null).getString(key);
     }
 
     private JComponent createContent() {
@@ -168,7 +171,9 @@ public final class AiGenerationDialog extends JDialog {
         });
     }
 
-    /** 开发环境中，先在内存中构建并审阅实际发送的 Diff，避免将未展示的内容直接发往远程服务。 */
+    /**
+     * 开发环境中，先在内存中构建并审阅实际发送的 Diff，避免将未展示的内容直接发往远程服务。
+     */
     private void prepareDiffPreview() {
         generate.setEnabled(false);
         output.setText(text("plugin.ai.diffPreviewPreparing"));
@@ -221,10 +226,6 @@ public final class AiGenerationDialog extends JDialog {
     private java.util.List<com.c301.plugin.model.CommitTypeDomain> allowedTypes(EffectiveCommitTemplateSettings settings) {
         return settings.customEnable() ? settings.customCommitTypeList()
                 : CommUtil.getDefaultCommitTypeList(settings.language().getKey());
-    }
-
-    private static String text(String key) {
-        return CommUtil.i18nResourceBundle(null).getString(key);
     }
 
     private final class Listener implements AiStreamingListener {

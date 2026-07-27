@@ -38,6 +38,21 @@ final class AiPreferencesConfigurable {
     private JButton saveKey;
     private JButton clearKey;
 
+    private static ResourceBundle bundle() {
+        return CommUtil.i18nResourceBundle(null);
+    }
+
+    private static GridBagConstraints constraints(int y) {
+        GridBagConstraints constraints = new GridBagConstraints();
+        constraints.gridx = 0;
+        constraints.gridy = y;
+        constraints.weightx = 1;
+        constraints.anchor = GridBagConstraints.NORTHWEST;
+        constraints.fill = GridBagConstraints.HORIZONTAL;
+        constraints.insets = JBUI.insets(4, 0);
+        return constraints;
+    }
+
     JComponent createComponent() {
         if (panel == null) {
             panel = new JPanel(new GridBagLayout());
@@ -186,7 +201,9 @@ final class AiPreferencesConfigurable {
         updateOptionsVisibility();
     }
 
-    /** AI 总开关关闭时只保留开关本身，避免配置表单与快捷入口处于可见但不可用的状态。 */
+    /**
+     * AI 总开关关闭时只保留开关本身，避免配置表单与快捷入口处于可见但不可用的状态。
+     */
     private void updateOptionsVisibility() {
         if (panel == null) {
             return;
@@ -238,26 +255,11 @@ final class AiPreferencesConfigurable {
         }
     }
 
-    private static ResourceBundle bundle() {
-        return CommUtil.i18nResourceBundle(null);
-    }
-
     private List<String> patternsFromEditor() {
         return Arrays.stream(excludePatterns.getText().split("\\R"))
                 .map(String::trim)
                 .filter(value -> !value.isEmpty())
                 .toList();
-    }
-
-    private static GridBagConstraints constraints(int y) {
-        GridBagConstraints constraints = new GridBagConstraints();
-        constraints.gridx = 0;
-        constraints.gridy = y;
-        constraints.weightx = 1;
-        constraints.anchor = GridBagConstraints.NORTHWEST;
-        constraints.fill = GridBagConstraints.HORIZONTAL;
-        constraints.insets = JBUI.insets(4, 0);
-        return constraints;
     }
 
     private void addLabeled(String label, JComponent component, GridBagConstraints constraints) {

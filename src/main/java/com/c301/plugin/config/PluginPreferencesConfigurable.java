@@ -47,7 +47,6 @@ final class PluginPreferencesConfigurable {
             panel.add(uiLanguageConfigurable.createComponent(), constraints);
 
 
-
             constraints.gridy++;
             constraints.weighty = 1;
             constraints.fill = GridBagConstraints.VERTICAL;

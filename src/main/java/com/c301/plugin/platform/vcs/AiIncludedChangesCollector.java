@@ -65,7 +65,9 @@ public final class AiIncludedChangesCollector {
         return new CollectionResult(included, excluded, acceptedChanges);
     }
 
-    /** 发送给远程服务的路径必须相对项目根目录，避免泄露本机用户名或目录结构。 */
+    /**
+     * 发送给远程服务的路径必须相对项目根目录，避免泄露本机用户名或目录结构。
+     */
     private static String pathOf(Project project, Change change) {
         var revision = change.getAfterRevision() != null ? change.getAfterRevision() : change.getBeforeRevision();
         if (revision == null) {

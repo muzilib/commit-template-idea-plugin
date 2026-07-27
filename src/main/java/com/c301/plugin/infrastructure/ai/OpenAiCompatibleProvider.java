@@ -26,6 +26,18 @@ import java.util.Map;
 public final class OpenAiCompatibleProvider implements AiProvider {
     private static final ObjectMapper JSON = new ObjectMapper();
 
+    private static String resolveUrl(String endpoint, String apiPath) {
+        String base = endpoint == null ? "" : endpoint.trim();
+        String path = apiPath == null || apiPath.isBlank() ? "/chat/completions" : apiPath.trim();
+        if (!base.endsWith("/") && !path.startsWith("/")) {
+            return URI.create(base + "/" + path).toString();
+        }
+        if (base.endsWith("/") && path.startsWith("/")) {
+            return URI.create(base + path.substring(1)).toString();
+        }
+        return URI.create(base + path).toString();
+    }
+
     @Override
     public void generate(AiGenerationRequest request, AiCredentials credentials,
                          ProgressIndicator indicator, AiStreamingListener listener) {
@@ -107,17 +119,5 @@ public final class OpenAiCompatibleProvider implements AiProvider {
         } catch (Exception ignored) {
             // 个别无效 SSE 片段不能泄露原始响应，只忽略该片段并继续读取。
         }
-    }
-
-    private static String resolveUrl(String endpoint, String apiPath) {
-        String base = endpoint == null ? "" : endpoint.trim();
-        String path = apiPath == null || apiPath.isBlank() ? "/chat/completions" : apiPath.trim();
-        if (!base.endsWith("/") && !path.startsWith("/")) {
-            return URI.create(base + "/" + path).toString();
-        }
-        if (base.endsWith("/") && path.startsWith("/")) {
-            return URI.create(base + path.substring(1)).toString();
-        }
-        return URI.create(base + path).toString();
     }
 }

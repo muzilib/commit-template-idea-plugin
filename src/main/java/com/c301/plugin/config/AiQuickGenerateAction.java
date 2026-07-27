@@ -18,6 +18,14 @@ import org.jetbrains.annotations.NotNull;
  * Commit 工具栏的 AI 快捷入口。只有全局 AI 开关开启时才显示，且不会执行 Git 提交。
  */
 public final class AiQuickGenerateAction extends AnAction implements DumbAware {
+    private static CommitMessageI findCommitMessage(AnActionEvent event) {
+        Refreshable refreshable = Refreshable.PANEL_KEY.getData(event.getDataContext());
+        if (refreshable instanceof CommitMessageI message) {
+            return message;
+        }
+        return VcsDataKeys.COMMIT_MESSAGE_CONTROL.getData(event.getDataContext());
+    }
+
     @Override
     public void update(@NotNull AnActionEvent event) {
         boolean enabled = AiPreferencesState.getInstance().isEnabled();
@@ -39,13 +47,5 @@ public final class AiQuickGenerateAction extends AnAction implements DumbAware {
         Project targetProject = project;
         ApplicationManager.getApplication().invokeLater(() ->
                 new AiGenerationDialog(targetProject, commitMessage, changes).setVisible(true), ModalityState.current());
-    }
-
-    private static CommitMessageI findCommitMessage(AnActionEvent event) {
-        Refreshable refreshable = Refreshable.PANEL_KEY.getData(event.getDataContext());
-        if (refreshable instanceof CommitMessageI message) {
-            return message;
-        }
-        return VcsDataKeys.COMMIT_MESSAGE_CONTROL.getData(event.getDataContext());
     }
 }

@@ -515,7 +515,9 @@ public class CommitTemplateDialog extends JDialog {
         new AiGenerationDialog(project, changes, this::applyAiSuggestionToForm).setVisible(true);
     }
 
-    /** 用户在 AI 对话框中确认后才回填表单，且不触发提交、暂存或任何 Git 操作。 */
+    /**
+     * 用户在 AI 对话框中确认后才回填表单，且不触发提交、暂存或任何 Git 操作。
+     */
     private void applyAiSuggestionToForm(GitCommitDomain suggestion) {
         if (suggestion.getCommitType() != null) {
             var buttons = typeChangeGroup.getElements();

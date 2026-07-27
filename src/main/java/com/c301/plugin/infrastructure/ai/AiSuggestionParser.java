@@ -7,7 +7,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.ArrayList;
 import java.util.List;
 
-/** 解析完整流式文本中的 JSON 候选；解析失败时不自动回填任何提交字段。 */
+/**
+ * 解析完整流式文本中的 JSON 候选；解析失败时不自动回填任何提交字段。
+ */
 public final class AiSuggestionParser {
     private static final ObjectMapper JSON = new ObjectMapper();
 
