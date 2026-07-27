@@ -9,7 +9,7 @@ import javax.swing.*;
 import java.awt.*;
 
 /**
- * Global validation and formatting settings shared by every project.
+ * 所有项目共用的全局提交信息校验与格式化设置。
  */
 final class CommitMessageRulesConfigurable {
     private final StoreCommitTemplateState globalState = StoreCommitTemplateState.getInstance();

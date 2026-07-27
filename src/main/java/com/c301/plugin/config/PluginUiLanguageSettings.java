@@ -7,7 +7,7 @@ import com.intellij.DynamicBundle;
 import java.util.Locale;
 
 /**
- * Resolves the language used by plugin settings and dialogs independently from commit content language.
+ * 独立于提交内容语言，解析插件设置页和弹窗使用的界面语言。
  */
 public final class PluginUiLanguageSettings {
     private PluginUiLanguageSettings() {

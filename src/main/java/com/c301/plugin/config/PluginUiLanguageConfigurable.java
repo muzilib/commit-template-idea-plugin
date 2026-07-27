@@ -11,7 +11,7 @@ import java.awt.*;
 import java.util.ResourceBundle;
 
 /**
- * Global configuration for plugin UI language, kept separate from commit-content language.
+ * 插件界面语言的全局配置，与提交内容语言保持独立。
  */
 final class PluginUiLanguageConfigurable {
     private final StoreCommitTemplateState state = StoreCommitTemplateState.getInstance();

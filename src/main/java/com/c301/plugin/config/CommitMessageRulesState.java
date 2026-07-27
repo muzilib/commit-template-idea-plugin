@@ -5,7 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * XML-serializable global defaults for commit-message rules.
+ * 可序列化为 XML 的全局提交信息规则默认配置。
  */
 @Data
 @NoArgsConstructor

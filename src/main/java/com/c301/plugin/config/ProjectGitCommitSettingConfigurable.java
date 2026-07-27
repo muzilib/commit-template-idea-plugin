@@ -24,8 +24,8 @@ import java.awt.*;
 import java.util.LinkedList;
 
 /**
- * Project-specific, non-sensitive overrides for commit template behavior.
- * API keys and model credentials deliberately remain global and will be stored in Password Safe.
+ * 当前项目的、非敏感的提交模板行为覆盖配置。
+ * API 密钥和模型凭据必须保持为全局配置，并将存储在 Password Safe 中。
  */
 public class ProjectGitCommitSettingConfigurable implements SearchableConfigurable {
     private final Project project;
@@ -249,8 +249,8 @@ public class ProjectGitCommitSettingConfigurable implements SearchableConfigurab
     private void updateEnabledState() {
         language.setEnabled(overrideLanguage.isSelected());
         customTemplate.setEnabled(overrideCustomTemplate.isSelected());
-        // A project type-list override is independently usable and automatically becomes the
-        // project's custom type source. It must not depend on the separate template checkbox.
+        // 项目提交类型列表覆盖可独立使用，并会自动成为当前项目的自定义类型来源。
+        // 它不依赖单独的自定义模板复选框。
         boolean typeListEnabled = overrideCommitTypeList.isSelected();
         commitTypePanel.setEnabled(typeListEnabled);
         commitTypeTable.setEnabled(typeListEnabled);

@@ -15,7 +15,7 @@ import javax.swing.*;
 import java.awt.*;
 
 /**
- * A single settings entry that exposes global defaults and the current project's overrides.
+ * 统一的设置入口，同时展示全局默认配置和当前项目覆盖配置。
  */
 public class UnifiedCommitTemplateSettingsConfigurable implements SearchableConfigurable, Configurable.NoScroll {
 
@@ -32,9 +32,8 @@ public class UnifiedCommitTemplateSettingsConfigurable implements SearchableConf
     }
 
     /**
-     * A settings tab must be allowed to shrink below the preferred width of another tab. Without
-     * this wrapper, JTabbedPane inherits the widest child minimum size and IDEA wraps the entire
-     * configurable in a horizontal scroll pane.
+     * 每个设置页必须可以缩小到其他页首选宽度以下。没有该包装时，JTabbedPane 会继承
+     * 最宽子页面的最小尺寸，IDEA 随后会为整个 Configurable 包装水平滚动容器。
      */
     private static JComponent responsiveTab(JComponent content) {
         JPanel wrapper = new JPanel(new BorderLayout()) {

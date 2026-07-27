@@ -32,15 +32,18 @@ public class JBCommitTypeTable extends JBTable {
     }
 
     /**
-     * The settings dialog may be narrower than a localized description.  The table must follow
-     * its viewport instead of requesting its content width and forcing the settings dialog to
-     * show a horizontal scrollbar.
+     * 设置窗口可能比本地化描述更窄。表格应跟随视口宽度，而不是请求内容所需宽度，
+     * 以免迫使设置窗口显示水平滚动条。
      */
     @Override
     public boolean getScrollableTracksViewportWidth() {
         return true;
     }
 
+    /**
+     * 列宽会在布局阶段确定。随后重新计算换行描述的高度，
+     * 使较窄的设置页面通过增高行高来展示内容，而不是裁切文本。
+     */
     @Override
     public void doLayout() {
         super.doLayout();
@@ -48,10 +51,10 @@ public class JBCommitTypeTable extends JBTable {
     }
 
     /**
-     * Imports missing built-in types and refreshes existing built-in descriptions for the requested
-     * commit-content language. Types not supplied by the built-in list are left untouched.
+     * 导入缺失的内置类型，并按指定的提交内容语言刷新已有内置类型的描述。
+     * 内置列表未提供的类型保持不变。
      *
-     * @return number of inserted or refreshed entries, limited by the configured maximum.
+     * @return 新增或刷新的条目数量，受配置的最大数量限制。
      */
     public int importSystemDefaults(LanguageDomain language) {
         var existingTypes = new HashMap<String, com.c301.plugin.model.CommitTypeDomain>();
@@ -187,8 +190,8 @@ public class JBCommitTypeTable extends JBTable {
         typeColumn.setPreferredWidth(100);
         typeColumn.setMaxWidth(140);
 
-        // The description column is deliberately allowed to shrink. Its renderer wraps text and
-        // updateRowHeights() grows the affected row rather than widening the settings page.
+        // 描述列允许主动收缩。渲染器负责换行，updateRowHeights() 通过增高对应行
+        // 来展示完整内容，而不是撑宽设置页面。
         var descriptionColumn = getColumnModel().getColumn(CommitTypeTableModel.DESCRIPTION_COLUMN);
         descriptionColumn.setMinWidth(0);
         descriptionColumn.setPreferredWidth(320);
@@ -196,6 +199,10 @@ public class JBCommitTypeTable extends JBTable {
         updateRowHeights();
     }
 
+    /**
+     * 按描述列的实际宽度测量渲染器。必须逐行处理，
+     * 因为本地化描述可能换行为不同的行数。
+     */
     private void updateRowHeights() {
         if (getRowCount() == 0 || getColumnModel().getColumnCount() == 0) {
             return;

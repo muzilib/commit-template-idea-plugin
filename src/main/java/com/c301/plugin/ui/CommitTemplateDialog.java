@@ -45,12 +45,20 @@ import java.util.Map;
  **/
 public class CommitTemplateDialog extends JDialog {
 
+    /**
+     * 与语言无关的窗口尺寸边界。已本地化的提交类型文本在类型列表视口内换行，
+     * 因此窗口尺寸不能依赖当前选择的提交内容语言。
+     */
     private static final Dimension MINIMUM_DIALOG_SIZE = new Dimension(640, 520);
     private static final Dimension DEFAULT_DIALOG_SIZE = new Dimension(760, 620);
     private final StoreCommitTemplateState store = StoreCommitTemplateState.getInstance();
     private final CommitMessageI commitMessageI;
     private final Project project;
     private final EffectiveCommitTemplateSettings effectiveSettings;
+    /**
+     * 保存本地化后的纯文本标签，与依赖宽度的 HTML 渲染结果分离。
+     * 调整窗口大小后重新生成 HTML，避免长标签决定弹窗的首选宽度。
+     */
     private final Map<JRadioButton, String> commitTypeButtonTexts = new HashMap<>();
     private JPanel contentPane;
     private JButton buttonOK;
@@ -120,7 +128,7 @@ public class CommitTemplateDialog extends JDialog {
         labelLanguage.setVisible(false);
         optionLanguage.setVisible(false);
 
-        // call onCancel() when cross is clicked
+        // 点击窗口关闭按钮时执行取消逻辑。
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         addWindowListener(new WindowAdapter() {
             public void windowClosing(WindowEvent e) {
@@ -128,7 +136,7 @@ public class CommitTemplateDialog extends JDialog {
             }
         });
 
-        // call onCancel() on ESCAPE
+        // 按下 ESC 键时执行取消逻辑。
         contentPane.registerKeyboardAction(e -> handleCancelEvent(),
                 KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0),
                 JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
@@ -192,6 +200,7 @@ public class CommitTemplateDialog extends JDialog {
                 windows.setWindowWidth(getWidth());
                 windows.setWindowHeight(getHeight());
                 store.setCommitWindowConfig(windows);
+                // 必须在 Swing 完成新视口布局后执行，否则读取到的宽度仍是旧值。
                 SwingUtilities.invokeLater(CommitTemplateDialog.this::updateCommitTypeButtonWrapping);
             }
         });
@@ -352,8 +361,8 @@ public class CommitTemplateDialog extends JDialog {
             }
         }
 
-        // Restore the user's last size, but keep one language-neutral usable minimum. Long localized
-        // commit-type descriptions wrap in their own scrollable list rather than expanding the dialog.
+        // 恢复用户上次保存的尺寸，同时保留统一的可用最小值。较长的本地化提交类型描述
+        // 在独立的可滚动列表中换行，而不是继续撑大弹窗。
         var window = store.getCommitWindowConfig();
         if (window == null) window = new WindowsConfigDomain();
         var storeWidth = Math.max(window.getWindowWidth(), DEFAULT_DIALOG_SIZE.width);
@@ -393,6 +402,10 @@ public class CommitTemplateDialog extends JDialog {
         };
     }
 
+    /**
+     * 运行时替换 GUI Designer 生成的固定高度单选按钮网格。生成方法保持不变，
+     * 此纵向滚动列表可让较长的本地化标签换行，并允许表单缩窄而不产生水平滚动条。
+     */
     private void configureResponsiveCommitTypeList() {
         if (!(radioButton1.getParent() instanceof JPanel generatedList)
                 || !(generatedList.getParent() instanceof JPanel formPanel)) {
@@ -421,6 +434,9 @@ public class CommitTemplateDialog extends JDialog {
         formPanel.revalidate();
     }
 
+    /**
+     * 移动已有的 Designer 组件，避免重新创建后丢失其监听器或 ButtonGroup 归属。
+     */
     private void moveToResponsiveTypeList(JComponent component) {
         component.getParent().remove(component);
         component.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -432,6 +448,9 @@ public class CommitTemplateDialog extends JDialog {
                 radioButton6, radioButton7, radioButton8, radioButton9, radioButton10, radioButton11};
     }
 
+    /**
+     * 先保存原始文本；视口宽度变化时需要据此重新生成显示用 HTML。
+     */
     private void setCommitTypeButtonText(JRadioButton button, String text) {
         commitTypeButtonTexts.put(button, text);
         updateCommitTypeButtonWrapping();
@@ -441,6 +460,7 @@ public class CommitTemplateDialog extends JDialog {
         if (commitTypeListScrollPane == null) {
             return;
         }
+        // 将 HTML 宽度约束为视口宽度，强制 Swing 换行而非撑宽弹窗。
         int width = Math.max(120, commitTypeListScrollPane.getViewport().getWidth() - 12);
         for (Map.Entry<JRadioButton, String> entry : commitTypeButtonTexts.entrySet()) {
             entry.getKey().setText("<html><body style='width: " + width + "px'>"
@@ -468,6 +488,7 @@ public class CommitTemplateDialog extends JDialog {
         previewCommitMessage.setWrapStyleWord(true);
         previewCommitMessage.setRows(3);
         var previewScrollPane = new JScrollPane(previewCommitMessage);
+        // 预览文本已经按单词换行，水平滚动条只会妨碍窗口缩放。
         previewScrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         previewPanel.add(labelPreview, BorderLayout.NORTH);
         previewPanel.add(previewScrollPane, BorderLayout.CENTER);

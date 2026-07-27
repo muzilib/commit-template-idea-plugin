@@ -9,8 +9,8 @@ import java.awt.*;
 import java.util.ResourceBundle;
 
 /**
- * Container for global plugin preferences that are independent of commit-template content.
- * Add future preference sections here to keep the top-level settings navigation stable.
+ * 承载与提交模板内容无关的全局插件偏好设置。
+ * 后续新增偏好分区应放在这里，以保持顶层设置导航结构稳定。
  */
 final class PluginPreferencesConfigurable {
     private final PluginUiLanguageConfigurable uiLanguageConfigurable = new PluginUiLanguageConfigurable();

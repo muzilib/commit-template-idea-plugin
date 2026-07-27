@@ -255,7 +255,7 @@ public class CommitTemplateSettingUI {
     }
 
     /**
-     * Detaches the global-defaults panel so a parent configurable can compose it with project settings.
+     * 分离全局默认设置面板，供父级 Configurable 与项目设置页组合使用。
      */
     public JComponent detachSettingsPanel() {
         tabbedPane.remove(settingPanel);
@@ -263,7 +263,7 @@ public class CommitTemplateSettingUI {
     }
 
     /**
-     * Detaches the About panel so a parent configurable can own the top-level tabs.
+     * 分离“关于”面板，供父级 Configurable 统一管理顶层标签页。
      */
     public JComponent detachAboutPanel() {
         tabbedPane.remove(aboutPanel);

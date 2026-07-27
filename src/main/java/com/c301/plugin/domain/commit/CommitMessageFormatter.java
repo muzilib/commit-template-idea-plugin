@@ -6,7 +6,7 @@ import com.c301.plugin.model.GitmojiLocationDomain;
 import com.c301.plugin.utils.StrUtil;
 
 /**
- * Formats a commit message from the structured commit form values.
+ * 根据结构化的提交表单数据生成提交信息文本。
  */
 public final class CommitMessageFormatter {
     private CommitMessageFormatter() {

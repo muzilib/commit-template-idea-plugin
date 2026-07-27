@@ -9,7 +9,7 @@ import java.awt.*;
 import java.util.ResourceBundle;
 
 /**
- * Global preferences that control optional commit-message presentation.
+ * 控制可选提交信息展示效果的全局偏好设置。
  */
 final class PluginPresentationConfigurable {
     private final StoreCommitTemplateState state = StoreCommitTemplateState.getInstance();

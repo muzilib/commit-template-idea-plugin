@@ -1,7 +1,7 @@
 package com.c301.plugin.domain.commit;
 
 /**
- * Non-sensitive rules that control commit-message validation and formatting.
+ * 控制提交信息校验与格式化的非敏感规则。
  */
 public record CommitMessageRules(
         boolean requireCommitType,
