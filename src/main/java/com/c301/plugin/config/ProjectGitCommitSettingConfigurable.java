@@ -13,7 +13,7 @@ import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.options.SearchableConfigurable;
 import com.intellij.openapi.project.Project;
 import com.intellij.ui.ToolbarDecorator;
-import com.intellij.ui.components.JBLabel;
+
 import com.intellij.util.ui.JBUI;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
@@ -50,6 +50,17 @@ public class ProjectGitCommitSettingConfigurable implements SearchableConfigurab
 
     private static String text(String key) {
         return CommUtil.i18nResourceBundle(null).getString(key);
+    }
+
+    private static void disableHorizontalScrolling(Component component) {
+        if (component instanceof JScrollPane scrollPane) {
+            scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        }
+        if (component instanceof Container container) {
+            for (Component child : container.getComponents()) {
+                disableHorizontalScrolling(child);
+            }
+        }
     }
 
     @Override
@@ -125,14 +136,34 @@ public class ProjectGitCommitSettingConfigurable implements SearchableConfigurab
     private JPanel createPanel() {
         JPanel root = new JPanel(new BorderLayout());
         root.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
-        JPanel header = new JPanel(new BorderLayout(8, 0));
-        header.add(new JBLabel(text("plugin.project.securityHint")), BorderLayout.CENTER);
+        JPanel header = new JPanel(new GridBagLayout());
+        GridBagConstraints headerConstraints = new GridBagConstraints();
+        headerConstraints.gridx = 0;
+        headerConstraints.gridy = 0;
+        headerConstraints.weightx = 1;
+        headerConstraints.fill = GridBagConstraints.HORIZONTAL;
+        headerConstraints.anchor = GridBagConstraints.WEST;
+        JTextArea securityHint = new JTextArea(text("plugin.project.securityHint"));
+        securityHint.setEditable(false);
+        securityHint.setFocusable(false);
+        securityHint.setOpaque(false);
+        securityHint.setLineWrap(true);
+        securityHint.setWrapStyleWord(true);
+        securityHint.setColumns(0);
+        securityHint.setMinimumSize(new Dimension(0, securityHint.getPreferredSize().height));
+        securityHint.setFont(UIManager.getFont("Label.font"));
+        securityHint.setForeground(UIManager.getColor("Label.disabledForeground"));
+        header.add(securityHint, headerConstraints);
         JButton resetOverrides = new JButton(text("plugin.project.restoreDefaults"));
         resetOverrides.addActionListener(e -> {
             state.clearOverrides();
             reset();
         });
-        header.add(resetOverrides, BorderLayout.EAST);
+        headerConstraints.gridy++;
+        headerConstraints.weightx = 0;
+        headerConstraints.fill = GridBagConstraints.NONE;
+        headerConstraints.insets = JBUI.insetsTop(6);
+        header.add(resetOverrides, headerConstraints);
         root.add(header, BorderLayout.NORTH);
 
         JPanel content = new JPanel(new GridBagLayout());
@@ -151,6 +182,8 @@ public class ProjectGitCommitSettingConfigurable implements SearchableConfigurab
         constraints.insets = JBUI.insets(0, 24, 8, 0);
         language = new JComboBox<>();
         language.setRenderer(new LanguageListCellRendererRender());
+        language.setPreferredSize(JBUI.size(240, language.getPreferredSize().height));
+        language.setMinimumSize(JBUI.size(0, language.getPreferredSize().height));
         Constant.LANGUAGES.forEach(language::addItem);
         content.add(language, constraints);
 
@@ -171,6 +204,7 @@ public class ProjectGitCommitSettingConfigurable implements SearchableConfigurab
         constraints.insets = JBUI.insets(0, 24, 8, 0);
         commitTypePanel = new JPanel(new BorderLayout());
         commitTypePanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 8, 0));
+        commitTypePanel.setMinimumSize(new Dimension(0, 0));
         commitTypeTable = new JBCommitTypeTable(cache);
         commitTypeTable.setDefaultRenderer(Object.class, new CustomTableCellRenderer());
         commitTypeEditor = ToolbarDecorator.createDecorator(commitTypeTable)
@@ -180,11 +214,13 @@ public class ProjectGitCommitSettingConfigurable implements SearchableConfigurab
                 .setMoveUpAction(button -> commitTypeTable.handlesMoveUpActionEvent())
                 .setMoveDownAction(button -> commitTypeTable.handlesMoveDownActionEvent())
                 .createPanel();
+        disableHorizontalScrolling(commitTypeEditor);
         var commitTypeEditorPanel = new JPanel(new BorderLayout(0, 4));
+        commitTypeEditorPanel.setMinimumSize(new Dimension(0, 0));
         insertSystemDefaultsButton = new JButton(text("plugin.setting.insertSystemDefaults"));
         insertSystemDefaultsButton.addActionListener(e -> {
             LanguageDomain selectedLanguage = (LanguageDomain) language.getSelectedItem();
-            int inserted = commitTypeTable.insertSystemDefaults(selectedLanguage == null
+            int inserted = commitTypeTable.importSystemDefaults(selectedLanguage == null
                     ? CommitTemplateSettingsResolver.getInstance(project).resolve().language() : selectedLanguage);
             var resourceBundle = CommUtil.i18nResourceBundle(null);
             String message = inserted == 0
@@ -213,9 +249,9 @@ public class ProjectGitCommitSettingConfigurable implements SearchableConfigurab
     private void updateEnabledState() {
         language.setEnabled(overrideLanguage.isSelected());
         customTemplate.setEnabled(overrideCustomTemplate.isSelected());
-        boolean typeListEnabled = overrideCommitTypeList.isSelected()
-                && (overrideCustomTemplate.isSelected() ? customTemplate.isSelected()
-                : CommitTemplateSettingsResolver.getInstance(project).resolve().customEnable());
+        // A project type-list override is independently usable and automatically becomes the
+        // project's custom type source. It must not depend on the separate template checkbox.
+        boolean typeListEnabled = overrideCommitTypeList.isSelected();
         commitTypePanel.setEnabled(typeListEnabled);
         commitTypeTable.setEnabled(typeListEnabled);
         commitTypeEditor.setEnabled(typeListEnabled);

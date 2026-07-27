@@ -88,6 +88,7 @@ public class CommitTemplateSettingUI {
 
         //初始化语言列表
         optionLanguage.setRenderer(new LanguageListCellRendererRender());
+
         Constant.LANGUAGES.forEach(optionLanguage::addItem);
         optionLanguage.addActionListener(e -> {
             optionLanguage.hidePopup();
@@ -108,11 +109,13 @@ public class CommitTemplateSettingUI {
                 .setMoveUpAction(button -> commitTypeTable.handlesMoveUpActionEvent())
                 .setMoveDownAction(button -> commitTypeTable.handlesMoveDownActionEvent())
                 .createPanel();
+        disableHorizontalScrolling(editCommitTypePanel);
         var commitTypeEditorPanel = new JPanel(new BorderLayout(0, 4));
+        commitTypeEditorPanel.setMinimumSize(new Dimension(0, 180));
         var insertSystemDefaults = new JButton();
         insertSystemDefaults.addActionListener(e -> {
             var resourceBundle = CommUtil.i18nResourceBundle(null);
-            int inserted = commitTypeTable.insertSystemDefaults(cache.getLanguage());
+            int inserted = commitTypeTable.importSystemDefaults(cache.getLanguage());
             String message = inserted == 0
                     ? resourceBundle.getString("plugin.setting.insertSystemDefaults.none")
                     : resourceBundle.getString("plugin.setting.insertSystemDefaults.result")
@@ -237,6 +240,17 @@ public class CommitTemplateSettingUI {
                 var textPreview = CommUtil.handlePreviewGitemojiLocation(cache);
                 labelLocationPreview.setText(textPreview);
             });
+        }
+    }
+
+    private static void disableHorizontalScrolling(Component component) {
+        if (component instanceof JScrollPane scrollPane) {
+            scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        }
+        if (component instanceof Container container) {
+            for (Component child : container.getComponents()) {
+                disableHorizontalScrolling(child);
+            }
         }
     }
 

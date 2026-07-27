@@ -2,6 +2,7 @@ package com.c301.plugin.config;
 
 import com.c301.plugin.ui.CommitTemplateSettingUI;
 import com.c301.plugin.utils.CommUtil;
+import com.intellij.openapi.options.Configurable;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.options.SearchableConfigurable;
 import com.intellij.openapi.project.Project;
@@ -11,11 +12,14 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
+import java.awt.*;
 
 /**
  * A single settings entry that exposes global defaults and the current project's overrides.
  */
-public class UnifiedCommitTemplateSettingsConfigurable implements SearchableConfigurable {
+public class UnifiedCommitTemplateSettingsConfigurable implements SearchableConfigurable, Configurable.NoScroll {
+
+
     private final GitCommitSettingConfigurable globalConfigurable = new GitCommitSettingConfigurable();
     private final ProjectGitCommitSettingConfigurable projectConfigurable;
     private final CommitMessageRulesConfigurable rulesConfigurable;
@@ -25,6 +29,24 @@ public class UnifiedCommitTemplateSettingsConfigurable implements SearchableConf
     public UnifiedCommitTemplateSettingsConfigurable(@NotNull Project project) {
         projectConfigurable = new ProjectGitCommitSettingConfigurable(project);
         rulesConfigurable = new CommitMessageRulesConfigurable();
+    }
+
+    /**
+     * A settings tab must be allowed to shrink below the preferred width of another tab. Without
+     * this wrapper, JTabbedPane inherits the widest child minimum size and IDEA wraps the entire
+     * configurable in a horizontal scroll pane.
+     */
+    private static JComponent responsiveTab(JComponent content) {
+        JPanel wrapper = new JPanel(new BorderLayout()) {
+            @Override
+            public Dimension getMinimumSize() {
+                return new Dimension(0, 0);
+            }
+        };
+        wrapper.setMinimumSize(new Dimension(0, 0));
+        content.setMinimumSize(new Dimension(0, 0));
+        wrapper.add(content, BorderLayout.CENTER);
+        return wrapper;
     }
 
     @Override
@@ -44,11 +66,12 @@ public class UnifiedCommitTemplateSettingsConfigurable implements SearchableConf
             globalConfigurable.reset();
             CommitTemplateSettingUI globalUI = globalConfigurable.getSettingUI();
             tabs = new JTabbedPane();
-            tabs.addTab("", globalUI.detachSettingsPanel());
-            tabs.addTab("", projectConfigurable.getSettingsPanel());
-            tabs.addTab("", rulesConfigurable.createComponent());
-            tabs.addTab("", preferencesConfigurable.createComponent());
-            tabs.addTab("", globalUI.detachAboutPanel());
+            tabs.setMinimumSize(new Dimension(0, 0));
+            tabs.addTab("", responsiveTab(globalUI.detachSettingsPanel()));
+            tabs.addTab("", responsiveTab(projectConfigurable.getSettingsPanel()));
+            tabs.addTab("", responsiveTab(rulesConfigurable.createComponent()));
+            tabs.addTab("", responsiveTab(preferencesConfigurable.createComponent()));
+            tabs.addTab("", responsiveTab(globalUI.detachAboutPanel()));
         }
         resetTabTitles();
         return tabs;

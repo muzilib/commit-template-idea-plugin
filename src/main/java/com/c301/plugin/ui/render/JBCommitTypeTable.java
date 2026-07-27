@@ -8,8 +8,9 @@ import com.c301.plugin.utils.CommUtil;
 import com.intellij.ui.table.JBTable;
 
 import javax.swing.*;
-import java.util.HashSet;
-import java.util.Set;
+import javax.swing.table.TableCellRenderer;
+import java.awt.*;
+import java.util.HashMap;
 
 /**
  * 提交类型表格渲染组件
@@ -26,33 +27,60 @@ public class JBCommitTypeTable extends JBTable {
 
     public JBCommitTypeTable(SettingCacheDomain cache) {
         this.cache = cache;
+        setMinimumSize(new Dimension(0, 0));
         handleRefreshEvent();
     }
 
     /**
-     * Inserts missing built-in commit types in the requested commit-content language.
-     *
-     * @return number of types added, limited by the configured maximum.
+     * The settings dialog may be narrower than a localized description.  The table must follow
+     * its viewport instead of requesting its content width and forcing the settings dialog to
+     * show a horizontal scrollbar.
      */
-    public int insertSystemDefaults(LanguageDomain language) {
-        Set<String> existingTypes = new HashSet<>();
+    @Override
+    public boolean getScrollableTracksViewportWidth() {
+        return true;
+    }
+
+    @Override
+    public void doLayout() {
+        super.doLayout();
+        updateRowHeights();
+    }
+
+    /**
+     * Imports missing built-in types and refreshes existing built-in descriptions for the requested
+     * commit-content language. Types not supplied by the built-in list are left untouched.
+     *
+     * @return number of inserted or refreshed entries, limited by the configured maximum.
+     */
+    public int importSystemDefaults(LanguageDomain language) {
+        var existingTypes = new HashMap<String, com.c301.plugin.model.CommitTypeDomain>();
         for (var commitType : cache.getCustomCommitTypeList()) {
             if (commitType != null && commitType.getType() != null) {
-                existingTypes.add(commitType.getType());
+                existingTypes.put(commitType.getType(), commitType);
             }
         }
-        int inserted = 0;
+
+        int changed = 0;
         for (var defaultType : CommUtil.getDefaultCommitTypeList(language.getKey())) {
-            if (cache.getCustomCommitTypeList().size() >= Constant.MAX_COMMIT_TYPE_LENGTH) {
-                break;
-            }
-            if (existingTypes.add(defaultType.getType())) {
+            var existing = existingTypes.get(defaultType.getType());
+            if (existing == null) {
+                if (cache.getCustomCommitTypeList().size() >= Constant.MAX_COMMIT_TYPE_LENGTH) {
+                    break;
+                }
                 cache.getCustomCommitTypeList().add(CommUtil.deepCopy(defaultType));
-                inserted++;
+                changed++;
+                continue;
+            }
+            if (!java.util.Objects.equals(existing.getDescription(), defaultType.getDescription())
+                    || !java.util.Objects.equals(existing.getEmoji(), defaultType.getEmoji())) {
+                existing.setDescription(defaultType.getDescription());
+                existing.setEmoji(defaultType.getEmoji());
+                changed++;
             }
         }
         handleRefreshEvent();
-        return inserted;
+        return changed;
     }
 
     /**
@@ -144,26 +172,48 @@ public class JBCommitTypeTable extends JBTable {
     public void handleRefreshEvent() {
         setModel(new CommitTypeTableModel(cache));
         setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+        setRowHeight(40);
 
-        //设置列宽 gitmoji 分类
         if (cache.isEmojiEnable()) {
             var gitmojiColumn = getColumnModel().getColumn(CommitTypeTableModel.GITMOJE_COLUMN);
-            gitmojiColumn.setMinWidth(100);
-            gitmojiColumn.setMaxWidth(120);
-            gitmojiColumn.setPreferredWidth(100);
+            gitmojiColumn.setMinWidth(28);
+            gitmojiColumn.setMaxWidth(48);
+            gitmojiColumn.setPreferredWidth(36);
         }
 
-        //设置列宽 提交类型 分类
         var typeColumn = getColumnModel().getColumn(CommitTypeTableModel.TYPE_COLUMN);
-        typeColumn.setMinWidth(150);
-        typeColumn.setMaxWidth(250);
-        typeColumn.setPreferredWidth(150);
+        typeColumn.setMinWidth(56);
+        typeColumn.setPreferredWidth(100);
+        typeColumn.setMaxWidth(140);
 
-        //设置列宽 提交类型 描述
+        // The description column is deliberately allowed to shrink. Its renderer wraps text and
+        // updateRowHeights() grows the affected row rather than widening the settings page.
         var descriptionColumn = getColumnModel().getColumn(CommitTypeTableModel.DESCRIPTION_COLUMN);
-        descriptionColumn.setMinWidth(550);
-        descriptionColumn.setMaxWidth(750);
-        descriptionColumn.setPreferredWidth(550);
+        descriptionColumn.setMinWidth(0);
+        descriptionColumn.setPreferredWidth(320);
+        descriptionColumn.setMaxWidth(Integer.MAX_VALUE);
+        updateRowHeights();
+    }
+
+    private void updateRowHeights() {
+        if (getRowCount() == 0 || getColumnModel().getColumnCount() == 0) {
+            return;
+        }
+        int descriptionColumn = CommitTypeTableModel.DESCRIPTION_COLUMN;
+        int width = getColumnModel().getColumn(descriptionColumn).getWidth();
+        if (width <= 0) {
+            return;
+        }
+        for (int row = 0; row < getRowCount(); row++) {
+            TableCellRenderer renderer = getCellRenderer(row, descriptionColumn);
+            Component component = prepareRenderer(renderer, row, descriptionColumn);
+            component.setSize(width, Short.MAX_VALUE);
+            int height = Math.max(40, component.getPreferredSize().height);
+            if (getRowHeight(row) != height) {
+                setRowHeight(row, height);
+            }
+        }
     }
 
 }

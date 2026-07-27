@@ -42,10 +42,14 @@ public final class CommitTemplateSettingsResolver {
         ProjectCommitTemplateOverrideState override = ProjectCommitTemplateOverrideState.getInstance(project);
 
         LanguageDomain language = override.getLanguage() != null ? override.getLanguage() : global.getLanguage();
-        boolean customEnable = override.getCustomEnable() != null ? override.getCustomEnable() : global.isCustomEnable();
+        boolean projectTypeListConfigured = Boolean.TRUE.equals(override.getCustomCommitTypeListConfigured());
+        // A project-specific type list is itself an explicit request to use custom types.
+        // It must not be ignored merely because the separate template toggle inherits false.
+        boolean customEnable = projectTypeListConfigured
+                || (override.getCustomEnable() != null ? override.getCustomEnable() : global.isCustomEnable());
         boolean emojiEnable = global.isEmojiEnable();
         GitmojiLocationDomain emojiLocation = global.getEmojiLocation();
-        List<CommitTypeDomain> commitTypes = Boolean.TRUE.equals(override.getCustomCommitTypeListConfigured())
+        List<CommitTypeDomain> commitTypes = projectTypeListConfigured
                 ? override.getCustomCommitTypeList()
                 : global.getCustomCommitTypeList();
         CommitMessageRules globalRules = global.getCommitMessageRules() == null

@@ -70,3 +70,9 @@ Before any remote request:
 - support cancellation and never log authorization headers or complete Diffs.
 
 AI responses should use a validated structured format. The plugin, not the model, formats the final Conventional Commit message.
+
+## Related documentation
+
+- [Business plan and development guide](business-and-development-guide.md): product boundary, configuration scope, development standards and legacy-code handling.
+- [Execution flow](execution-flow.md): current commit-template and settings execution paths.
+- [AI design proposal](ai-design-proposal.md): AI business flow, security contract, technical design and confirmation decisions. This is a proposal and is not implemented yet.

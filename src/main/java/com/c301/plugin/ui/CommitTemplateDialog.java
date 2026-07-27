@@ -30,7 +30,9 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.Map;
 
 /**
  * 提交模板对话框
@@ -43,10 +45,13 @@ import java.util.LinkedList;
  **/
 public class CommitTemplateDialog extends JDialog {
 
+    private static final Dimension MINIMUM_DIALOG_SIZE = new Dimension(640, 520);
+    private static final Dimension DEFAULT_DIALOG_SIZE = new Dimension(760, 620);
     private final StoreCommitTemplateState store = StoreCommitTemplateState.getInstance();
     private final CommitMessageI commitMessageI;
     private final Project project;
     private final EffectiveCommitTemplateSettings effectiveSettings;
+    private final Map<JRadioButton, String> commitTypeButtonTexts = new HashMap<>();
     private JPanel contentPane;
     private JButton buttonOK;
     private JButton buttonCancel;
@@ -81,6 +86,8 @@ public class CommitTemplateDialog extends JDialog {
     private ButtonGroup typeChangeGroup;
     private JLabel labelPreview;
     private JTextArea previewCommitMessage;
+    private JPanel commitTypeListPanel;
+    private JScrollPane commitTypeListScrollPane;
 
     /**
      * 创建弹窗信息
@@ -92,6 +99,8 @@ public class CommitTemplateDialog extends JDialog {
         this.project = project;
         this.effectiveSettings = resolveEffectiveSettings(project);
         setContentPane(createDialogContent());
+        configureResponsiveCommitTypeList();
+        setResizable(true);
         getRootPane().setDefaultButton(buttonOK);
         labelCommitTypeNoData.setVisible(false);
         labelCommitTypeSetting.setVisible(false);
@@ -104,7 +113,7 @@ public class CommitTemplateDialog extends JDialog {
 
         //设置显示窗口大小
         pack();
-        setMinimumSize(new Dimension(880, 560));
+        setMinimumSize(MINIMUM_DIALOG_SIZE);
 
         buttonOK.addActionListener(e -> handleOKEvent());
         buttonCancel.addActionListener(e -> handleCancelEvent());
@@ -123,6 +132,10 @@ public class CommitTemplateDialog extends JDialog {
         contentPane.registerKeyboardAction(e -> handleCancelEvent(),
                 KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0),
                 JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+    }
+
+    private static String escapeHtml(String text) {
+        return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
     }
 
     /**
@@ -179,6 +192,7 @@ public class CommitTemplateDialog extends JDialog {
                 windows.setWindowWidth(getWidth());
                 windows.setWindowHeight(getHeight());
                 store.setCommitWindowConfig(windows);
+                SwingUtilities.invokeLater(CommitTemplateDialog.this::updateCommitTypeButtonWrapping);
             }
         });
 
@@ -332,30 +346,21 @@ public class CommitTemplateDialog extends JDialog {
                 button.setFont(Constant.EMOJI_FONT);
                 var commitType = commitTypeList.get(index++);
                 button.setActionCommand(commitType.getType());
-                button.setText(commitType.toString(effectiveSettings.emojiEnable()));
+                if (button instanceof JRadioButton radioButton) {
+                    setCommitTypeButtonText(radioButton, commitType.toString(effectiveSettings.emojiEnable()));
+                }
             }
         }
 
-        //渲染窗口宽度信息
-        var width = 880;
-        var height = 700;
-        width = switch (language.getKey()) {
-            case "de_DE" -> 950;
-            case "it_IT" -> 960;
-            case "fr_FR", "fr_CA" -> 1100;
-            default -> 880;
-        };
-        //比对存储的窗口大小
+        // Restore the user's last size, but keep one language-neutral usable minimum. Long localized
+        // commit-type descriptions wrap in their own scrollable list rather than expanding the dialog.
         var window = store.getCommitWindowConfig();
         if (window == null) window = new WindowsConfigDomain();
-
-        //设置窗口宽高
-        var storeWidth = window.getWindowWidth();
-        if (storeWidth < width) window.setWindowWidth(width);
-        var storeHeight = window.getWindowHeight();
-        if (storeHeight < height) window.setWindowHeight(height);
+        var storeWidth = Math.max(window.getWindowWidth(), DEFAULT_DIALOG_SIZE.width);
+        var storeHeight = Math.max(window.getWindowHeight(), DEFAULT_DIALOG_SIZE.height);
         setSize(new Dimension(storeWidth, storeHeight));
-        setMinimumSize(new Dimension(width, height));
+        setMinimumSize(MINIMUM_DIALOG_SIZE);
+        SwingUtilities.invokeLater(this::updateCommitTypeButtonWrapping);
 
         //设置窗口坐标
         var x = window.getWindowX();
@@ -386,6 +391,63 @@ public class CommitTemplateDialog extends JDialog {
             case SUBJECT_TRAILING_PERIOD -> resourceBundle.getString("plugin.dialog.error.subjectTrailingPeriod");
             default -> resourceBundle.getString("plugin.dialog.error.commitRequired");
         };
+    }
+
+    private void configureResponsiveCommitTypeList() {
+        if (!(radioButton1.getParent() instanceof JPanel generatedList)
+                || !(generatedList.getParent() instanceof JPanel formPanel)) {
+            return;
+        }
+
+        commitTypeListPanel = new JPanel();
+        commitTypeListPanel.setLayout(new BoxLayout(commitTypeListPanel, BoxLayout.Y_AXIS));
+        commitTypeListPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 4));
+        moveToResponsiveTypeList(labelCommitTypeNoData);
+        moveToResponsiveTypeList(labelCommitTypeSetting);
+        for (JRadioButton button : commitTypeButtons()) {
+            moveToResponsiveTypeList(button);
+        }
+
+        formPanel.remove(generatedList);
+        commitTypeListScrollPane = new JScrollPane(commitTypeListPanel);
+        commitTypeListScrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        commitTypeListScrollPane.setMinimumSize(new Dimension(0, 120));
+        commitTypeListScrollPane.setPreferredSize(new Dimension(0, 260));
+        formPanel.add(commitTypeListScrollPane, new GridConstraints(1, 1, 1, 2,
+                GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH,
+                GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
+                GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW,
+                new Dimension(0, 120), new Dimension(0, 260), null, 0, false));
+        formPanel.revalidate();
+    }
+
+    private void moveToResponsiveTypeList(JComponent component) {
+        component.getParent().remove(component);
+        component.setAlignmentX(Component.LEFT_ALIGNMENT);
+        commitTypeListPanel.add(component);
+    }
+
+    private JRadioButton[] commitTypeButtons() {
+        return new JRadioButton[]{radioButton1, radioButton2, radioButton3, radioButton4, radioButton5,
+                radioButton6, radioButton7, radioButton8, radioButton9, radioButton10, radioButton11};
+    }
+
+    private void setCommitTypeButtonText(JRadioButton button, String text) {
+        commitTypeButtonTexts.put(button, text);
+        updateCommitTypeButtonWrapping();
+    }
+
+    private void updateCommitTypeButtonWrapping() {
+        if (commitTypeListScrollPane == null) {
+            return;
+        }
+        int width = Math.max(120, commitTypeListScrollPane.getViewport().getWidth() - 12);
+        for (Map.Entry<JRadioButton, String> entry : commitTypeButtonTexts.entrySet()) {
+            entry.getKey().setText("<html><body style='width: " + width + "px'>"
+                    + escapeHtml(entry.getValue()) + "</body></html>");
+        }
+        commitTypeListPanel.revalidate();
+        commitTypeListPanel.repaint();
     }
 
     private JPanel createDialogContent() {

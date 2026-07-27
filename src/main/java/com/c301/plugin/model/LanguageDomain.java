@@ -60,6 +60,7 @@ public class LanguageDomain {
      * 显示文字
      */
     private String label;
+
     private LanguageDomain() {
     }
 

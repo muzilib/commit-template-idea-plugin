@@ -18,19 +18,26 @@ import java.awt.*;
 public class CustomTableCellRenderer extends DefaultTableCellRenderer {
 
     @Override
-    public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-        var component = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-
-        //处理字符串乱码
-        if (value instanceof String) {
-            ((JLabel) component).setText((String) value);
+    public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus,
+                                                   int row, int column) {
+        if (column == CommitTypeTableModel.DESCRIPTION_COLUMN) {
+            JTextArea description = new JTextArea(value == null ? "" : value.toString());
+            description.setFont(Constant.EMOJI_FONT);
+            description.setLineWrap(true);
+            description.setWrapStyleWord(true);
+            description.setRows(2);
+            description.setOpaque(true);
+            description.setBorder(BorderFactory.createEmptyBorder(2, 4, 2, 4));
+            description.setBackground(isSelected ? table.getSelectionBackground() : table.getBackground());
+            description.setForeground(isSelected ? table.getSelectionForeground() : table.getForeground());
+            return description;
         }
 
-        //设置渲染字体
-        if (component instanceof JLabel) {
-            component.setFont(Constant.EMOJI_FONT);
+        var component = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+        if (component instanceof JLabel label) {
+            label.setText(value == null ? "" : value.toString());
+            label.setFont(Constant.EMOJI_FONT);
         }
         return component;
     }
-
 }

@@ -52,6 +52,8 @@ final class PluginUiLanguageConfigurable {
             constraints.insets = JBUI.insets(2, 24, 4, 0);
             uiLanguage = new JComboBox<>();
             uiLanguage.setRenderer(new LanguageListCellRendererRender());
+            uiLanguage.setPreferredSize(JBUI.size(240, uiLanguage.getPreferredSize().height));
+            uiLanguage.setMinimumSize(JBUI.size(0, uiLanguage.getPreferredSize().height));
             Constant.LANGUAGES.forEach(uiLanguage::addItem);
             panel.add(uiLanguage, constraints);
 
@@ -94,7 +96,7 @@ final class PluginUiLanguageConfigurable {
 
     private void refreshTexts() {
         ResourceBundle bundle = CommUtil.i18nResourceBundle(null);
-        description.setText(bundle.getString("plugin.uiLanguage.description"));
+        description.setText("<html>" + bundle.getString("plugin.uiLanguage.description") + "</html>");
         syncWithIde.setText(bundle.getString("plugin.uiLanguage.syncWithIde"));
         uiLanguageLabel.setText(bundle.getString("plugin.uiLanguage.select"));
     }

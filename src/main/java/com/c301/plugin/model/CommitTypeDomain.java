@@ -51,6 +51,7 @@ public class CommitTypeDomain {
      * 提交类型说明
      */
     private String description;
+
     /**
      * 最小化构造函数
      *
