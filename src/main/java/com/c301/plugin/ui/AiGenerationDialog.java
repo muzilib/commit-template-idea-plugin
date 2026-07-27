@@ -127,7 +127,7 @@ public final class AiGenerationDialog extends JDialog {
                         : CommUtil.getDefaultCommitTypeList(settings.language().getKey());
                 AiGenerationRequest request = new AiGenerationRequest(
                         preferences.getEndpoint(), preferences.getApiPath(), preferences.getModel(),
-                        preferences.getTemperature(), preferences.getMaxTokens(), settings.language(),
+                        preferences.getTemperature(), preferences.getMaxTokens(), preferences.getSystemPrompt(), settings.language(),
                         allowedTypes, settings.commitMessageRules(),
                         transferMode, changeContent);
                 new OpenAiCompatibleProvider().generate(request, new AiCredentials(apiKey), progressIndicator,

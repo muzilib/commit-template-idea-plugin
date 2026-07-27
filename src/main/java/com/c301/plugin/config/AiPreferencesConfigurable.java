@@ -22,12 +22,14 @@ final class AiPreferencesConfigurable {
     private final AiPreferencesState state = AiPreferencesState.getInstance();
     private final AiCredentialStore credentialStore = new PasswordSafeAiCredentialStore();
     private JPanel panel;
+    private JScrollPane scrollPane;
     private JCheckBox enabled;
     private JTextField endpoint;
     private JTextField apiPath;
     private JTextField model;
     private JSpinner temperature;
     private JSpinner maxTokens;
+    private JTextArea systemPrompt;
     private JCheckBox allowDiffTransfer;
     private JTextArea excludePatterns;
     private JLabel credentialStatus;
@@ -56,6 +58,23 @@ final class AiPreferencesConfigurable {
             addLabeled("Temperature", temperature, constraints);
             maxTokens = new JSpinner(new SpinnerNumberModel(1024, 1, 16384, 1));
             addLabeled("最大输出 Token", maxTokens, constraints);
+
+            constraints.gridy++;
+            panel.add(new JLabel("系统提示词（支持 {languageLabel}、{languageKey}、{allowedTypes}、{subjectMaxLength} 占位符）"), constraints);
+            constraints.gridy++;
+            systemPrompt = new JTextArea(10, 0);
+            systemPrompt.setLineWrap(true);
+            systemPrompt.setWrapStyleWord(true);
+            JScrollPane systemPromptScrollPane = new JScrollPane(systemPrompt);
+            systemPromptScrollPane.setMinimumSize(new Dimension(0, JBUI.scale(180)));
+            systemPromptScrollPane.setPreferredSize(new Dimension(0, JBUI.scale(200)));
+            systemPromptScrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
+            systemPromptScrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+            constraints.fill = GridBagConstraints.BOTH;
+            constraints.weighty = 0.5D;
+            panel.add(systemPromptScrollPane, constraints);
+            constraints.fill = GridBagConstraints.HORIZONTAL;
+            constraints.weighty = 0;
 
             constraints.gridy++;
             allowDiffTransfer = new JCheckBox("允许发送经过确认和过滤的 Diff");
@@ -92,6 +111,15 @@ final class AiPreferencesConfigurable {
             enabled.addActionListener(event -> updateOptionsVisibility());
             saveKey.addActionListener(event -> saveApiKey());
             clearKey.addActionListener(event -> clearApiKey());
+            // 滚动视口比表单更高时，容器负责将表单固定在顶部，避免 GridBagLayout 垂直居中。
+            JPanel scrollContent = new JPanel(new BorderLayout());
+            scrollContent.add(panel, BorderLayout.NORTH);
+            scrollPane = new JScrollPane(scrollContent,
+                    ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED,
+                    ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+            scrollPane.setBorder(JBUI.Borders.empty());
+            scrollPane.getVerticalScrollBar().setUnitIncrement(JBUI.scale(16));
+
             endpoint.getDocument().addDocumentListener(new DocumentListener() {
                 @Override
                 public void insertUpdate(DocumentEvent event) {
@@ -110,7 +138,7 @@ final class AiPreferencesConfigurable {
             });
         }
         reset();
-        return panel;
+        return scrollPane;
     }
 
     boolean isModified() {
@@ -120,6 +148,7 @@ final class AiPreferencesConfigurable {
                 || !model.getText().trim().equals(state.getModel())
                 || Double.compare((Double) temperature.getValue(), state.getTemperature()) != 0
                 || !maxTokens.getValue().equals(state.getMaxTokens())
+                || !systemPrompt.getText().equals(state.getSystemPrompt())
                 || allowDiffTransfer.isSelected() != state.isAllowDiffTransfer()
                 || !patternsFromEditor().equals(state.getExcludePatterns()));
     }
@@ -132,6 +161,7 @@ final class AiPreferencesConfigurable {
         state.setModel(model.getText().trim());
         state.setTemperature((Double) temperature.getValue());
         state.setMaxTokens((Integer) maxTokens.getValue());
+        state.setSystemPrompt(systemPrompt.getText());
         state.setAllowDiffTransfer(allowDiffTransfer.isSelected());
         state.setExcludePatterns(new ArrayList<>(patternsFromEditor()));
     }
@@ -146,6 +176,7 @@ final class AiPreferencesConfigurable {
         model.setText(state.getModel());
         temperature.setValue(state.getTemperature());
         maxTokens.setValue(state.getMaxTokens());
+        systemPrompt.setText(state.getSystemPrompt());
         allowDiffTransfer.setSelected(state.isAllowDiffTransfer());
         excludePatterns.setText(String.join("\n", state.getExcludePatterns()));
         refreshCredentialStatus();
@@ -169,6 +200,9 @@ final class AiPreferencesConfigurable {
     private void validateConfiguration() throws ConfigurationException {
         if (endpoint.getText().isBlank() || model.getText().isBlank()) {
             throw new ConfigurationException("AI 服务地址和模型名称不能为空。");
+        }
+        if (systemPrompt.getText().isBlank()) {
+            throw new ConfigurationException("AI 系统提示词不能为空。");
         }
         String value = endpoint.getText().trim().toLowerCase();
         if (!value.startsWith("https://") && !value.startsWith("http://localhost") && !value.startsWith("http://127.0.0.1")) {

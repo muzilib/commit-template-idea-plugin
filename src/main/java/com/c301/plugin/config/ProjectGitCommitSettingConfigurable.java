@@ -136,13 +136,7 @@ public class ProjectGitCommitSettingConfigurable implements SearchableConfigurab
     private JPanel createPanel() {
         JPanel root = new JPanel(new BorderLayout());
         root.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
-        JPanel header = new JPanel(new GridBagLayout());
-        GridBagConstraints headerConstraints = new GridBagConstraints();
-        headerConstraints.gridx = 0;
-        headerConstraints.gridy = 0;
-        headerConstraints.weightx = 1;
-        headerConstraints.fill = GridBagConstraints.HORIZONTAL;
-        headerConstraints.anchor = GridBagConstraints.WEST;
+        JPanel header = new JPanel(new BorderLayout(0, JBUI.scale(6)));
         JTextArea securityHint = new JTextArea(text("plugin.project.securityHint"));
         securityHint.setEditable(false);
         securityHint.setFocusable(false);
@@ -153,17 +147,15 @@ public class ProjectGitCommitSettingConfigurable implements SearchableConfigurab
         securityHint.setMinimumSize(new Dimension(0, securityHint.getPreferredSize().height));
         securityHint.setFont(UIManager.getFont("Label.font"));
         securityHint.setForeground(UIManager.getColor("Label.disabledForeground"));
-        header.add(securityHint, headerConstraints);
+        header.add(securityHint, BorderLayout.NORTH);
         JButton resetOverrides = new JButton(text("plugin.project.restoreDefaults"));
         resetOverrides.addActionListener(e -> {
             state.clearOverrides();
             reset();
         });
-        headerConstraints.gridy++;
-        headerConstraints.weightx = 0;
-        headerConstraints.fill = GridBagConstraints.NONE;
-        headerConstraints.insets = JBUI.insetsTop(6);
-        header.add(resetOverrides, headerConstraints);
+        JPanel resetPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        resetPanel.add(resetOverrides);
+        header.add(resetPanel, BorderLayout.SOUTH);
         root.add(header, BorderLayout.NORTH);
 
         JPanel content = new JPanel(new GridBagLayout());
@@ -204,7 +196,9 @@ public class ProjectGitCommitSettingConfigurable implements SearchableConfigurab
         constraints.insets = JBUI.insets(0, 24, 8, 0);
         commitTypePanel = new JPanel(new BorderLayout());
         commitTypePanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 8, 0));
-        commitTypePanel.setMinimumSize(new Dimension(0, 0));
+        // 表格行必须保留可见高度；否则 GridBagLayout 会把编辑器压缩为零高度。
+        commitTypePanel.setMinimumSize(JBUI.size(0, 180));
+        commitTypePanel.setPreferredSize(JBUI.size(0, 180));
         commitTypeTable = new JBCommitTypeTable(cache);
         commitTypeTable.setDefaultRenderer(Object.class, new CustomTableCellRenderer());
         commitTypeEditor = ToolbarDecorator.createDecorator(commitTypeTable)
@@ -216,7 +210,7 @@ public class ProjectGitCommitSettingConfigurable implements SearchableConfigurab
                 .createPanel();
         disableHorizontalScrolling(commitTypeEditor);
         var commitTypeEditorPanel = new JPanel(new BorderLayout(0, 4));
-        commitTypeEditorPanel.setMinimumSize(new Dimension(0, 0));
+        commitTypeEditorPanel.setMinimumSize(JBUI.size(0, 180));
         insertSystemDefaultsButton = new JButton(text("plugin.setting.insertSystemDefaults"));
         insertSystemDefaultsButton.addActionListener(e -> {
             LanguageDomain selectedLanguage = (LanguageDomain) language.getSelectedItem();
@@ -235,6 +229,8 @@ public class ProjectGitCommitSettingConfigurable implements SearchableConfigurab
         commitTypeEditorPanel.add(commitTypeActions, BorderLayout.NORTH);
         commitTypeEditorPanel.add(commitTypeEditor, BorderLayout.CENTER);
         commitTypePanel.add(commitTypeEditorPanel, BorderLayout.CENTER);
+        constraints.fill = GridBagConstraints.BOTH;
+        constraints.weighty = 1;
         content.add(commitTypePanel, constraints);
 
 

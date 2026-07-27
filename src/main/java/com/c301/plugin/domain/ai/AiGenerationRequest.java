@@ -13,6 +13,7 @@ public record AiGenerationRequest(
         String model,
         double temperature,
         int maxTokens,
+        String systemPromptTemplate,
         LanguageDomain contentLanguage,
         List<CommitTypeDomain> allowedCommitTypes,
         CommitMessageRules rules,

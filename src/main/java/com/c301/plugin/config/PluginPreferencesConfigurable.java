@@ -16,12 +16,9 @@ import java.util.ResourceBundle;
 final class PluginPreferencesConfigurable {
     private final PluginUiLanguageConfigurable uiLanguageConfigurable = new PluginUiLanguageConfigurable();
     private final PluginPresentationConfigurable presentationConfigurable = new PluginPresentationConfigurable();
-    private final AiPreferencesConfigurable aiConfigurable = new AiPreferencesConfigurable();
     private JPanel panel;
-    private JScrollPane scrollPane;
     private TitledSeparator presentationSection;
     private TitledSeparator uiLanguageSection;
-    private TitledSeparator aiSection;
 
     JComponent createComponent() {
         if (panel == null) {
@@ -49,44 +46,30 @@ final class PluginPreferencesConfigurable {
             constraints.insets = JBUI.emptyInsets();
             panel.add(uiLanguageConfigurable.createComponent(), constraints);
 
-            constraints.gridy++;
-            constraints.insets = JBUI.insetsTop(16);
-            aiSection = new TitledSeparator();
-            panel.add(aiSection, constraints);
 
-            constraints.gridy++;
-            constraints.insets = JBUI.emptyInsets();
-            panel.add(aiConfigurable.createComponent(), constraints);
 
             constraints.gridy++;
             constraints.weighty = 1;
             constraints.fill = GridBagConstraints.VERTICAL;
             panel.add(Box.createVerticalGlue(), constraints);
 
-            scrollPane = new JScrollPane(panel,
-                    ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED,
-                    ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-            scrollPane.setBorder(JBUI.Borders.empty());
-            scrollPane.getVerticalScrollBar().setUnitIncrement(JBUI.scale(16));
             refreshLanguage();
         }
-        return scrollPane;
+        return panel;
     }
 
     boolean isModified() {
-        return presentationConfigurable.isModified() || uiLanguageConfigurable.isModified() || aiConfigurable.isModified();
+        return presentationConfigurable.isModified() || uiLanguageConfigurable.isModified();
     }
 
     void apply() throws ConfigurationException {
         presentationConfigurable.apply();
         uiLanguageConfigurable.apply();
-        aiConfigurable.apply();
     }
 
     void reset() {
         presentationConfigurable.reset();
         uiLanguageConfigurable.reset();
-        aiConfigurable.reset();
     }
 
     void refreshLanguage() {
@@ -99,8 +82,6 @@ final class PluginPreferencesConfigurable {
         if (uiLanguageSection != null) {
             uiLanguageSection.setText(bundle.getString("plugin.preferences.section.uiLanguage"));
         }
-        if (aiSection != null) {
-            aiSection.setText("AI 提交建议");
-        }
+
     }
 }

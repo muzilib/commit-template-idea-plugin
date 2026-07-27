@@ -24,6 +24,7 @@ public class UnifiedCommitTemplateSettingsConfigurable implements SearchableConf
     private final ProjectGitCommitSettingConfigurable projectConfigurable;
     private final CommitMessageRulesConfigurable rulesConfigurable;
     private final PluginPreferencesConfigurable preferencesConfigurable = new PluginPreferencesConfigurable();
+    private final AiPreferencesConfigurable aiConfigurable = new AiPreferencesConfigurable();
     private JTabbedPane tabs;
 
     public UnifiedCommitTemplateSettingsConfigurable(@NotNull Project project) {
@@ -70,6 +71,7 @@ public class UnifiedCommitTemplateSettingsConfigurable implements SearchableConf
             tabs.addTab("", responsiveTab(projectConfigurable.getSettingsPanel()));
             tabs.addTab("", responsiveTab(rulesConfigurable.createComponent()));
             tabs.addTab("", responsiveTab(preferencesConfigurable.createComponent()));
+            tabs.addTab("", responsiveTab(aiConfigurable.createComponent()));
             tabs.addTab("", responsiveTab(globalUI.detachAboutPanel()));
         }
         resetTabTitles();
@@ -79,7 +81,7 @@ public class UnifiedCommitTemplateSettingsConfigurable implements SearchableConf
     @Override
     public boolean isModified() {
         return globalConfigurable.isModified() || projectConfigurable.isModified() || rulesConfigurable.isModified()
-                || preferencesConfigurable.isModified();
+                || preferencesConfigurable.isModified() || aiConfigurable.isModified();
     }
 
     @Override
@@ -88,6 +90,7 @@ public class UnifiedCommitTemplateSettingsConfigurable implements SearchableConf
         projectConfigurable.apply();
         rulesConfigurable.apply();
         preferencesConfigurable.apply();
+        aiConfigurable.apply();
         globalConfigurable.reset();
         projectConfigurable.reset();
         rulesConfigurable.refreshLanguage();
@@ -103,6 +106,7 @@ public class UnifiedCommitTemplateSettingsConfigurable implements SearchableConf
         projectConfigurable.reset();
         rulesConfigurable.reset();
         preferencesConfigurable.reset();
+        aiConfigurable.reset();
         resetTabTitles();
     }
 
@@ -116,6 +120,7 @@ public class UnifiedCommitTemplateSettingsConfigurable implements SearchableConf
         tabs.setTitleAt(1, resourceBundle.getString("plugin.setting.tab.projectOverrides"));
         tabs.setTitleAt(2, resourceBundle.getString("plugin.setting.tab.commitRules"));
         tabs.setTitleAt(3, resourceBundle.getString("plugin.setting.tab.preferences"));
-        tabs.setTitleAt(4, resourceBundle.getString("plugin.setting.label.about"));
+        tabs.setTitleAt(4, "AI 模型");
+        tabs.setTitleAt(5, resourceBundle.getString("plugin.setting.label.about"));
     }
 }

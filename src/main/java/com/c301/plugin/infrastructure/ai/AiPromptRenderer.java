@@ -14,12 +14,15 @@ public final class AiPromptRenderer {
         String types = request.allowedCommitTypes().stream()
                 .map(CommitTypeDomain::getType)
                 .collect(Collectors.joining(", "));
-        return "你是 Git Commit 助手。请仅返回一个 JSON 对象，不要 Markdown、代码块或解释。"
-                + "提交内容语言为 " + request.contentLanguage().getKey() + "。"
-                + "type 必须是以下值之一：" + types + "。"
-                + "subject 不能为空且不超过 " + request.rules().subjectMaxLength() + " 个字符。"
-                + "JSON 字段固定为 type、scope、subject、body、breakingChange、issueNumbers。"
-                + "body 与 breakingChange 可为 null，issueNumbers 必须为数字数组。";
+        String template = request.systemPromptTemplate();
+        if (template == null || template.isBlank()) {
+            throw new IllegalArgumentException("未配置 AI 系统提示词。");
+        }
+        return template
+                .replace("{languageLabel}", request.contentLanguage().getLabel())
+                .replace("{languageKey}", request.contentLanguage().getKey())
+                .replace("{allowedTypes}", types)
+                .replace("{subjectMaxLength}", String.valueOf(request.rules().subjectMaxLength()));
     }
 
     public static String userPrompt(AiGenerationRequest request) {
