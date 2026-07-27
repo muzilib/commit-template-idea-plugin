@@ -2,6 +2,7 @@ package com.c301.plugin.config;
 
 import com.c301.plugin.infrastructure.credentials.AiCredentialStore;
 import com.c301.plugin.infrastructure.credentials.PasswordSafeAiCredentialStore;
+import com.c301.plugin.utils.CommUtil;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.util.ui.JBUI;
@@ -13,6 +14,7 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.ResourceBundle;
 
 /**
  * AI 提交建议的全局配置界面。密钥不进入 Swing 表单状态或持久化 State，
@@ -42,25 +44,26 @@ final class AiPreferencesConfigurable {
             panel.setBorder(JBUI.Borders.emptyTop(8));
             GridBagConstraints constraints = constraints(0);
 
-            enabled = new JCheckBox("启用 AI 提交建议");
+            ResourceBundle bundle = bundle();
+            enabled = new JCheckBox(bundle.getString("plugin.ai.enabled"));
             panel.add(enabled, constraints);
             constraints.gridy++;
-            panel.add(new JLabel("服务协议：OpenAI-Compatible Chat Completions"), constraints);
+            panel.add(new JLabel(bundle.getString("plugin.ai.protocol")), constraints);
 
             endpoint = new JTextField();
-            addLabeled("服务地址 Endpoint", endpoint, constraints);
+            addLabeled(bundle.getString("plugin.ai.endpoint"), endpoint, constraints);
             apiPath = new JTextField();
-            addLabeled("API 路径", apiPath, constraints);
+            addLabeled(bundle.getString("plugin.ai.apiPath"), apiPath, constraints);
             model = new JTextField();
-            addLabeled("模型名称", model, constraints);
+            addLabeled(bundle.getString("plugin.ai.model"), model, constraints);
 
             temperature = new JSpinner(new SpinnerNumberModel(0.2D, 0.0D, 2.0D, 0.1D));
-            addLabeled("Temperature", temperature, constraints);
+            addLabeled(bundle.getString("plugin.ai.temperature"), temperature, constraints);
             maxTokens = new JSpinner(new SpinnerNumberModel(1024, 1, 16384, 1));
-            addLabeled("最大输出 Token", maxTokens, constraints);
+            addLabeled(bundle.getString("plugin.ai.maxTokens"), maxTokens, constraints);
 
             constraints.gridy++;
-            panel.add(new JLabel("系统提示词（支持 {languageLabel}、{languageKey}、{allowedTypes}、{subjectMaxLength} 占位符）"), constraints);
+            panel.add(new JLabel(bundle.getString("plugin.ai.systemPrompt")), constraints);
             constraints.gridy++;
             systemPrompt = new JTextArea(10, 0);
             systemPrompt.setLineWrap(true);
@@ -77,10 +80,10 @@ final class AiPreferencesConfigurable {
             constraints.weighty = 0;
 
             constraints.gridy++;
-            allowDiffTransfer = new JCheckBox("允许发送经过确认和过滤的 Diff");
+            allowDiffTransfer = new JCheckBox(bundle.getString("plugin.ai.allowDiffTransfer"));
             panel.add(allowDiffTransfer, constraints);
             constraints.gridy++;
-            JLabel exclusionHint = new JLabel("文件排除规则（每行一条，支持 .gitignore 风格；内置敏感文件规则始终生效）");
+            JLabel exclusionHint = new JLabel(bundle.getString("plugin.ai.excludePatterns"));
             panel.add(exclusionHint, constraints);
             constraints.gridy++;
             // 排除规则按行编辑，必须保留足够的可见高度，不能因父级 GridBagLayout 压缩为单行。
@@ -101,8 +104,8 @@ final class AiPreferencesConfigurable {
             constraints.gridy++;
             JPanel credentials = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
             credentialStatus = new JLabel();
-            saveKey = new JButton("设置 / 替换 API Key");
-            clearKey = new JButton("清除 API Key");
+            saveKey = new JButton(bundle.getString("plugin.ai.saveApiKey"));
+            clearKey = new JButton(bundle.getString("plugin.ai.clearApiKey"));
             credentials.add(credentialStatus);
             credentials.add(saveKey);
             credentials.add(clearKey);
@@ -199,20 +202,20 @@ final class AiPreferencesConfigurable {
 
     private void validateConfiguration() throws ConfigurationException {
         if (endpoint.getText().isBlank() || model.getText().isBlank()) {
-            throw new ConfigurationException("AI 服务地址和模型名称不能为空。");
+            throw new ConfigurationException(bundle().getString("plugin.ai.error.endpointAndModelRequired"));
         }
         if (systemPrompt.getText().isBlank()) {
-            throw new ConfigurationException("AI 系统提示词不能为空。");
+            throw new ConfigurationException(bundle().getString("plugin.ai.error.systemPromptRequired"));
         }
         String value = endpoint.getText().trim().toLowerCase();
         if (!value.startsWith("https://") && !value.startsWith("http://localhost") && !value.startsWith("http://127.0.0.1")) {
-            throw new ConfigurationException("远程 AI 服务地址必须使用 HTTPS。");
+            throw new ConfigurationException(bundle().getString("plugin.ai.error.httpsRequired"));
         }
     }
 
     private void saveApiKey() {
-        String key = Messages.showPasswordDialog(null, "API Key 将保存到 IntelliJ Password Safe，不会写入项目或插件配置文件。",
-                "设置 AI API Key", null, null);
+        String key = Messages.showPasswordDialog(null, bundle().getString("plugin.ai.apiKeyHint"),
+                bundle().getString("plugin.ai.saveApiKeyTitle"), null, null);
         if (key != null && !key.isBlank()) {
             credentialStore.saveApiKey(endpoint.getText().trim(), key.trim());
         }
@@ -220,7 +223,8 @@ final class AiPreferencesConfigurable {
     }
 
     private void clearApiKey() {
-        int result = Messages.showYesNoDialog(panel, "确定清除当前服务地址对应的 API Key 吗？", "清除 AI API Key", null);
+        int result = Messages.showYesNoDialog(panel, bundle().getString("plugin.ai.clearApiKeyConfirmation"),
+                bundle().getString("plugin.ai.clearApiKeyTitle"), null);
         if (result == Messages.YES) {
             credentialStore.clearApiKey(endpoint.getText().trim());
         }
@@ -230,8 +234,12 @@ final class AiPreferencesConfigurable {
     private void refreshCredentialStatus() {
         if (credentialStatus != null) {
             boolean configured = credentialStore.hasCredential(endpoint == null ? state.getEndpoint() : endpoint.getText().trim());
-            credentialStatus.setText(configured ? "API Key：已配置" : "API Key：未配置");
+            credentialStatus.setText(bundle().getString(configured ? "plugin.ai.apiKeyConfigured" : "plugin.ai.apiKeyNotConfigured"));
         }
+    }
+
+    private static ResourceBundle bundle() {
+        return CommUtil.i18nResourceBundle(null);
     }
 
     private List<String> patternsFromEditor() {

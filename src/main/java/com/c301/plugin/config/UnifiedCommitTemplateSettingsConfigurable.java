@@ -120,7 +120,7 @@ public class UnifiedCommitTemplateSettingsConfigurable implements SearchableConf
         tabs.setTitleAt(1, resourceBundle.getString("plugin.setting.tab.projectOverrides"));
         tabs.setTitleAt(2, resourceBundle.getString("plugin.setting.tab.commitRules"));
         tabs.setTitleAt(3, resourceBundle.getString("plugin.setting.tab.preferences"));
-        tabs.setTitleAt(4, "AI 模型");
+        tabs.setTitleAt(4, resourceBundle.getString("plugin.setting.tab.aiModel"));
         tabs.setTitleAt(5, resourceBundle.getString("plugin.setting.label.about"));
     }
 }

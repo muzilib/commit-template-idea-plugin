@@ -475,7 +475,8 @@ public class CommitTemplateDialog extends JDialog {
 
         var bottomPanel = new JPanel(new BorderLayout(0, 6));
         if (AiPreferencesState.getInstance().isEnabled() && actionEvent != null) {
-            JButton generateAiSuggestion = new JButton("AI 生成并应用到表单");
+            JButton generateAiSuggestion = new JButton(CommUtil.i18nResourceBundle(null)
+                    .getString("plugin.ai.generateAndApplyToForm"));
             generateAiSuggestion.addActionListener(event -> openAiGenerationDialog());
             JPanel aiActions = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
             aiActions.add(generateAiSuggestion);

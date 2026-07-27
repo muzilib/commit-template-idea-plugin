@@ -34,10 +34,10 @@ public final class AiGenerationDialog extends JDialog {
     private final AiPreferencesState preferences;
     private final AiIncludedChangesCollector.CollectionResult changes;
     private final JTextArea output = new JTextArea();
-    private final JButton generate = new JButton("开始生成");
-    private final JButton apply = new JButton("应用到表单");
-    private final JButton close = new JButton("关闭");
-    private final JCheckBox sendDiff = new JCheckBox("本次发送经过筛选的 Diff");
+    private final JButton generate = new JButton();
+    private final JButton apply = new JButton();
+    private final JButton close = new JButton();
+    private final JCheckBox sendDiff = new JCheckBox();
     private final StringBuilder response = new StringBuilder();
     private final AtomicBoolean completed = new AtomicBoolean();
     private String applicationTarget = "表单";
@@ -50,8 +50,8 @@ public final class AiGenerationDialog extends JDialog {
             commitMessage.setCommitMessage(com.c301.plugin.domain.commit.CommitMessageFormatter.format(
                     commit, settings.emojiEnable() ? settings.emojiLocation() : null, settings.commitMessageRules()));
         });
-        applicationTarget = "提交信息";
-        apply.setText("应用到提交信息");
+        applicationTarget = text("plugin.ai.target.commitMessage");
+        apply.setText(text("plugin.ai.applyToCommitMessage"));
     }
 
     public AiGenerationDialog(Project project, AiIncludedChangesCollector.CollectionResult changes,
@@ -60,10 +60,14 @@ public final class AiGenerationDialog extends JDialog {
         this.suggestionConsumer = suggestionConsumer;
         this.preferences = AiPreferencesState.getInstance();
         this.changes = changes;
-        setTitle("AI 生成提交信息");
+        setTitle(text("plugin.ai.generationDialogTitle"));
         setModal(true);
         setMinimumSize(new Dimension(620, 480));
         setPreferredSize(new Dimension(760, 620));
+        generate.setText(text("plugin.ai.generate"));
+        apply.setText(text("plugin.ai.applyToForm"));
+        close.setText(text("plugin.ai.close"));
+        sendDiff.setText(text("plugin.ai.sendDiff"));
         setContentPane(createContent());
         pack();
         setLocationRelativeTo(null);
@@ -75,10 +79,13 @@ public final class AiGenerationDialog extends JDialog {
     private JComponent createContent() {
         JPanel content = new JPanel(new BorderLayout(0, 8));
         content.setBorder(JBUI.Borders.empty(12));
-        JTextArea summary = new JTextArea("服务：" + preferences.getEndpoint() + "\n模型：" + preferences.getModel()
-                + "\n包含文件：" + changes.includedMetadata().size() + "\n排除文件：" + changes.excludedChanges().size()
-                + "\n\n将发送的元数据：\n" + changes.asPromptContent()
-                + (changes.excludedChanges().isEmpty() ? "" : "\n\n已排除：\n" + String.join("\n", changes.excludedChanges())));
+        JTextArea summary = new JTextArea(text("plugin.ai.summary.service") + " " + preferences.getEndpoint()
+                + "\n" + text("plugin.ai.summary.model") + " " + preferences.getModel()
+                + "\n" + text("plugin.ai.summary.included") + " " + changes.includedMetadata().size()
+                + "\n" + text("plugin.ai.summary.excluded") + " " + changes.excludedChanges().size()
+                + "\n\n" + text("plugin.ai.summary.metadata") + "\n" + changes.asPromptContent()
+                + (changes.excludedChanges().isEmpty() ? "" : "\n\n" + text("plugin.ai.summary.excludedList")
+                + "\n" + String.join("\n", changes.excludedChanges())));
         summary.setEditable(false);
         summary.setLineWrap(true);
         summary.setWrapStyleWord(true);
@@ -97,7 +104,7 @@ public final class AiGenerationDialog extends JDialog {
         JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         sendDiff.setEnabled(preferences.isAllowDiffTransfer());
         sendDiff.setVisible(preferences.isAllowDiffTransfer());
-        sendDiff.setToolTipText("仅在本次确认后构建并发送经过筛选和总量限制的 Diff。");
+        sendDiff.setToolTipText(text("plugin.ai.sendDiffTooltip"));
         apply.setEnabled(false);
         actions.add(sendDiff);
         actions.add(generate);
@@ -109,12 +116,12 @@ public final class AiGenerationDialog extends JDialog {
 
     private void generate() {
         if (changes.includedMetadata().isEmpty()) {
-            output.setText("没有可安全发送的已包含变更。请检查文件选择或排除规则。");
+            output.setText(text("plugin.ai.noIncludedChanges"));
             return;
         }
         String apiKey = new PasswordSafeAiCredentialStore().readApiKey(preferences.getEndpoint());
         if (apiKey == null || apiKey.isBlank()) {
-            Messages.showWarningDialog(this, "请先在偏好设置中配置当前 AI 服务地址对应的 API Key。", "未配置 API Key");
+            Messages.showWarningDialog(this, text("plugin.ai.apiKeyMissingHint"), text("plugin.ai.apiKeyMissingTitle"));
             return;
         }
         EffectiveCommitTemplateSettings settings = CommitTemplateSettingsResolver.getInstance(project).resolve();
@@ -124,8 +131,8 @@ public final class AiGenerationDialog extends JDialog {
                 : changes.asPromptContent();
         if (changeContent.isBlank()) {
             output.setText(transferMode == AiTransferMode.DIFF
-                    ? "没有可安全发送的 Diff；不会发起网络请求。"
-                    : "没有可安全发送的变更元数据。不会发起网络请求。");
+                    ? text("plugin.ai.noDiff")
+                    : text("plugin.ai.noMetadata"));
             return;
         }
         response.setLength(0);
@@ -133,7 +140,8 @@ public final class AiGenerationDialog extends JDialog {
         output.setText("");
         apply.setEnabled(false);
         generate.setEnabled(false);
-        com.intellij.openapi.progress.ProgressManager.getInstance().run(new Task.Backgroundable(project, "AI 生成提交信息", true) {
+        com.intellij.openapi.progress.ProgressManager.getInstance().run(new Task.Backgroundable(project,
+                text("plugin.ai.generationTaskTitle"), true) {
             @Override
             public void run(@NotNull ProgressIndicator progressIndicator) {
 
@@ -158,13 +166,17 @@ public final class AiGenerationDialog extends JDialog {
             suggestionConsumer.accept(commit);
             dispose();
         } catch (Exception exception) {
-            Messages.showErrorDialog(this, exception.getMessage(), "无法应用 AI 建议");
+            Messages.showErrorDialog(this, exception.getMessage(), text("plugin.ai.applyErrorTitle"));
         }
     }
 
     private java.util.List<com.c301.plugin.model.CommitTypeDomain> allowedTypes(EffectiveCommitTemplateSettings settings) {
         return settings.customEnable() ? settings.customCommitTypeList()
                 : CommUtil.getDefaultCommitTypeList(settings.language().getKey());
+    }
+
+    private static String text(String key) {
+        return CommUtil.i18nResourceBundle(null).getString(key);
     }
 
     private final class Listener implements AiStreamingListener {
@@ -190,9 +202,9 @@ public final class AiGenerationDialog extends JDialog {
                 try {
                     AiSuggestionValidator.validateAndConvert(AiSuggestionParser.parse(response.toString()), settings, allowedTypes(settings));
                     apply.setEnabled(true);
-                    output.append("\n\n—— 已完成，可应用到" + applicationTarget + "。——");
+                    output.append("\n\n" + text("plugin.ai.completed").replace("{target}", applicationTarget));
                 } catch (Exception exception) {
-                    output.append("\n\n—— AI 返回内容无法通过本地提交规则校验。——");
+                    output.append("\n\n" + text("plugin.ai.invalidSuggestion"));
                 }
             });
         }
