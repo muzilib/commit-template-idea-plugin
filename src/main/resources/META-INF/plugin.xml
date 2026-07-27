@@ -104,6 +104,8 @@
 
         <applicationService
                 serviceImplementation="com.c301.plugin.config.StoreCommitTemplateState"/>
+        <applicationService
+                serviceImplementation="com.c301.plugin.config.AiPreferencesState"/>
         <projectService
                 serviceImplementation="com.c301.plugin.config.ProjectCommitTemplateOverrideState"/>
         <projectService
@@ -126,14 +128,13 @@
             <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="alt shift Q"/>
             <add-to-group group-id="Vcs.MessageActionGroup" anchor="first"/>
         </action>
-        <!--<action id="plugin_commit_ai_button"
-                class="com.c301.plugin.config.GitCommitAiWriteAction"
+        <action id="plugin_commit_ai_button"
+                class="com.c301.plugin.config.AiQuickGenerateAction"
+                text="AI 生成提交信息"
+                description="使用 AI 生成提交信息建议，不会执行 Git 提交"
                 icon="/icons/load.png">
-            <keyboard-shortcut keymap="$default" first-keystroke="alt shift W"/>
-            <keyboard-shortcut keymap="Mac OS X" first-keystroke="alt shift W"/>
-            <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="alt shift W"/>
-            <add-to-group group-id="Vcs.MessageActionGroup" anchor="first"/>
-        </action>-->
+            <add-to-group group-id="Vcs.MessageActionGroup" anchor="after" relative-to-action="plugin_commit_button"/>
+        </action>
     </actions>
 
 </idea-plugin>
