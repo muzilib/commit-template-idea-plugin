@@ -1,11 +1,15 @@
 plugins {
-    id("java")
-    id("org.jetbrains.kotlin.jvm") version "1.9.25"
-    id("org.jetbrains.intellij") version "1.17.4"
+    id 'java'
+    id 'org.jetbrains.intellij' version '1.17.4'
 }
 
-group = project.pluginGroup
-version = project.pluginVersion
+group = providers.gradleProperty('pluginGroup').get()
+version = providers.gradleProperty('pluginVersion').get()
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
 
 repositories {
     maven {
@@ -19,10 +23,10 @@ repositories {
 }
 
 intellij {
-    version = project.platformVersion
-    type = project.platformType
+    version = providers.gradleProperty('platformVersion').get()
+    type = providers.gradleProperty('platformType').get()
+    plugins = ['Git4Idea']
 
-    plugins = ["Git4Idea"]
     downloadSources = true
     updateSinceUntilBuild = false
     buildSearchableOptions.enabled = false
@@ -35,93 +39,54 @@ dependencies {
     implementation 'org.apache.httpcomponents:httpclient:4.5.14'
 }
 
-
 tasks.withType(JavaCompile).configureEach {
-    options.encoding = "UTF-8"
+    options.encoding = 'UTF-8'
 }
 
-def updateVersionProperties(String channel) {
-    def propertiesFile = file('src/main/resources/version.properties')
-    def properties = new Properties()
-    properties.load(new FileInputStream(propertiesFile))
+// `-Pchannel` takes precedence; the convenience tasks select their matching channel.
+def buildChannel = providers.gradleProperty('channel').getOrElse(
+        gradle.startParameter.taskNames.any { it.endsWith('buildAlpha') } ? 'Alpha' :
+                gradle.startParameter.taskNames.any { it.endsWith('buildStable') } ? 'Stable' : 'Release'
+)
+def buildTime = new Date().format('yyyyMMddHHmm')
+def generatedResourcesDir = layout.buildDirectory.dir('generated-resources/main')
 
-    properties.setProperty('channelCode', channel)
-    properties.setProperty('builderTime', new Date().format('yyyyMMddHHmm'))
-
-    properties.store(new FileOutputStream(propertiesFile), null)
-    return properties.getProperty('builderTime')
-}
-
-tasks.register('buildStable') {
-    group = 'ct-idea-plugin'
-    description = '构建Stable版本'
-
-    doFirst {
-        def builderTime = updateVersionProperties('Stable')
-        println("构建Stable版本")
-        ext.builderTime = builderTime
-    }
-
-    dependsOn clean
-    finalizedBy buildPlugin
-}
-
-tasks.register('buildAlpha') {
-    group = 'ct-idea-plugin'
-    description = '构建Alpha版本'
-
-    doFirst {
-        def builderTime = updateVersionProperties('Alpha')
-        println("构建Alpha版本")
-        ext.builderTime = builderTime
-    }
-
-    dependsOn clean
-    finalizedBy buildPlugin
-}
-
-tasks.register('renameArtifact') {
-    group = 'ct-idea-plugin'
-    description = '重命名构建产物'
+tasks.register('generateBuildInfo') {
+    outputs.file(generatedResourcesDir.map { it.file('version.properties') })
 
     doLast {
-        def buildTask = gradle.taskGraph.allTasks.find { it.name == 'buildStable' || it.name == 'buildAlpha' }
-        def builderTime
-        def channel
+        def properties = new Properties()
+        properties.setProperty('pluginVersion', project.version.toString())
+        properties.setProperty('javaVersion', providers.gradleProperty('javaVersion').get())
+        properties.setProperty('platformVersion', providers.gradleProperty('platformVersion').get())
+        properties.setProperty('platformType', providers.gradleProperty('platformType').get())
+        properties.setProperty('channelCode', buildChannel)
+        properties.setProperty('builderTime', buildTime)
 
-        if (buildTask != null) {
-            builderTime = buildTask.builderTime
-            channel = buildTask.name == 'buildStable' ? 'stable' : 'alpha'
-        } else {
-            // Fallback for direct buildPlugin execution
-            def propertiesFile = file('src/main/resources/version.properties')
-            def properties = new Properties()
-            if (propertiesFile.exists()) {
-                properties.load(new FileInputStream(propertiesFile))
-                builderTime = properties.getProperty('builderTime')
-            }
-            if (builderTime == null) {
-                builderTime = new Date().format('yyyyMMddHHmm')
-            }
-            channel = 'release'
-        }
-
-        //修改jar文件名
-        def originalJar = file("build/libs/commit-template-idea-plugin-${project.version}.jar")
-        def newJar = file("build/libs/commit-template-idea-plugin-${project.version}-${channel}(${builderTime}).jar")
-        if (originalJar.exists()) {
-            originalJar.renameTo(newJar)
-            println("已重命名构建产物jar: ${newJar.name}")
-        }
-
-        //修改zip文件名
-        originalJar = file("build/distributions/commit-template-idea-plugin-${project.version}.zip")
-        newJar = file("build/distributions/commit-template-idea-plugin-${project.version}-${channel}(${builderTime}).zip")
-        if (originalJar.exists()) {
-            originalJar.renameTo(newJar)
-            println("已重命名构建产物zip: ${newJar.name}")
-        }
+        def output = generatedResourcesDir.get().file('version.properties').asFile
+        output.parentFile.mkdirs()
+        output.withOutputStream { properties.store(it, null) }
     }
 }
 
-buildPlugin.finalizedBy renameArtifact
+tasks.named('processResources') {
+    dependsOn tasks.named('generateBuildInfo')
+    exclude 'version.properties'
+    from(generatedResourcesDir)
+}
+
+tasks.named('buildPlugin') {
+    archiveFileName.set("${rootProject.name}-${project.version}-${buildChannel.toLowerCase()}(${buildTime}).zip")
+}
+
+def registerChannelBuild = { String taskName, String channel ->
+    tasks.register(taskName) {
+        group = 'ct-idea-plugin'
+        description = "构建${channel}版本"
+        dependsOn tasks.named('clean')
+        finalizedBy tasks.named('buildPlugin')
+    }
+}
+
+registerChannelBuild('buildStable', 'Stable')
+registerChannelBuild('buildAlpha', 'Alpha')
