@@ -198,7 +198,7 @@ public class CommitTemplateSettingUI {
                     Build time: {buildTime}
                     Java: {javaVersion}
                     Platform: {platformVersion}
-                    Support: _Chenbing"""
+                    """
                     .replace("{buildVersion}", buildVersion)
                     .replace("{buildTime}", buildTime)
                     .replace("{javaVersion}", javaVersion)

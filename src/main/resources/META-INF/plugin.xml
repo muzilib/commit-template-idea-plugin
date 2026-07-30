@@ -4,26 +4,13 @@
     <version>1.0.9</version>
     <vendor email="muzi@muzilib.com" url="https://github.com/muzilib">Chenbing</vendor>
 
-    <description><![CDATA[Git Commit Template helps IntelliJ IDEA users create, format, and validate structured Git commit messages directly in the Commit tool window.
-        <p><b>English</b></p>
-        <p>Create messages using a Conventional Commits-style template:</p>
-        <pre>&lt;type&gt;(&lt;scope&gt;): &lt;subject&gt;
-
-&lt;body&gt;
-
-&lt;footer&gt;</pre>
-        <ul>
-            <li>Configurable commit templates, commit types, scope requirements, and local validation rules.</li>
-            <li>Global defaults and per-project template overrides.</li>
-            <li>AI commit-message suggestions from only the currently selected Included Changes.</li>
-            <li>Qwen, ChatGPT/OpenAI, DeepSeek, and custom OpenAI-Compatible services.</li>
-            <li>Request-review and direct streaming modes, with sensitive-file filtering and explicit data-transfer consent.</li>
-            <li>Independent plugin UI language and AI-generated commit-message language settings.</li>
-        </ul>
-        <p>This project continues maintenance and development of the original plugin. See the <a href="https://github.com/muzilib/commit-template-idea-plugin">project repository</a>, <a href="https://github.com/muzilib/commit-template-idea-plugin/issues">submit an issue</a>, or read the <a href="https://github.com/muzilib/commit-template-idea-plugin/blob/main/docs/Plugin-Documentation.md">English documentation</a> and <a href="https://github.com/muzilib/commit-template-idea-plugin/blob/main/docs/%E6%8F%92%E4%BB%B6%E8%AF%B4%E6%98%8E%E6%96%87%E6%A1%A3.md">Chinese documentation</a>.</p>
-        <hr/>
+    <description><![CDATA[Git Commit Template
         <p><b>中文介绍</b></p>
         <p>Git Commit Template 是一个用于创建、格式化和校验 Git 提交信息的 IntelliJ IDEA 插件，帮助你更方便地遵循 Conventional Commits 等提交规范。</p>
+        <p>默认提交信息模板：</p>
+        <pre>&lt;type&gt;(&lt;scope&gt;): &lt;subject&gt;
+        &lt;body&gt;
+        &lt;footer&gt;</pre>
         <ul>
             <li>支持提交模板、提交类型、Scope 要求和本地规则校验。</li>
             <li>支持全局默认配置与项目级模板覆盖。</li>
@@ -32,7 +19,35 @@
             <li>支持发送前预览或直接流式生成，并提供敏感文件过滤和数据传输确认。</li>
             <li>插件窗口显示语言和 AI 生成提交信息的语言可独立配置。</li>
         </ul>
-        <p>本项目持续维护和扩展原始插件，欢迎使用和反馈。</p>]]></description>
+        <p>本项目持续维护和扩展原始插件，欢迎使用和反馈。</p>
+        <p><a href="https://github.com/muzilib/commit-template-idea-plugin">当前项目地址</a><br/>
+        <a href="https://github.com/MobileTribe/commit-template-idea-plugin">原始项目地址</a><br/>
+        <a href="https://plugins.jetbrains.com/plugin/23641-git-commit-template/faq">常见问题（FAQ）</a><br/>
+        <a href="https://github.com/muzilib/commit-template-idea-plugin/issues">提交 Issue / 反馈问题</a><br/>
+        <a href="https://github.com/muzilib/commit-template-idea-plugin/blob/main/docs/%E6%8F%92%E4%BB%B6%E8%AF%B4%E6%98%8E%E6%96%87%E6%A1%A3.md">中文文档</a></p>
+        <hr/>
+
+        <p><b>English</b></p>
+        <p>Git Commit Template helps IntelliJ IDEA users create, format, and validate structured Git commit messages directly in the Commit tool window.</p>
+        <p>Create messages using a Conventional Commits-style template:</p>
+        <pre>&lt;type&gt;(&lt;scope&gt;): &lt;subject&gt;
+        &lt;body&gt;
+        &lt;footer&gt;</pre>
+        <ul>
+            <li>Configurable commit templates, commit types, scope requirements, and local validation rules.</li>
+            <li>Global defaults and per-project template overrides.</li>
+            <li>AI commit-message suggestions from only the currently selected Included Changes.</li>
+            <li>Qwen, ChatGPT/OpenAI, DeepSeek, and custom OpenAI-Compatible services.</li>
+            <li>Request-review and direct streaming modes, with sensitive-file filtering and explicit data-transfer consent.</li>
+            <li>Independent plugin UI language and AI-generated commit-message language settings.</li>
+        </ul>
+        <p>This project continues maintenance and development of the original plugin. Feedback and contributions are welcome.</p>
+        <p><a href="https://github.com/muzilib/commit-template-idea-plugin">Current project</a><br/>
+        <a href="https://github.com/MobileTribe/commit-template-idea-plugin">Original project</a><br/>
+        <a href="https://plugins.jetbrains.com/plugin/23641-git-commit-template/faq">FAQ</a><br/>
+        <a href="https://github.com/muzilib/commit-template-idea-plugin/issues">Submit an issue</a><br/>
+        <a href="https://github.com/muzilib/commit-template-idea-plugin/blob/main/docs/Plugin-Documentation.md">English documentation</a></p>
+    ]]></description>
 
     <change-notes>
         <![CDATA[
@@ -148,8 +163,8 @@
         </action>
         <action id="plugin_commit_ai_button"
                 class="com.c301.plugin.config.AiQuickGenerateAction"
-                text="AI 生成提交信息"
-                description="使用 AI 生成提交信息建议，不会执行 Git 提交"
+                text="action.plugin_commit_ai_button.text"
+                description="action.plugin_commit_ai_button.description"
                 icon="/icons/git-ai.png">
             <add-to-group group-id="Vcs.MessageActionGroup" anchor="after" relative-to-action="plugin_commit_button"/>
         </action>
