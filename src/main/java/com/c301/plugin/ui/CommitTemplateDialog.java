@@ -337,18 +337,7 @@ public class CommitTemplateDialog extends JDialog {
             labelCommitTypeSetting.addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseClicked(MouseEvent e) {
-                    handleCancelEvent();
-                    Project targetProject = project;
-                    if (targetProject == null) {
-                        var openProjects = ProjectManager.getInstance().getOpenProjects();
-                        if (openProjects.length > 0) {
-                            targetProject = openProjects[0];
-                        }
-                    }
-                    if (targetProject != null) {
-                        ShowSettingsUtil.getInstance().showSettingsDialog(targetProject,
-                                com.c301.plugin.config.UnifiedCommitTemplateSettingsConfigurable.class);
-                    }
+                    openCommitTemplateSettings();
                 }
             });
         } else {
@@ -514,10 +503,20 @@ public class CommitTemplateDialog extends JDialog {
     }
 
     /**
-     * 通过“跳过 CI?”同行的链接打开提交模板设置；该入口不读取变更或触发 AI 请求。
+     * 打开提交模板设置前关闭当前窗口，避免设置页与模板对话框同时显示。
      */
     private void openCommitTemplateSettings() {
-        ShowSettingsUtil.getInstance().showSettingsDialog(project, UnifiedCommitTemplateSettingsConfigurable.class);
+        handleCancelEvent();
+        Project targetProject = project;
+        if (targetProject == null) {
+            var openProjects = ProjectManager.getInstance().getOpenProjects();
+            if (openProjects.length > 0) {
+                targetProject = openProjects[0];
+            }
+        }
+        if (targetProject != null) {
+            ShowSettingsUtil.getInstance().showSettingsDialog(targetProject, UnifiedCommitTemplateSettingsConfigurable.class);
+        }
     }
 
     /**
