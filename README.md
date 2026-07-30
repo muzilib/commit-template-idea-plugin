@@ -25,7 +25,7 @@ This project is maintained and extended from the original [MobileTribe/commit-te
 - **Multiple AI Providers** — Supports Qwen, ChatGPT/OpenAI, DeepSeek, and custom OpenAI-Compatible Chat Completions endpoints.
 - **Streaming and Review Modes** — Review the complete request before sending, or stream a readable draft directly into the Commit Message and validate the final result after streaming ends.
 - **Privacy Controls** — Sends only filtered Included Changes; excludes binary and sensitive files, applies user exclusion patterns, uses project-relative paths, and asks for consent before the first real Diff transfer.
-- **Secure Credentials** — Stores API keys in IntelliJ Password Safe rather than ordinary plugin settings.
+- **Secure Credentials** — Stores one independent API key per provider in IntelliJ Password Safe rather than ordinary plugin settings.
 - **Qwen Options** — Provides optional Qwen sampling, thinking, search, streaming-usage, and data-inspection settings.
 - **Localization** — Includes multilingual UI resources.
 

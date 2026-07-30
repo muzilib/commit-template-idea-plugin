@@ -3,6 +3,10 @@ package com.c301.plugin.config;
 import com.c301.plugin.domain.ai.AiDataTransferConsent;
 import com.c301.plugin.domain.ai.AiProviderType;
 import com.c301.plugin.domain.ai.QwenGenerationOptions;
+import com.c301.plugin.infrastructure.credentials.PasswordSafeAiCredentialStore;
+import com.c301.plugin.ui.PluginNotifications;
+import com.c301.plugin.utils.CommUtil;
+import com.intellij.notification.NotificationType;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.PersistentStateComponent;
 import com.intellij.openapi.components.State;
@@ -28,7 +32,10 @@ import java.util.Map;
 public class AiPreferencesState implements PersistentStateComponent<AiPreferencesState> {
 
 
+    private static final int CURRENT_MIGRATION_VERSION = 1;
+
     private boolean enabled;
+    private int migrationVersion;
     private AiProviderType providerType = AiProviderType.QWEN;
     private String apiUrl = AiProviderType.QWEN.apiUrl();
     private String model = "qwen3.7-max";
@@ -72,6 +79,84 @@ public class AiPreferencesState implements PersistentStateComponent<AiPreference
         return base + path;
     }
 
+    private static boolean isSupportedApiUrl(String value) {
+        if (value == null || value.isBlank()) {
+            return false;
+        }
+        String normalized = value.trim().toLowerCase();
+        return normalized.startsWith("https://") || normalized.startsWith("http://localhost")
+                || normalized.startsWith("http://127.0.0.1");
+    }
+
+    private static AiProviderType providerForApiUrl(String value, AiProviderType fallback) {
+        String normalized = value == null ? "" : value.trim();
+        if (AiProviderType.QWEN.apiUrl().equals(normalized)) {
+            return AiProviderType.QWEN;
+        }
+        if (AiProviderType.CHATGPT.apiUrl().equals(normalized)) {
+            return AiProviderType.CHATGPT;
+        }
+        if (AiProviderType.DEEPSEEK.apiUrl().equals(normalized)) {
+            return AiProviderType.DEEPSEEK;
+        }
+        return fallback == null ? AiProviderType.CUSTOM : fallback;
+    }
+
+    /**
+     * 仅清理可明确判定为无效的 AI 非敏感配置，避免升级时覆盖有效用户偏好。
+     */
+    private void sanitizePreferences() {
+        if (!isSupportedApiUrl(apiUrl)) {
+            apiUrl = providerType.usesPresetApiUrl() ? providerType.apiUrl() : "";
+        } else {
+            apiUrl = apiUrl.trim();
+        }
+        if (model == null) {
+            model = "";
+        } else {
+            model = model.trim();
+        }
+        if (Double.isNaN(temperature) || Double.isInfinite(temperature) || temperature < 0D || temperature > 2D) {
+            temperature = 0.7D;
+        }
+        if (maxTokens < 1 || maxTokens > 16_384) {
+            maxTokens = 1024;
+        }
+        excludePatterns = new ArrayList<>(excludePatterns.stream().filter(value -> value != null && !value.isBlank())
+                .map(String::trim).distinct().toList());
+        customSystemPrompts.entrySet().removeIf(entry -> entry.getKey() == null || entry.getValue() == null
+                || entry.getValue().isBlank());
+    }
+
+    private boolean migrateCredentials(String legacyApiUrl) {
+        PasswordSafeAiCredentialStore credentialStore = new PasswordSafeAiCredentialStore();
+        boolean migrated = true;
+        migrated &= credentialStore.migrateLegacyApiKey(AiProviderType.QWEN, AiProviderType.QWEN.apiUrl());
+        migrated &= credentialStore.migrateLegacyApiKey(AiProviderType.CHATGPT, AiProviderType.CHATGPT.apiUrl());
+        migrated &= credentialStore.migrateLegacyApiKey(AiProviderType.DEEPSEEK, AiProviderType.DEEPSEEK.apiUrl());
+        migrated &= credentialStore.migrateLegacyApiKey(providerType, legacyApiUrl, apiUrl);
+        return migrated;
+    }
+
+    private void migrateLegacyPreferences() {
+        String legacyApiUrl = joinLegacyApiUrl(endpoint, apiPath);
+        if (!legacyApiUrl.isBlank() && (apiUrl == null || apiUrl.isBlank()
+                || AiProviderType.QWEN.apiUrl().equals(apiUrl))) {
+            apiUrl = legacyApiUrl;
+        }
+        providerType = legacyApiUrl.isBlank() ? providerForApiUrl(apiUrl, providerType)
+                : providerForApiUrl(legacyApiUrl, AiProviderType.CUSTOM);
+        sanitizePreferences();
+        boolean credentialsMigrated = migrateCredentials(legacyApiUrl);
+        endpoint = null;
+        apiPath = null;
+        migrationVersion = CURRENT_MIGRATION_VERSION;
+        if (!credentialsMigrated) {
+            PluginNotifications.notify(null, CommUtil.i18nResourceBundle(null)
+                    .getString("plugin.ai.credentialMigrationFailed"), NotificationType.WARNING);
+        }
+    }
+
     @Override
     public @Nullable AiPreferencesState getState() {
         return this;
@@ -86,17 +171,6 @@ public class AiPreferencesState implements PersistentStateComponent<AiPreference
         if (providerType == null) {
             providerType = AiProviderType.QWEN;
         }
-        String migratedLegacyUrl = joinLegacyApiUrl(endpoint, apiPath);
-        if (!migratedLegacyUrl.isBlank() && !migratedLegacyUrl.equals(AiProviderType.QWEN.apiUrl())) {
-            providerType = AiProviderType.CUSTOM;
-        }
-        if (!migratedLegacyUrl.isBlank() && (apiUrl == null || apiUrl.isBlank()
-                || (providerType == AiProviderType.QWEN && apiUrl.equals(AiProviderType.QWEN.apiUrl())))) {
-            apiUrl = migratedLegacyUrl;
-        }
-        if (apiUrl == null || apiUrl.isBlank()) {
-            apiUrl = providerType.usesPresetApiUrl() ? providerType.apiUrl() : "";
-        }
         if (customSystemPrompts == null) {
             customSystemPrompts = new LinkedHashMap<>();
         }
@@ -105,6 +179,11 @@ public class AiPreferencesState implements PersistentStateComponent<AiPreference
         }
         if (dataTransferConsent == null) {
             dataTransferConsent = AiDataTransferConsent.UNDECIDED;
+        }
+        if (migrationVersion < CURRENT_MIGRATION_VERSION) {
+            migrateLegacyPreferences();
+        } else {
+            sanitizePreferences();
         }
     }
 }

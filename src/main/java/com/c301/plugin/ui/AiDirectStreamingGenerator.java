@@ -75,7 +75,7 @@ public final class AiDirectStreamingGenerator {
         if (!AiDataTransferConsentDialog.ensureAccepted(project)) {
             return;
         }
-        String apiKey = new PasswordSafeAiCredentialStore().readApiKey(preferences.getApiUrl());
+        String apiKey = new PasswordSafeAiCredentialStore().readApiKey(preferences.getProviderType());
         if (apiKey == null || apiKey.isBlank()) {
             notify(text("plugin.ai.apiKeyMissingHint"), NotificationType.ERROR);
             return;

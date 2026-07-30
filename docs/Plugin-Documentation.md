@@ -161,7 +161,7 @@ Open **Settings / Preferences → Tools → Commit Template Idea Plugin → AI M
 6. Open **Advanced settings** if you need Temperature, output-token, system-prompt, or provider-specific settings.
 7. Select **Apply** or **OK**.
 
-API keys are stored through IntelliJ Platform **Password Safe**, not in normal plugin configuration files. Keys are associated with the full API URL, so a different API URL can require a separate key.
+API keys are stored through IntelliJ Platform **Password Safe**, not in normal plugin configuration files. Each provider (Qwen, ChatGPT, DeepSeek, and Custom) has one independent key; changing the API URL or model within a provider continues to use that provider's key.
 
 ### 4.4 System prompts
 
@@ -266,7 +266,7 @@ No files may be selected, the files may be binary, or they may match built-in se
 
 ### Authentication fails after setting an API key
 
-Verify the API key, full API URL including `/chat/completions`, provider access, model permission, network/proxy access, and provider quota. A changed API URL can require setting the key again for that URL.
+Verify the key configured for the active provider, the full API URL including `/chat/completions`, provider access, model permission, network/proxy access, and provider quota.
 
 ### AI output cannot be applied
 
@@ -478,7 +478,7 @@ Keep the OpenAI-Compatible layering: reuse common HTTP/SSE transport and isolate
 Checklist:
 
 - [ ] API URL is editable and preset switching is correct.
-- [ ] API keys are isolated by full API URL.
+- [ ] API keys are isolated by provider and are never shared with another provider.
 - [ ] No network request is made without an eligible Diff.
 - [ ] Provider-specific fields do not leak to other providers.
 - [ ] SSE parsing matches the service response format.

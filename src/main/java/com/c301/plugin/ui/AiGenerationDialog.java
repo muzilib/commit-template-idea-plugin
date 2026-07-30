@@ -218,7 +218,7 @@ public final class AiGenerationDialog extends JDialog {
         if (request == null) {
             return;
         }
-        String apiKey = new PasswordSafeAiCredentialStore().readApiKey(preferences.getApiUrl());
+        String apiKey = new PasswordSafeAiCredentialStore().readApiKey(preferences.getProviderType());
         if (apiKey == null || apiKey.isBlank()) {
             String message = text("plugin.ai.apiKeyMissingHint");
             Messages.showWarningDialog(this, message, text("plugin.ai.apiKeyMissingTitle"));

@@ -578,7 +578,7 @@ final class AiPreferencesConfigurable {
         String key = Messages.showPasswordDialog(null, bundle().getString("plugin.ai.apiKeyHint"),
                 bundle().getString("plugin.ai.saveApiKeyTitle"), null, null);
         if (key != null && !key.isBlank()) {
-            credentialStore.saveApiKey(apiUrl.getText().trim(), key.trim());
+            credentialStore.saveApiKey(selectedProvider(), key.trim());
         }
         refreshCredentialStatus();
     }
@@ -587,14 +587,14 @@ final class AiPreferencesConfigurable {
         int result = Messages.showYesNoDialog(panel, bundle().getString("plugin.ai.clearApiKeyConfirmation"),
                 bundle().getString("plugin.ai.clearApiKeyTitle"), null);
         if (result == Messages.YES) {
-            credentialStore.clearApiKey(apiUrl.getText().trim());
+            credentialStore.clearApiKey(selectedProvider());
         }
         refreshCredentialStatus();
     }
 
     private void refreshCredentialStatus() {
         if (credentialStatus != null) {
-            boolean configured = credentialStore.hasCredential(apiUrl == null ? state.getApiUrl() : apiUrl.getText().trim());
+            boolean configured = credentialStore.hasCredential(selectedProvider());
             credentialStatus.setText(bundle().getString(configured ? "plugin.ai.apiKeyConfigured" : "plugin.ai.apiKeyNotConfigured"));
         }
     }
