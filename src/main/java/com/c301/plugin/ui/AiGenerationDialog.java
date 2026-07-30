@@ -5,6 +5,7 @@ import com.c301.plugin.config.AiPreferencesState;
 import com.c301.plugin.config.CommitTemplateSettingsResolver;
 import com.c301.plugin.config.EffectiveCommitTemplateSettings;
 import com.c301.plugin.domain.ai.*;
+import com.c301.plugin.infrastructure.ai.AiPromptRenderer;
 import com.c301.plugin.infrastructure.ai.AiSuggestionParser;
 import com.c301.plugin.infrastructure.ai.OpenAiCompatibleProvider;
 import com.c301.plugin.infrastructure.credentials.PasswordSafeAiCredentialStore;
@@ -75,7 +76,7 @@ public final class AiGenerationDialog extends JDialog {
         pack();
         setLocationRelativeTo(null);
         generate.addActionListener(event -> generate());
-        sendDiff.addActionListener(event -> clearPreparedDiff());
+        sendDiff.addActionListener(event -> onDiffSelectionChanged());
         apply.addActionListener(event -> applySuggestion());
         close.addActionListener(event -> dispose());
     }
@@ -87,13 +88,7 @@ public final class AiGenerationDialog extends JDialog {
     private JComponent createContent() {
         JPanel content = new JPanel(new BorderLayout(0, 8));
         content.setBorder(JBUI.Borders.empty(12));
-        JTextArea summary = new JTextArea(text("plugin.ai.summary.service") + " " + preferences.getEndpoint()
-                + "\n" + text("plugin.ai.summary.model") + " " + preferences.getModel()
-                + "\n" + text("plugin.ai.summary.included") + " " + changes.includedMetadata().size()
-                + "\n" + text("plugin.ai.summary.excluded") + " " + changes.excludedChanges().size()
-                + "\n\n" + text("plugin.ai.summary.metadata") + "\n" + changes.asPromptContent()
-                + (changes.excludedChanges().isEmpty() ? "" : "\n\n" + text("plugin.ai.summary.excludedList")
-                + "\n" + String.join("\n", changes.excludedChanges())));
+        JTextArea summary = new JTextArea(createSummary());
         summary.setEditable(false);
         summary.setLineWrap(true);
         summary.setWrapStyleWord(true);
@@ -120,6 +115,31 @@ public final class AiGenerationDialog extends JDialog {
         actions.add(close);
         content.add(actions, BorderLayout.SOUTH);
         return content;
+    }
+
+    private String createSummary() {
+        String summary = text("plugin.ai.summary.service") + " " + preferences.getEndpoint()
+                + "\n" + text("plugin.ai.summary.model") + " " + preferences.getModel()
+                + "\n" + text("plugin.ai.summary.included") + " " + changes.includedMetadata().size()
+                + "\n" + text("plugin.ai.summary.excluded") + " " + changes.excludedChanges().size()
+                + "\n\n" + text("plugin.ai.summary.metadata") + "\n" + changes.asPromptContent();
+        if (DEVELOPMENT_DIFF_PREVIEW) {
+            EffectiveCommitTemplateSettings settings = CommitTemplateSettingsResolver.getInstance(project).resolve();
+            AiGenerationRequest request = createRequest(settings, AiTransferMode.METADATA, changes.asPromptContent());
+            summary += "\n\n" + text("plugin.ai.debug.systemPrompt") + "\n"
+                    + AiPromptRenderer.systemPrompt(request)
+                    + "\n\n" + text("plugin.ai.debug.metadataUserPrompt") + "\n"
+                    + AiPromptRenderer.userPrompt(request);
+        }
+        return summary + (changes.excludedChanges().isEmpty() ? "" : "\n\n" + text("plugin.ai.summary.excludedList")
+                + "\n" + String.join("\n", changes.excludedChanges()));
+    }
+
+    private AiGenerationRequest createRequest(EffectiveCommitTemplateSettings settings, AiTransferMode transferMode,
+                                              String changeContent) {
+        return new AiGenerationRequest(preferences.getEndpoint(), preferences.getApiPath(), preferences.getModel(),
+                preferences.getTemperature(), preferences.getMaxTokens(), preferences.getSystemPrompt(), settings.language(),
+                allowedTypes(settings), settings.commitMessageRules(), transferMode, changeContent);
     }
 
     private void generate() {
@@ -158,13 +178,7 @@ public final class AiGenerationDialog extends JDialog {
             @Override
             public void run(@NotNull ProgressIndicator progressIndicator) {
 
-                var allowedTypes = settings.customEnable() ? settings.customCommitTypeList()
-                        : CommUtil.getDefaultCommitTypeList(settings.language().getKey());
-                AiGenerationRequest request = new AiGenerationRequest(
-                        preferences.getEndpoint(), preferences.getApiPath(), preferences.getModel(),
-                        preferences.getTemperature(), preferences.getMaxTokens(), preferences.getSystemPrompt(), settings.language(),
-                        allowedTypes, settings.commitMessageRules(),
-                        transferMode, changeContent);
+                AiGenerationRequest request = createRequest(settings, transferMode, changeContent);
                 new OpenAiCompatibleProvider().generate(request, new AiCredentials(apiKey), progressIndicator,
                         new Listener(settings));
             }
@@ -206,9 +220,14 @@ public final class AiGenerationDialog extends JDialog {
         return preview + "\n\n" + result.diff();
     }
 
-    private void clearPreparedDiff() {
+    private void onDiffSelectionChanged() {
         preparedDiff = null;
         generate.setText(text("plugin.ai.generate"));
+        if (DEVELOPMENT_DIFF_PREVIEW && sendDiff.isSelected()) {
+            prepareDiffPreview();
+        } else if (DEVELOPMENT_DIFF_PREVIEW) {
+            output.setText("");
+        }
     }
 
     private void applySuggestion() {
