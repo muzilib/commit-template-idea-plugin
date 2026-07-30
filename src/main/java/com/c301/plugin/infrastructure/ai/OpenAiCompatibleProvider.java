@@ -21,6 +21,7 @@ import java.nio.charset.StandardCharsets;
  * OpenAI Chat Completions 兼容协议的 SSE 实现，可对接兼容该标准的模型服务。
  * 请求与响应只保存在内存，异常信息经过脱敏后再交给调用方。
  */
+
 /**
  * OpenAI Compatible 协议的公共传输实现。
  * 各服务商通过独立 Provider 子类接入，以便后续分别扩展请求和响应差异。

@@ -93,6 +93,75 @@ final class AiPreferencesConfigurable {
         panel.add(row, constraints);
     }
 
+    private static String formatOptional(Object value) {
+        return value == null ? "" : String.valueOf(value);
+    }
+
+    private static String selectedOptional(JComboBox<String> comboBox) {
+        String value = (String) comboBox.getSelectedItem();
+        return value == null || value.isBlank() ? null : value;
+    }
+
+    private static Double optionalDouble(JTextField field) {
+        try {
+            return requiredOptionalDouble(field);
+        } catch (ConfigurationException ignored) {
+            return null;
+        }
+    }
+
+    private static Integer optionalInteger(JTextField field) {
+        try {
+            return requiredOptionalInteger(field);
+        } catch (ConfigurationException ignored) {
+            return null;
+        }
+    }
+
+    private static Long optionalLong(JTextField field) {
+        try {
+            return requiredOptionalLong(field);
+        } catch (ConfigurationException ignored) {
+            return null;
+        }
+    }
+
+    private static Double requiredOptionalDouble(JTextField field) throws ConfigurationException {
+        String value = field.getText().trim();
+        if (value.isBlank()) {
+            return null;
+        }
+        try {
+            return Double.valueOf(value);
+        } catch (NumberFormatException exception) {
+            throw new ConfigurationException(bundle().getString("plugin.ai.qwen.error.invalidOption"));
+        }
+    }
+
+    private static Integer requiredOptionalInteger(JTextField field) throws ConfigurationException {
+        String value = field.getText().trim();
+        if (value.isBlank()) {
+            return null;
+        }
+        try {
+            return Integer.valueOf(value);
+        } catch (NumberFormatException exception) {
+            throw new ConfigurationException(bundle().getString("plugin.ai.qwen.error.invalidOption"));
+        }
+    }
+
+    private static Long requiredOptionalLong(JTextField field) throws ConfigurationException {
+        String value = field.getText().trim();
+        if (value.isBlank()) {
+            return null;
+        }
+        try {
+            return Long.valueOf(value);
+        } catch (NumberFormatException exception) {
+            throw new ConfigurationException(bundle().getString("plugin.ai.qwen.error.invalidOption"));
+        }
+    }
+
     JComponent createComponent() {
         if (panel == null) {
             panel = new JPanel(new GridBagLayout());
@@ -426,75 +495,6 @@ final class AiPreferencesConfigurable {
         options.setSearchStrategy((String) qwenSearchStrategy.getSelectedItem());
         options.setDataInspectionEnabled(qwenDataInspection.isSelected());
         return options;
-    }
-
-    private static String formatOptional(Object value) {
-        return value == null ? "" : String.valueOf(value);
-    }
-
-    private static String selectedOptional(JComboBox<String> comboBox) {
-        String value = (String) comboBox.getSelectedItem();
-        return value == null || value.isBlank() ? null : value;
-    }
-
-    private static Double optionalDouble(JTextField field) {
-        try {
-            return requiredOptionalDouble(field);
-        } catch (ConfigurationException ignored) {
-            return null;
-        }
-    }
-
-    private static Integer optionalInteger(JTextField field) {
-        try {
-            return requiredOptionalInteger(field);
-        } catch (ConfigurationException ignored) {
-            return null;
-        }
-    }
-
-    private static Long optionalLong(JTextField field) {
-        try {
-            return requiredOptionalLong(field);
-        } catch (ConfigurationException ignored) {
-            return null;
-        }
-    }
-
-    private static Double requiredOptionalDouble(JTextField field) throws ConfigurationException {
-        String value = field.getText().trim();
-        if (value.isBlank()) {
-            return null;
-        }
-        try {
-            return Double.valueOf(value);
-        } catch (NumberFormatException exception) {
-            throw new ConfigurationException(bundle().getString("plugin.ai.qwen.error.invalidOption"));
-        }
-    }
-
-    private static Integer requiredOptionalInteger(JTextField field) throws ConfigurationException {
-        String value = field.getText().trim();
-        if (value.isBlank()) {
-            return null;
-        }
-        try {
-            return Integer.valueOf(value);
-        } catch (NumberFormatException exception) {
-            throw new ConfigurationException(bundle().getString("plugin.ai.qwen.error.invalidOption"));
-        }
-    }
-
-    private static Long requiredOptionalLong(JTextField field) throws ConfigurationException {
-        String value = field.getText().trim();
-        if (value.isBlank()) {
-            return null;
-        }
-        try {
-            return Long.valueOf(value);
-        } catch (NumberFormatException exception) {
-            throw new ConfigurationException(bundle().getString("plugin.ai.qwen.error.invalidOption"));
-        }
     }
 
     private void updateAdvancedSettingsVisibility() {
