@@ -2,7 +2,9 @@
 
 [中文文档](docs/插件说明文档.md) · [English Documentation](docs/Plugin-Documentation.md)
 
-Git Commit Template is an IntelliJ IDEA plugin for creating, formatting, and validating structured Git commit messages. It also provides AI-generated commit-message suggestions from the changes selected in IDEA's **Included Changes** list.
+Git Commit Template is 
+
+an IntelliJ IDEA plugin for creating, formatting, and validating structured Git commit messages. It also provides AI-generated commit-message suggestions from the changes selected in IDEA's **Included Changes** list.
 
 This project is maintained and extended from the original [MobileTribe/commit-template-idea-plugin](https://github.com/MobileTribe/commit-template-idea-plugin).
 

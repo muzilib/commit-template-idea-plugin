@@ -52,7 +52,7 @@ public class AiPreferencesState implements PersistentStateComponent<AiPreference
     private QwenGenerationOptions qwenGenerationOptions = new QwenGenerationOptions();
 
     private AiDataTransferConsent dataTransferConsent = AiDataTransferConsent.UNDECIDED;
-    private boolean checkDiffBeforeSending = true;
+    private boolean checkDiffBeforeSending = false;
     private boolean showAdvancedSettings;
     private List<String> excludePatterns = new ArrayList<>(List.of(
             ".env", ".env.*", "*.pem", "*.key", "*.p12", "*.jks",

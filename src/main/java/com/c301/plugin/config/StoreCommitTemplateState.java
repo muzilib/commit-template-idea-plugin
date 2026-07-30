@@ -62,7 +62,7 @@ public class StoreCommitTemplateState implements PersistentStateComponent<StoreC
     /**
      * 是否在提交弹窗中显示生成后的提交信息预览，作为全局默认值。
      */
-    private boolean previewEnabled = true;
+    private boolean previewEnabled = false;
     /**
      * 自定义模板启用状态
      */
