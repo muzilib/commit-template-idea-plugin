@@ -2,6 +2,7 @@ package com.c301.plugin.config;
 
 import com.c301.plugin.platform.vcs.AiIncludedChangesCollector;
 
+import com.c301.plugin.ui.AiDirectStreamingGenerator;
 import com.c301.plugin.ui.AiGenerationDialog;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
@@ -52,7 +53,11 @@ public final class AiQuickGenerateAction extends AnAction implements DumbAware {
                 AiGenerationDialog.notifyNoEligibleChanges(targetProject);
                 return;
             }
-            new AiGenerationDialog(targetProject, targetCommitMessage, changes).setVisible(true);
+            if (AiPreferencesState.getInstance().isCheckDiffBeforeSending()) {
+                new AiGenerationDialog(targetProject, targetCommitMessage, changes).setVisible(true);
+            } else {
+                new AiDirectStreamingGenerator(targetProject, targetCommitMessage, changes).generate();
+            }
         }, ModalityState.current());
     }
 }
