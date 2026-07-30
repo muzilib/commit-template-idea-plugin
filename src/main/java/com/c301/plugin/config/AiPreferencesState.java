@@ -2,6 +2,7 @@ package com.c301.plugin.config;
 
 import com.c301.plugin.domain.ai.AiDataTransferConsent;
 import com.c301.plugin.domain.ai.AiProviderType;
+import com.c301.plugin.domain.ai.QwenGenerationOptions;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.PersistentStateComponent;
 import com.intellij.openapi.components.State;
@@ -41,6 +42,7 @@ public class AiPreferencesState implements PersistentStateComponent<AiPreference
     private Map<AiProviderType, String> customSystemPrompts = new LinkedHashMap<>();
     private double temperature = 0.7D;
     private int maxTokens = 1024;
+    private QwenGenerationOptions qwenGenerationOptions = new QwenGenerationOptions();
 
     private AiDataTransferConsent dataTransferConsent = AiDataTransferConsent.UNDECIDED;
     private boolean checkDiffBeforeSending = true;
@@ -97,6 +99,9 @@ public class AiPreferencesState implements PersistentStateComponent<AiPreference
         }
         if (customSystemPrompts == null) {
             customSystemPrompts = new LinkedHashMap<>();
+        }
+        if (qwenGenerationOptions == null) {
+            qwenGenerationOptions = new QwenGenerationOptions();
         }
         if (dataTransferConsent == null) {
             dataTransferConsent = AiDataTransferConsent.UNDECIDED;

@@ -15,6 +15,7 @@ public record AiGenerationRequest(
         String systemPromptTemplate,
         double temperature,
         int maxTokens,
+        QwenGenerationOptions qwenGenerationOptions,
         LanguageDomain contentLanguage,
         List<CommitTypeDomain> allowedCommitTypes,
         CommitMessageRules rules,

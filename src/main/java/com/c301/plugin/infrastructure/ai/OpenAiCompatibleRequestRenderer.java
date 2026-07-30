@@ -1,6 +1,7 @@
 package com.c301.plugin.infrastructure.ai;
 
 import com.c301.plugin.domain.ai.AiGenerationRequest;
+import com.c301.plugin.domain.ai.AiProvider;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.net.URI;
@@ -21,15 +22,15 @@ public final class OpenAiCompatibleRequestRenderer {
         return URI.create(request.apiUrl().trim()).toString();
     }
 
-    public static String requestBody(AiGenerationRequest request) throws Exception {
-        return JSON.writeValueAsString(requestPayload(request));
+    public static String requestBody(AiGenerationRequest request, AiProvider provider) throws Exception {
+        return JSON.writeValueAsString(requestPayload(request, provider));
     }
 
-    public static String formattedRequestBody(AiGenerationRequest request) throws Exception {
-        return JSON.writerWithDefaultPrettyPrinter().writeValueAsString(requestPayload(request));
+    public static String formattedRequestBody(AiGenerationRequest request, AiProvider provider) throws Exception {
+        return JSON.writerWithDefaultPrettyPrinter().writeValueAsString(requestPayload(request, provider));
     }
 
-    private static Map<String, Object> requestPayload(AiGenerationRequest request) {
+    private static Map<String, Object> requestPayload(AiGenerationRequest request, AiProvider provider) {
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("model", request.model());
         payload.put("stream", true);
@@ -39,6 +40,7 @@ public final class OpenAiCompatibleRequestRenderer {
                 Map.of("role", "system", "content", AiPromptRenderer.systemPrompt(request)),
                 Map.of("role", "user", "content", AiPromptRenderer.userPrompt(request))
         ));
+        provider.customizeRequestPayload(payload, request);
         return payload;
     }
 }

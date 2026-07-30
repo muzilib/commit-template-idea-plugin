@@ -168,7 +168,8 @@ public final class AiGenerationDialog extends JDialog {
             prompt = AiSystemPromptTemplates.forProvider(preferences.getProviderType());
         }
         request = new AiGenerationRequest(preferences.getApiUrl(), preferences.getModel(), prompt,
-                preferences.getTemperature(), preferences.getMaxTokens(), effectiveSettings.language(), allowedTypes(),
+                preferences.getTemperature(), preferences.getMaxTokens(), preferences.getQwenGenerationOptions(),
+                effectiveSettings.language(), allowedTypes(),
                 effectiveSettings.commitMessageRules(), AiCommitTemplateContextRenderer.render(effectiveSettings, allowedTypes()),
                 result.diff());
         try {
@@ -189,13 +190,18 @@ public final class AiGenerationDialog extends JDialog {
 
     private String renderRequestPreview(AiIncludedChangesCollector.DiffCollectionResult result) throws Exception {
         StringBuilder value = new StringBuilder();
+        var provider = AiProviderFactory.create(preferences.getProviderType());
         value.append("POST ").append(OpenAiCompatibleRequestRenderer.resolveUrl(request))
                 .append("\n\nRequest headers\n")
                 .append("Accept: text/event-stream\n")
                 .append("Content-Type: application/json\n")
-                .append("Authorization: Bearer [configured; hidden]\n\n")
-                .append("Request body\n")
-                .append(OpenAiCompatibleRequestRenderer.formattedRequestBody(request))
+                .append("Authorization: Bearer [configured; hidden]\n");
+        if (preferences.getProviderType() == com.c301.plugin.domain.ai.AiProviderType.QWEN
+                && preferences.getQwenGenerationOptions().isDataInspectionEnabled()) {
+            value.append("X-DashScope-DataInspection: {\"input\":\"cip\",\"output\":\"cip\"}\n");
+        }
+        value.append("\nRequest body\n")
+                .append(OpenAiCompatibleRequestRenderer.formattedRequestBody(request, provider))
                 .append("\n\nLocal filtering result\n")
                 .append("Included files: ").append(result.includedFileCount()).append("\n")
                 .append("Diff characters: ").append(result.characterCount()).append("\n")
@@ -228,7 +234,7 @@ public final class AiGenerationDialog extends JDialog {
                 text("plugin.ai.generationTaskTitle"), true) {
             @Override
             public void run(@NotNull ProgressIndicator indicator) {
-                new OpenAiCompatibleProvider().generate(request, new AiCredentials(apiKey), indicator,
+                AiProviderFactory.create(preferences.getProviderType()).generate(request, new AiCredentials(apiKey), indicator,
                         new Listener());
             }
         });
@@ -273,6 +279,11 @@ public final class AiGenerationDialog extends JDialog {
             }
             ApplicationManager.getApplication().invokeLater(() -> {
                 generate.setEnabled(true);
+                if (response.isEmpty()) {
+                    preview.append("\n\n" + text("plugin.ai.emptyVisibleResponse"));
+                    AiGenerationDialog.notify(project, text("plugin.ai.emptyVisibleResponse"), NotificationType.ERROR);
+                    return;
+                }
                 try {
                     AiSuggestionValidator.validateAndConvert(AiSuggestionParser.parse(response.toString()), effectiveSettings, allowedTypes());
                     apply.setEnabled(true);

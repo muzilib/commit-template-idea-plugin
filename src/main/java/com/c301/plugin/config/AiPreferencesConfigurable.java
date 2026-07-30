@@ -2,6 +2,7 @@ package com.c301.plugin.config;
 
 import com.c301.plugin.domain.ai.AiDataTransferConsent;
 import com.c301.plugin.domain.ai.AiProviderType;
+import com.c301.plugin.domain.ai.QwenGenerationOptions;
 import com.c301.plugin.infrastructure.ai.AiSystemPromptTemplates;
 import com.c301.plugin.infrastructure.credentials.AiCredentialStore;
 import com.c301.plugin.infrastructure.credentials.PasswordSafeAiCredentialStore;
@@ -41,6 +42,20 @@ final class AiPreferencesConfigurable {
     private JButton saveKey;
     private JButton clearKey;
     private JButton restorePrompt;
+    private JPanel qwenSettings;
+    private JCheckBox qwenIncludeUsage;
+    private JTextField qwenTopP;
+    private JTextField qwenTopK;
+    private JTextField qwenRepetitionPenalty;
+    private JTextField qwenPresencePenalty;
+    private JTextField qwenSeed;
+    private JCheckBox qwenEnableThinking;
+    private JTextField qwenThinkingBudget;
+    private JComboBox<String> qwenReasoningEffort;
+    private JCheckBox qwenEnableSearch;
+    private JCheckBox qwenForceSearch;
+    private JComboBox<String> qwenSearchStrategy;
+    private JCheckBox qwenDataInspection;
     private AiProviderType displayedProvider;
     private Map<AiProviderType, String> draftSystemPrompts = new LinkedHashMap<>();
 
@@ -145,6 +160,8 @@ final class AiPreferencesConfigurable {
             saveKey.addActionListener(event -> saveApiKey());
             clearKey.addActionListener(event -> clearApiKey());
             restorePrompt.addActionListener(event -> restoreDefaultPrompt());
+            qwenEnableThinking.addActionListener(event -> updateQwenDependentOptions());
+            qwenEnableSearch.addActionListener(event -> updateQwenDependentOptions());
             apiUrl.getDocument().addDocumentListener(new SimpleDocumentListener(this::refreshCredentialStatus));
 
             JPanel scrollContent = new JPanel(new BorderLayout());
@@ -168,6 +185,7 @@ final class AiPreferencesConfigurable {
                 || !model.getText().trim().equals(state.getModel())
                 || Double.compare((Double) temperature.getValue(), state.getTemperature()) != 0
                 || !maxTokens.getValue().equals(state.getMaxTokens())
+                || !qwenOptionsFromEditor().equals(state.getQwenGenerationOptions())
                 || !draftPromptsWithCurrentEditor().equals(normalizePrompts(state.getCustomSystemPrompts()))
                 || !patternsFromEditor().equals(state.getExcludePatterns()));
     }
@@ -186,6 +204,7 @@ final class AiPreferencesConfigurable {
         state.setModel(model.getText().trim());
         state.setTemperature((Double) temperature.getValue());
         state.setMaxTokens((Integer) maxTokens.getValue());
+        state.setQwenGenerationOptions(qwenOptionsFromEditor());
         savePromptFor(selectedProvider());
         state.setCustomSystemPrompts(normalizePrompts(draftSystemPrompts));
         state.setExcludePatterns(new ArrayList<>(patternsFromEditor()));
@@ -204,6 +223,7 @@ final class AiPreferencesConfigurable {
         model.setText(state.getModel());
         temperature.setValue(state.getTemperature());
         maxTokens.setValue(state.getMaxTokens());
+        resetQwenOptions(state.getQwenGenerationOptions());
         excludePatterns.setText(String.join("\n", state.getExcludePatterns()));
         switchProvider();
         // 重置时恢复用户保存的地址，不能被供应商预设的推荐地址覆盖。
@@ -233,6 +253,7 @@ final class AiPreferencesConfigurable {
         apiUrl.setEditable(true);
         model.putClientProperty("JTextField.placeholderText", bundle().getString(provider.modelPlaceholderKey()));
         systemPrompt.setText(promptFor(provider));
+        updateQwenSettingsVisibility();
         refreshCredentialStatus();
     }
 
@@ -269,6 +290,9 @@ final class AiPreferencesConfigurable {
         maxTokens = new JSpinner(new SpinnerNumberModel(1024, 1, 16384, 1));
         addAdvancedLabeled(content, bundle.getString("plugin.ai.maxTokens"), maxTokens, constraints);
         constraints.gridy++;
+        qwenSettings = createQwenSettings(bundle);
+        content.add(qwenSettings, constraints);
+        constraints.gridy++;
         content.add(new JLabel(bundle.getString("plugin.ai.systemPrompt")), constraints);
         constraints.gridy++;
         systemPrompt = new JTextArea(10, 0);
@@ -290,11 +314,195 @@ final class AiPreferencesConfigurable {
         return content;
     }
 
+    private JPanel createQwenSettings(ResourceBundle bundle) {
+        JPanel content = new JPanel(new GridBagLayout());
+        content.setBorder(BorderFactory.createTitledBorder(bundle.getString("plugin.ai.qwen.settings")));
+        GridBagConstraints constraints = constraints(0);
+        constraints.insets = JBUI.insetsBottom(4);
+        qwenIncludeUsage = new JCheckBox(bundle.getString("plugin.ai.qwen.includeUsage"));
+        content.add(qwenIncludeUsage, constraints);
+        constraints.gridy++;
+        content.add(new JLabel(bundle.getString("plugin.ai.qwen.sampling")), constraints);
+        constraints.gridy++;
+        qwenTopP = optionalField(bundle, "plugin.ai.qwen.defaultOptional");
+        addAdvancedLabeled(content, bundle.getString("plugin.ai.qwen.topP"), qwenTopP, constraints);
+        constraints.gridy++;
+        qwenTopK = optionalField(bundle, "plugin.ai.qwen.defaultOptional");
+        addAdvancedLabeled(content, bundle.getString("plugin.ai.qwen.topK"), qwenTopK, constraints);
+        constraints.gridy++;
+        qwenRepetitionPenalty = optionalField(bundle, "plugin.ai.qwen.defaultOptional");
+        addAdvancedLabeled(content, bundle.getString("plugin.ai.qwen.repetitionPenalty"), qwenRepetitionPenalty, constraints);
+        constraints.gridy++;
+        qwenPresencePenalty = optionalField(bundle, "plugin.ai.qwen.defaultOptional");
+        addAdvancedLabeled(content, bundle.getString("plugin.ai.qwen.presencePenalty"), qwenPresencePenalty, constraints);
+        constraints.gridy++;
+        qwenSeed = optionalField(bundle, "plugin.ai.qwen.randomOptional");
+        addAdvancedLabeled(content, bundle.getString("plugin.ai.qwen.seed"), qwenSeed, constraints);
+        constraints.gridy++;
+        content.add(new JLabel(bundle.getString("plugin.ai.qwen.thinking")), constraints);
+        constraints.gridy++;
+        qwenEnableThinking = new JCheckBox(bundle.getString("plugin.ai.qwen.enableThinking"));
+        content.add(qwenEnableThinking, constraints);
+        constraints.gridy++;
+        qwenThinkingBudget = optionalField(bundle, "plugin.ai.qwen.defaultOptional");
+        addAdvancedLabeled(content, bundle.getString("plugin.ai.qwen.thinkingBudget"), qwenThinkingBudget, constraints);
+        constraints.gridy++;
+        qwenReasoningEffort = new JComboBox<>(new String[]{"", "low", "medium", "high", "xhigh", "max"});
+        addAdvancedLabeled(content, bundle.getString("plugin.ai.qwen.reasoningEffort"), qwenReasoningEffort, constraints);
+        constraints.gridy++;
+        content.add(new JLabel(bundle.getString("plugin.ai.qwen.search")), constraints);
+        constraints.gridy++;
+        qwenEnableSearch = new JCheckBox(bundle.getString("plugin.ai.qwen.enableSearch"));
+        content.add(qwenEnableSearch, constraints);
+        constraints.gridy++;
+        qwenForceSearch = new JCheckBox(bundle.getString("plugin.ai.qwen.forceSearch"));
+        content.add(qwenForceSearch, constraints);
+        constraints.gridy++;
+        qwenSearchStrategy = new JComboBox<>(new String[]{"turbo", "max", "agent", "agent_max"});
+        addAdvancedLabeled(content, bundle.getString("plugin.ai.qwen.searchStrategy"), qwenSearchStrategy, constraints);
+        constraints.gridy++;
+        qwenDataInspection = new JCheckBox(bundle.getString("plugin.ai.qwen.dataInspection"));
+        content.add(qwenDataInspection, constraints);
+        return content;
+    }
+
+    private JTextField optionalField(ResourceBundle bundle, String placeholderKey) {
+        JTextField field = new JTextField();
+        field.putClientProperty("JTextField.placeholderText", bundle.getString(placeholderKey));
+        return field;
+    }
+
+    private void updateQwenSettingsVisibility() {
+        if (qwenSettings == null) {
+            return;
+        }
+        qwenSettings.setVisible(showAdvancedSettings.isSelected() && selectedProvider() == AiProviderType.QWEN);
+        updateQwenDependentOptions();
+    }
+
+    private void updateQwenDependentOptions() {
+        if (qwenEnableThinking == null) {
+            return;
+        }
+        boolean thinkingEnabled = qwenEnableThinking.isSelected();
+        qwenThinkingBudget.setEnabled(thinkingEnabled);
+        qwenReasoningEffort.setEnabled(thinkingEnabled);
+        boolean searchEnabled = qwenEnableSearch.isSelected();
+        qwenForceSearch.setEnabled(searchEnabled);
+        qwenSearchStrategy.setEnabled(searchEnabled);
+    }
+
+    private void resetQwenOptions(QwenGenerationOptions options) {
+        QwenGenerationOptions value = options == null ? new QwenGenerationOptions() : options;
+        qwenIncludeUsage.setSelected(value.isIncludeUsage());
+        qwenTopP.setText(formatOptional(value.getTopP()));
+        qwenTopK.setText(formatOptional(value.getTopK()));
+        qwenRepetitionPenalty.setText(formatOptional(value.getRepetitionPenalty()));
+        qwenPresencePenalty.setText(formatOptional(value.getPresencePenalty()));
+        qwenSeed.setText(formatOptional(value.getSeed()));
+        qwenEnableThinking.setSelected(value.isEnableThinking());
+        qwenThinkingBudget.setText(formatOptional(value.getThinkingBudget()));
+        qwenReasoningEffort.setSelectedItem(value.getReasoningEffort() == null ? "" : value.getReasoningEffort());
+        qwenEnableSearch.setSelected(value.isEnableSearch());
+        qwenForceSearch.setSelected(value.isForceSearch());
+        qwenSearchStrategy.setSelectedItem(value.getSearchStrategy() == null ? "turbo" : value.getSearchStrategy());
+        qwenDataInspection.setSelected(value.isDataInspectionEnabled());
+        updateQwenDependentOptions();
+    }
+
+    private QwenGenerationOptions qwenOptionsFromEditor() {
+        QwenGenerationOptions options = new QwenGenerationOptions();
+        options.setIncludeUsage(qwenIncludeUsage.isSelected());
+        options.setTopP(optionalDouble(qwenTopP));
+        options.setTopK(optionalInteger(qwenTopK));
+        options.setRepetitionPenalty(optionalDouble(qwenRepetitionPenalty));
+        options.setPresencePenalty(optionalDouble(qwenPresencePenalty));
+        options.setSeed(optionalLong(qwenSeed));
+        options.setEnableThinking(qwenEnableThinking.isSelected());
+        options.setThinkingBudget(optionalInteger(qwenThinkingBudget));
+        options.setReasoningEffort(selectedOptional(qwenReasoningEffort));
+        options.setEnableSearch(qwenEnableSearch.isSelected());
+        options.setForceSearch(qwenForceSearch.isSelected());
+        options.setSearchStrategy((String) qwenSearchStrategy.getSelectedItem());
+        options.setDataInspectionEnabled(qwenDataInspection.isSelected());
+        return options;
+    }
+
+    private static String formatOptional(Object value) {
+        return value == null ? "" : String.valueOf(value);
+    }
+
+    private static String selectedOptional(JComboBox<String> comboBox) {
+        String value = (String) comboBox.getSelectedItem();
+        return value == null || value.isBlank() ? null : value;
+    }
+
+    private static Double optionalDouble(JTextField field) {
+        try {
+            return requiredOptionalDouble(field);
+        } catch (ConfigurationException ignored) {
+            return null;
+        }
+    }
+
+    private static Integer optionalInteger(JTextField field) {
+        try {
+            return requiredOptionalInteger(field);
+        } catch (ConfigurationException ignored) {
+            return null;
+        }
+    }
+
+    private static Long optionalLong(JTextField field) {
+        try {
+            return requiredOptionalLong(field);
+        } catch (ConfigurationException ignored) {
+            return null;
+        }
+    }
+
+    private static Double requiredOptionalDouble(JTextField field) throws ConfigurationException {
+        String value = field.getText().trim();
+        if (value.isBlank()) {
+            return null;
+        }
+        try {
+            return Double.valueOf(value);
+        } catch (NumberFormatException exception) {
+            throw new ConfigurationException(bundle().getString("plugin.ai.qwen.error.invalidOption"));
+        }
+    }
+
+    private static Integer requiredOptionalInteger(JTextField field) throws ConfigurationException {
+        String value = field.getText().trim();
+        if (value.isBlank()) {
+            return null;
+        }
+        try {
+            return Integer.valueOf(value);
+        } catch (NumberFormatException exception) {
+            throw new ConfigurationException(bundle().getString("plugin.ai.qwen.error.invalidOption"));
+        }
+    }
+
+    private static Long requiredOptionalLong(JTextField field) throws ConfigurationException {
+        String value = field.getText().trim();
+        if (value.isBlank()) {
+            return null;
+        }
+        try {
+            return Long.valueOf(value);
+        } catch (NumberFormatException exception) {
+            throw new ConfigurationException(bundle().getString("plugin.ai.qwen.error.invalidOption"));
+        }
+    }
+
     private void updateAdvancedSettingsVisibility() {
         if (advancedSettings == null) {
             return;
         }
         advancedSettings.setVisible(showAdvancedSettings.isSelected());
+        updateQwenSettingsVisibility();
         panel.revalidate();
         panel.repaint();
     }
@@ -326,6 +534,44 @@ final class AiPreferencesConfigurable {
         if (systemPrompt.getText().isBlank()) {
             throw new ConfigurationException(bundle().getString("plugin.ai.error.systemPromptRequired"));
         }
+        validateQwenOptions();
+    }
+
+    private void validateQwenOptions() throws ConfigurationException {
+        if (selectedProvider() != AiProviderType.QWEN) {
+            return;
+        }
+        Double topP = requiredOptionalDouble(qwenTopP);
+        if (topP != null && (topP <= 0D || topP > 1D)) {
+            throw qwenValidationError();
+        }
+        Integer topK = requiredOptionalInteger(qwenTopK);
+        if (topK != null && topK < 0) {
+            throw qwenValidationError();
+        }
+        Double repetitionPenalty = requiredOptionalDouble(qwenRepetitionPenalty);
+        if (repetitionPenalty != null && repetitionPenalty <= 0D) {
+            throw qwenValidationError();
+        }
+        Double presencePenalty = requiredOptionalDouble(qwenPresencePenalty);
+        if (presencePenalty != null && (presencePenalty < -2D || presencePenalty > 2D)) {
+            throw qwenValidationError();
+        }
+        Long seed = requiredOptionalLong(qwenSeed);
+        if (seed != null && (seed < 0L || seed > 2_147_483_647L)) {
+            throw qwenValidationError();
+        }
+        Integer thinkingBudget = requiredOptionalInteger(qwenThinkingBudget);
+        if (thinkingBudget != null && thinkingBudget < 0) {
+            throw qwenValidationError();
+        }
+        if (qwenEnableThinking.isSelected() && thinkingBudget != null && selectedOptional(qwenReasoningEffort) != null) {
+            throw new ConfigurationException(bundle().getString("plugin.ai.qwen.error.thinkingConflict"));
+        }
+    }
+
+    private ConfigurationException qwenValidationError() {
+        return new ConfigurationException(bundle().getString("plugin.ai.qwen.error.invalidOption"));
     }
 
     private void saveApiKey() {
