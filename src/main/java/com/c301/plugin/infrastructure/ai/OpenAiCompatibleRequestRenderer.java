@@ -1,0 +1,44 @@
+package com.c301.plugin.infrastructure.ai;
+
+import com.c301.plugin.domain.ai.AiGenerationRequest;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.net.URI;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * 统一构造 OpenAI 兼容请求，确保用户审阅内容与实际网络请求保持一致。
+ */
+public final class OpenAiCompatibleRequestRenderer {
+    private static final ObjectMapper JSON = new ObjectMapper();
+
+    private OpenAiCompatibleRequestRenderer() {
+    }
+
+    public static String resolveUrl(AiGenerationRequest request) {
+        return URI.create(request.apiUrl().trim()).toString();
+    }
+
+    public static String requestBody(AiGenerationRequest request) throws Exception {
+        return JSON.writeValueAsString(requestPayload(request));
+    }
+
+    public static String formattedRequestBody(AiGenerationRequest request) throws Exception {
+        return JSON.writerWithDefaultPrettyPrinter().writeValueAsString(requestPayload(request));
+    }
+
+    private static Map<String, Object> requestPayload(AiGenerationRequest request) {
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("model", request.model());
+        payload.put("stream", true);
+        payload.put("temperature", request.temperature());
+        payload.put("max_tokens", request.maxTokens());
+        payload.put("messages", List.of(
+                Map.of("role", "system", "content", AiPromptRenderer.systemPrompt(request)),
+                Map.of("role", "user", "content", AiPromptRenderer.userPrompt(request))
+        ));
+        return payload;
+    }
+}

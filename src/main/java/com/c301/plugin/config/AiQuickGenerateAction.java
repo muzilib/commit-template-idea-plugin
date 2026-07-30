@@ -1,6 +1,7 @@
 package com.c301.plugin.config;
 
 import com.c301.plugin.platform.vcs.AiIncludedChangesCollector;
+
 import com.c301.plugin.ui.AiGenerationDialog;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
@@ -43,9 +44,15 @@ public final class AiQuickGenerateAction extends AnAction implements DumbAware {
         if (project == null || commitMessage == null) {
             return;
         }
-        var changes = AiIncludedChangesCollector.collectMetadata(event, AiPreferencesState.getInstance());
         Project targetProject = project;
-        ApplicationManager.getApplication().invokeLater(() ->
-                new AiGenerationDialog(targetProject, commitMessage, changes).setVisible(true), ModalityState.current());
+        CommitMessageI targetCommitMessage = commitMessage;
+        ApplicationManager.getApplication().invokeLater(() -> {
+            var changes = AiIncludedChangesCollector.collectMetadata(event, AiPreferencesState.getInstance());
+            if (changes.includedMetadata().isEmpty()) {
+                AiGenerationDialog.notifyNoEligibleChanges(targetProject);
+                return;
+            }
+            new AiGenerationDialog(targetProject, targetCommitMessage, changes).setVisible(true);
+        }, ModalityState.current());
     }
 }

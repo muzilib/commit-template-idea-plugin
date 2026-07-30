@@ -24,6 +24,8 @@ public class UnifiedCommitTemplateSettingsConfigurable implements SearchableConf
     private final ProjectGitCommitSettingConfigurable projectConfigurable;
     private final CommitMessageRulesConfigurable rulesConfigurable;
     private final PluginPreferencesConfigurable preferencesConfigurable = new PluginPreferencesConfigurable();
+    private static volatile boolean selectAiModelTabOnOpen;
+
     private final AiPreferencesConfigurable aiConfigurable = new AiPreferencesConfigurable();
     private JTabbedPane tabs;
 
@@ -59,6 +61,18 @@ public class UnifiedCommitTemplateSettingsConfigurable implements SearchableConf
         return CommUtil.i18nResourceBundle(null).getString("plugin.setting.displayName");
     }
 
+    /** 请求下一次打开设置时直接定位到 AI 模型标签页。 */
+    public static void requestAiModelTabOnOpen() {
+        selectAiModelTabOnOpen = true;
+    }
+
+    private void selectRequestedTab() {
+        if (selectAiModelTabOnOpen && tabs != null) {
+            tabs.setSelectedIndex(4);
+            selectAiModelTabOnOpen = false;
+        }
+    }
+
     @Override
     public @Nullable JComponent createComponent() {
         if (tabs == null) {
@@ -75,6 +89,7 @@ public class UnifiedCommitTemplateSettingsConfigurable implements SearchableConf
             tabs.addTab("", responsiveTab(globalUI.detachAboutPanel()));
         }
         resetTabTitles();
+        selectRequestedTab();
         return tabs;
     }
 

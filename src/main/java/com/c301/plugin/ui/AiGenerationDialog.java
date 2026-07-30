@@ -4,14 +4,16 @@ import com.c301.plugin.application.ai.AiSuggestionValidator;
 import com.c301.plugin.config.AiPreferencesState;
 import com.c301.plugin.config.CommitTemplateSettingsResolver;
 import com.c301.plugin.config.EffectiveCommitTemplateSettings;
-import com.c301.plugin.domain.ai.*;
-import com.c301.plugin.infrastructure.ai.AiPromptRenderer;
-import com.c301.plugin.infrastructure.ai.AiSuggestionParser;
-import com.c301.plugin.infrastructure.ai.OpenAiCompatibleProvider;
+import com.c301.plugin.config.UnifiedCommitTemplateSettingsConfigurable;
+import com.c301.plugin.domain.ai.AiCredentials;
+import com.c301.plugin.domain.ai.AiGenerationError;
+import com.c301.plugin.domain.ai.AiGenerationRequest;
+import com.c301.plugin.domain.ai.AiStreamingListener;
+import com.c301.plugin.infrastructure.ai.*;
 import com.c301.plugin.infrastructure.credentials.PasswordSafeAiCredentialStore;
-import com.c301.plugin.model.GitCommitDomain;
 import com.c301.plugin.platform.vcs.AiIncludedChangesCollector;
 import com.c301.plugin.utils.CommUtil;
+import com.intellij.notification.NotificationType;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.Task;
@@ -24,92 +26,90 @@ import org.jetbrains.annotations.NotNull;
 import javax.swing.*;
 import java.awt.*;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Consumer;
 
 /**
- * AI 快速生成弹窗：显示发送摘要、流式原文和最终候选预览；仅用户确认后回填 Commit Message。
+ * AI 提交建议窗口：发送前完整展示实际请求参数，响应只会回填 Commit Message。
  */
 public final class AiGenerationDialog extends JDialog {
-    private static final boolean DEVELOPMENT_DIFF_PREVIEW = ApplicationManager.getApplication().isInternal()
-            || Boolean.getBoolean("commit.template.ai.diff.preview");
     private final Project project;
-    private final Consumer<GitCommitDomain> suggestionConsumer;
-    private final AiPreferencesState preferences;
+    private final CommitMessageI commitMessage;
+    private final AiPreferencesState preferences = AiPreferencesState.getInstance();
     private final AiIncludedChangesCollector.CollectionResult changes;
-    private final JTextArea output = new JTextArea();
+    private final JPanel reviewHint = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+    private final JTextArea preview = new JTextArea();
     private final JButton generate = new JButton();
     private final JButton apply = new JButton();
+    private final JButton settings = new JButton();
     private final JButton close = new JButton();
-    private final JCheckBox sendDiff = new JCheckBox();
     private final StringBuilder response = new StringBuilder();
     private final AtomicBoolean completed = new AtomicBoolean();
-    private AiIncludedChangesCollector.DiffCollectionResult preparedDiff;
-    private String applicationTarget = "表单";
 
+    private EffectiveCommitTemplateSettings effectiveSettings;
+    private AiGenerationRequest request;
+    private String requestPreview;
 
     public AiGenerationDialog(Project project, CommitMessageI commitMessage,
                               AiIncludedChangesCollector.CollectionResult changes) {
-        this(project, changes, commit -> {
-            EffectiveCommitTemplateSettings settings = CommitTemplateSettingsResolver.getInstance(project).resolve();
-            commitMessage.setCommitMessage(com.c301.plugin.domain.commit.CommitMessageFormatter.format(
-                    commit, settings.emojiEnable() ? settings.emojiLocation() : null, settings.commitMessageRules()));
-        });
-        applicationTarget = text("plugin.ai.target.commitMessage");
-        apply.setText(text("plugin.ai.applyToCommitMessage"));
-    }
-
-    public AiGenerationDialog(Project project, AiIncludedChangesCollector.CollectionResult changes,
-                              Consumer<GitCommitDomain> suggestionConsumer) {
         this.project = project;
-        this.suggestionConsumer = suggestionConsumer;
-        this.preferences = AiPreferencesState.getInstance();
+        this.commitMessage = commitMessage;
         this.changes = changes;
         setTitle(text("plugin.ai.generationDialogTitle"));
         setModal(true);
         setMinimumSize(new Dimension(620, 480));
-        setPreferredSize(new Dimension(760, 620));
-        generate.setText(text("plugin.ai.generate"));
-        apply.setText(text("plugin.ai.applyToForm"));
+        setPreferredSize(new Dimension(900, 700));
+        generate.setText(text("plugin.ai.confirmAndGenerate"));
+        apply.setText(text("plugin.ai.applyToCommitMessage"));
+        settings.setText("<html><a href='settings'>" + text("plugin.ai.openSettings") + "</a></html>");
+        settings.setBorderPainted(false);
+        settings.setContentAreaFilled(false);
+        settings.setFocusPainted(false);
+        settings.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         close.setText(text("plugin.ai.close"));
-        sendDiff.setText(text("plugin.ai.sendDiff"));
         setContentPane(createContent());
         pack();
         setLocationRelativeTo(null);
         generate.addActionListener(event -> generate());
-        sendDiff.addActionListener(event -> onDiffSelectionChanged());
         apply.addActionListener(event -> applySuggestion());
+        settings.addActionListener(event -> openSettings());
         close.addActionListener(event -> dispose());
+        getRootPane().registerKeyboardAction(event -> dispose(), KeyStroke.getKeyStroke("ESCAPE"),
+                JComponent.WHEN_IN_FOCUSED_WINDOW);
+        prepareContext();
     }
 
-    private static String text(String key) {
-        return CommUtil.i18nResourceBundle(null).getString(key);
+    public static void notifyNoEligibleChanges(Project project) {
+        notify(project, text("plugin.ai.noEligibleChangesNotification"), NotificationType.WARNING);
+    }
+
+    private static void notifyAiError(Project project, AiGenerationError error) {
+        NotificationType type = error.kind() == AiGenerationError.Kind.CANCELED
+                ? NotificationType.INFORMATION : NotificationType.ERROR;
+        notify(project, error.message(), type);
+    }
+
+    private static void notify(Project project, String message, NotificationType type) {
+        PluginNotifications.notify(project, message, type);
     }
 
     private JComponent createContent() {
         JPanel content = new JPanel(new BorderLayout(0, 8));
         content.setBorder(JBUI.Borders.empty(12));
-        JTextArea summary = new JTextArea(createSummary());
-        summary.setEditable(false);
-        summary.setLineWrap(true);
-        summary.setWrapStyleWord(true);
-        JScrollPane summaryScroll = new JScrollPane(summary);
-        summaryScroll.setPreferredSize(new Dimension(0, 180));
-        summaryScroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-        content.add(summaryScroll, BorderLayout.NORTH);
+        JLabel hintLabel = new JLabel(text("plugin.ai.checkBeforeSendingHint"));
+        reviewHint.add(hintLabel);
+        reviewHint.add(Box.createHorizontalStrut(JBUI.scale(6)));
+        reviewHint.add(settings);
+        reviewHint.setVisible(false);
+        content.add(reviewHint, BorderLayout.NORTH);
 
-        output.setEditable(false);
-        output.setLineWrap(true);
-        output.setWrapStyleWord(true);
-        JScrollPane outputScroll = new JScrollPane(output);
-        outputScroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-        content.add(outputScroll, BorderLayout.CENTER);
+        configureTextArea(preview);
+        preview.setText(text("plugin.ai.diffPreparing"));
+        JScrollPane previewScroll = new JScrollPane(preview);
+        previewScroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        content.add(previewScroll, BorderLayout.CENTER);
 
         JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        sendDiff.setEnabled(preferences.isAllowDiffTransfer());
-        sendDiff.setVisible(preferences.isAllowDiffTransfer());
-        sendDiff.setToolTipText(text("plugin.ai.sendDiffTooltip"));
+        generate.setEnabled(false);
         apply.setEnabled(false);
-        actions.add(sendDiff);
         actions.add(generate);
         actions.add(apply);
         actions.add(close);
@@ -117,147 +117,153 @@ public final class AiGenerationDialog extends JDialog {
         return content;
     }
 
-    private String createSummary() {
-        String summary = text("plugin.ai.summary.service") + " " + preferences.getEndpoint()
-                + "\n" + text("plugin.ai.summary.model") + " " + preferences.getModel()
-                + "\n" + text("plugin.ai.summary.included") + " " + changes.includedMetadata().size()
-                + "\n" + text("plugin.ai.summary.excluded") + " " + changes.excludedChanges().size()
-                + "\n\n" + text("plugin.ai.summary.metadata") + "\n" + changes.asPromptContent();
-        if (DEVELOPMENT_DIFF_PREVIEW) {
-            EffectiveCommitTemplateSettings settings = CommitTemplateSettingsResolver.getInstance(project).resolve();
-            AiGenerationRequest request = createRequest(settings, AiTransferMode.METADATA, changes.asPromptContent());
-            summary += "\n\n" + text("plugin.ai.debug.systemPrompt") + "\n"
-                    + AiPromptRenderer.systemPrompt(request)
-                    + "\n\n" + text("plugin.ai.debug.metadataUserPrompt") + "\n"
-                    + AiPromptRenderer.userPrompt(request);
-        }
-        return summary + (changes.excludedChanges().isEmpty() ? "" : "\n\n" + text("plugin.ai.summary.excludedList")
-                + "\n" + String.join("\n", changes.excludedChanges()));
+    private void configureTextArea(JTextArea textArea) {
+        textArea.setEditable(false);
+        textArea.setFont(new Font(Font.MONOSPACED, Font.PLAIN, textArea.getFont().getSize()));
+        textArea.setLineWrap(false);
     }
 
-    private AiGenerationRequest createRequest(EffectiveCommitTemplateSettings settings, AiTransferMode transferMode,
-                                              String changeContent) {
-        return new AiGenerationRequest(preferences.getEndpoint(), preferences.getApiPath(), preferences.getModel(),
-                preferences.getTemperature(), preferences.getMaxTokens(), preferences.getSystemPrompt(), settings.language(),
-                allowedTypes(settings), settings.commitMessageRules(), transferMode, changeContent);
+    private void prepareContext() {
+        if (changes.includedMetadata().isEmpty()) {
+            notifyNoEligibleChanges(project);
+            dispose();
+            return;
+        }
+        effectiveSettings = CommitTemplateSettingsResolver.getInstance(project).resolve();
+        com.intellij.openapi.progress.ProgressManager.getInstance().run(new Task.Backgroundable(project,
+                text("plugin.ai.generationTaskTitle"), true) {
+            @Override
+            public void run(@NotNull ProgressIndicator indicator) {
+                AiIncludedChangesCollector.DiffCollectionResult result = AiIncludedChangesCollector.collectDiff(project, changes);
+                ApplicationManager.getApplication().invokeLater(() -> onContextPrepared(result));
+            }
+        });
+    }
+
+    private void onContextPrepared(AiIncludedChangesCollector.DiffCollectionResult result) {
+        if (!isDisplayable()) {
+            return;
+        }
+        if (result.diff().isBlank()) {
+            notifyNoEligibleChanges(project);
+            dispose();
+            return;
+        }
+        if (!AiDataTransferConsentDialog.ensureAccepted(project)) {
+            dispose();
+            return;
+        }
+        String prompt = preferences.getCustomSystemPrompts().get(preferences.getProviderType());
+        if (prompt == null || prompt.isBlank()) {
+            prompt = AiSystemPromptTemplates.forProvider(preferences.getProviderType());
+        }
+        request = new AiGenerationRequest(preferences.getApiUrl(), preferences.getModel(), prompt,
+                preferences.getTemperature(), preferences.getMaxTokens(), effectiveSettings.language(), allowedTypes(),
+                effectiveSettings.commitMessageRules(), AiCommitTemplateContextRenderer.render(effectiveSettings, allowedTypes()),
+                result.diff());
+        try {
+            requestPreview = renderRequestPreview(result);
+        } catch (Exception exception) {
+            preview.setText(text("plugin.ai.requestPreviewError"));
+            return;
+        }
+        preview.setText(requestPreview);
+        if (preferences.isCheckDiffBeforeSending()) {
+            reviewHint.setVisible(true);
+            generate.setEnabled(true);
+            return;
+        }
+        preview.append("\n\n" + text("plugin.ai.sendingWithoutCheck"));
+        generate();
+    }
+
+    private String renderRequestPreview(AiIncludedChangesCollector.DiffCollectionResult result) throws Exception {
+        StringBuilder value = new StringBuilder();
+        value.append("POST ").append(OpenAiCompatibleRequestRenderer.resolveUrl(request))
+                .append("\n\nRequest headers\n")
+                .append("Accept: text/event-stream\n")
+                .append("Content-Type: application/json\n")
+                .append("Authorization: Bearer [configured; hidden]\n\n")
+                .append("Request body\n")
+                .append(OpenAiCompatibleRequestRenderer.formattedRequestBody(request))
+                .append("\n\nLocal filtering result\n")
+                .append("Included files: ").append(result.includedFileCount()).append("\n")
+                .append("Diff characters: ").append(result.characterCount()).append("\n")
+                .append("Diff truncated: ").append(result.truncated() ? "yes" : "no");
+        if (!changes.excludedChanges().isEmpty() || !result.excludedChanges().isEmpty()) {
+            value.append("\nExcluded changes:\n");
+            appendLines(value, changes.excludedChanges());
+            appendLines(value, result.excludedChanges());
+        }
+        return value.toString();
+    }
+
+    private static void appendLines(StringBuilder value, java.util.List<String> entries) {
+        for (String entry : entries) {
+            value.append("- ").append(entry).append("\n");
+        }
     }
 
     private void generate() {
-        if (changes.includedMetadata().isEmpty()) {
-            output.setText(text("plugin.ai.noIncludedChanges"));
+        if (request == null) {
             return;
         }
-        String apiKey = new PasswordSafeAiCredentialStore().readApiKey(preferences.getEndpoint());
+        String apiKey = new PasswordSafeAiCredentialStore().readApiKey(preferences.getApiUrl());
         if (apiKey == null || apiKey.isBlank()) {
-            Messages.showWarningDialog(this, text("plugin.ai.apiKeyMissingHint"), text("plugin.ai.apiKeyMissingTitle"));
-            return;
-        }
-        EffectiveCommitTemplateSettings settings = CommitTemplateSettingsResolver.getInstance(project).resolve();
-        AiTransferMode transferMode = sendDiff.isSelected() ? AiTransferMode.DIFF : AiTransferMode.METADATA;
-        if (transferMode == AiTransferMode.DIFF && DEVELOPMENT_DIFF_PREVIEW && preparedDiff == null) {
-            prepareDiffPreview();
-            return;
-        }
-        String changeContent = transferMode == AiTransferMode.DIFF
-                ? (preparedDiff != null ? preparedDiff.diff()
-                : AiIncludedChangesCollector.collectDiff(project, changes).diff())
-                : changes.asPromptContent();
-        if (changeContent.isBlank()) {
-            output.setText(transferMode == AiTransferMode.DIFF
-                    ? text("plugin.ai.noDiff")
-                    : text("plugin.ai.noMetadata"));
+            String message = text("plugin.ai.apiKeyMissingHint");
+            Messages.showWarningDialog(this, message, text("plugin.ai.apiKeyMissingTitle"));
+            notify(project, message, NotificationType.ERROR);
             return;
         }
         response.setLength(0);
         completed.set(false);
-        output.setText("");
+        preview.setText(requestPreview + "\n\n----------------------------------------\nAI response\n");
         apply.setEnabled(false);
         generate.setEnabled(false);
         com.intellij.openapi.progress.ProgressManager.getInstance().run(new Task.Backgroundable(project,
                 text("plugin.ai.generationTaskTitle"), true) {
             @Override
-            public void run(@NotNull ProgressIndicator progressIndicator) {
-
-                AiGenerationRequest request = createRequest(settings, transferMode, changeContent);
-                new OpenAiCompatibleProvider().generate(request, new AiCredentials(apiKey), progressIndicator,
-                        new Listener(settings));
+            public void run(@NotNull ProgressIndicator indicator) {
+                new OpenAiCompatibleProvider().generate(request, new AiCredentials(apiKey), indicator,
+                        new Listener());
             }
         });
-    }
-
-    /**
-     * 开发环境中，先在内存中构建并审阅实际发送的 Diff，避免将未展示的内容直接发往远程服务。
-     */
-    private void prepareDiffPreview() {
-        generate.setEnabled(false);
-        output.setText(text("plugin.ai.diffPreviewPreparing"));
-        com.intellij.openapi.progress.ProgressManager.getInstance().run(new Task.Backgroundable(project,
-                text("plugin.ai.generationTaskTitle"), true) {
-            @Override
-            public void run(@NotNull ProgressIndicator progressIndicator) {
-                AiIncludedChangesCollector.DiffCollectionResult result = AiIncludedChangesCollector.collectDiff(project, changes);
-                ApplicationManager.getApplication().invokeLater(() -> {
-                    preparedDiff = result;
-                    generate.setEnabled(true);
-                    generate.setText(text("plugin.ai.confirmAndGenerate"));
-                    output.setText(renderDiffPreview(result));
-                });
-            }
-        });
-    }
-
-    private String renderDiffPreview(AiIncludedChangesCollector.DiffCollectionResult result) {
-        String preview = text("plugin.ai.diffPreviewReady")
-                .replace("{files}", String.valueOf(result.includedFileCount()))
-                .replace("{characters}", String.valueOf(result.characterCount()));
-        if (result.truncated()) {
-            preview += "\n" + text("plugin.ai.diffPreviewTruncated");
-        }
-        if (!result.excludedChanges().isEmpty()) {
-            preview += "\n\n" + text("plugin.ai.summary.excludedList") + "\n"
-                    + String.join("\n", result.excludedChanges());
-        }
-        return preview + "\n\n" + result.diff();
-    }
-
-    private void onDiffSelectionChanged() {
-        preparedDiff = null;
-        generate.setText(text("plugin.ai.generate"));
-        if (DEVELOPMENT_DIFF_PREVIEW && sendDiff.isSelected()) {
-            prepareDiffPreview();
-        } else if (DEVELOPMENT_DIFF_PREVIEW) {
-            output.setText("");
-        }
     }
 
     private void applySuggestion() {
         try {
-            EffectiveCommitTemplateSettings settings = CommitTemplateSettingsResolver.getInstance(project).resolve();
             var suggestion = AiSuggestionParser.parse(response.toString());
-            var commit = AiSuggestionValidator.validateAndConvert(suggestion, settings, allowedTypes(settings));
-            suggestionConsumer.accept(commit);
+            var commit = AiSuggestionValidator.validateAndConvert(suggestion, effectiveSettings, allowedTypes());
+            commitMessage.setCommitMessage(com.c301.plugin.domain.commit.CommitMessageFormatter.format(
+                    commit, effectiveSettings.emojiEnable() ? effectiveSettings.emojiLocation() : null,
+                    effectiveSettings.commitMessageRules()));
             dispose();
         } catch (Exception exception) {
             Messages.showErrorDialog(this, exception.getMessage(), text("plugin.ai.applyErrorTitle"));
         }
     }
 
-    private java.util.List<com.c301.plugin.model.CommitTypeDomain> allowedTypes(EffectiveCommitTemplateSettings settings) {
-        return settings.customEnable() ? settings.customCommitTypeList()
-                : CommUtil.getDefaultCommitTypeList(settings.language().getKey());
+    private void openSettings() {
+        dispose();
+        UnifiedCommitTemplateSettingsConfigurable.requestAiModelTabOnOpen();
+        com.intellij.openapi.options.ShowSettingsUtil.getInstance().showSettingsDialog(project,
+                UnifiedCommitTemplateSettingsConfigurable.class);
+    }
+
+    private java.util.List<com.c301.plugin.model.CommitTypeDomain> allowedTypes() {
+        return effectiveSettings.customEnable() ? effectiveSettings.customCommitTypeList()
+                : CommUtil.getDefaultCommitTypeList(effectiveSettings.language().getKey());
+    }
+
+    private static String text(String key) {
+        return CommUtil.i18nResourceBundle(null).getString(key);
     }
 
     private final class Listener implements AiStreamingListener {
-        private final EffectiveCommitTemplateSettings settings;
-
-        private Listener(EffectiveCommitTemplateSettings settings) {
-            this.settings = settings;
-        }
-
         @Override
         public void onText(String text) {
             response.append(text);
-            ApplicationManager.getApplication().invokeLater(() -> output.append(text));
+            ApplicationManager.getApplication().invokeLater(() -> preview.append(text));
         }
 
         @Override
@@ -268,11 +274,12 @@ public final class AiGenerationDialog extends JDialog {
             ApplicationManager.getApplication().invokeLater(() -> {
                 generate.setEnabled(true);
                 try {
-                    AiSuggestionValidator.validateAndConvert(AiSuggestionParser.parse(response.toString()), settings, allowedTypes(settings));
+                    AiSuggestionValidator.validateAndConvert(AiSuggestionParser.parse(response.toString()), effectiveSettings, allowedTypes());
                     apply.setEnabled(true);
-                    output.append("\n\n" + text("plugin.ai.completed").replace("{target}", applicationTarget));
+                    preview.append("\n\n" + text("plugin.ai.completed")
+                            .replace("{target}", text("plugin.ai.target.commitMessage")));
                 } catch (Exception exception) {
-                    output.append("\n\n" + text("plugin.ai.invalidSuggestion"));
+                    preview.append("\n\n" + text("plugin.ai.invalidSuggestion"));
                 }
             });
         }
@@ -284,7 +291,8 @@ public final class AiGenerationDialog extends JDialog {
             }
             ApplicationManager.getApplication().invokeLater(() -> {
                 generate.setEnabled(true);
-                output.append("\n\n—— " + error.message() + " ——");
+                preview.append("\n\n-- " + error.message() + " --");
+                notifyAiError(project, error);
             });
         }
     }

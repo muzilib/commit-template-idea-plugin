@@ -1,5 +1,8 @@
 package com.c301.plugin.config;
 
+import com.c301.plugin.domain.ai.AiDataTransferConsent;
+import com.c301.plugin.domain.ai.AiProviderType;
+import com.c301.plugin.infrastructure.ai.AiSystemPromptTemplates;
 import com.c301.plugin.infrastructure.credentials.AiCredentialStore;
 import com.c301.plugin.infrastructure.credentials.PasswordSafeAiCredentialStore;
 import com.c301.plugin.utils.CommUtil;
@@ -11,14 +14,11 @@ import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.awt.*;
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.*;
 import java.util.List;
-import java.util.ResourceBundle;
 
 /**
- * AI 提交建议的全局配置界面。密钥不进入 Swing 表单状态或持久化 State，
- * 用户提交后立即交给 Password Safe。
+ * AI 提交建议的全局配置界面。密钥只保存到 Password Safe，系统提示词可按供应商单独覆盖。
  */
 final class AiPreferencesConfigurable {
     private final AiPreferencesState state = AiPreferencesState.getInstance();
@@ -26,17 +26,23 @@ final class AiPreferencesConfigurable {
     private JPanel panel;
     private JScrollPane scrollPane;
     private JCheckBox enabled;
-    private JTextField endpoint;
-    private JTextField apiPath;
+    private JCheckBox checkDiffBeforeSending;
+    private JCheckBox showAdvancedSettings;
+    private JPanel advancedSettings;
+    private JComboBox<AiProviderType> providerType;
+    private JTextField apiUrl;
     private JTextField model;
+    private JLabel providerHint;
     private JSpinner temperature;
     private JSpinner maxTokens;
     private JTextArea systemPrompt;
-    private JCheckBox allowDiffTransfer;
     private JTextArea excludePatterns;
     private JLabel credentialStatus;
     private JButton saveKey;
     private JButton clearKey;
+    private JButton restorePrompt;
+    private AiProviderType displayedProvider;
+    private Map<AiProviderType, String> draftSystemPrompts = new LinkedHashMap<>();
 
     private static ResourceBundle bundle() {
         return CommUtil.i18nResourceBundle(null);
@@ -58,65 +64,30 @@ final class AiPreferencesConfigurable {
             panel = new JPanel(new GridBagLayout());
             panel.setBorder(JBUI.Borders.emptyTop(8));
             GridBagConstraints constraints = constraints(0);
-
             ResourceBundle bundle = bundle();
+
             enabled = new JCheckBox(bundle.getString("plugin.ai.enabled"));
             panel.add(enabled, constraints);
             constraints.gridy++;
+            checkDiffBeforeSending = new JCheckBox(bundle.getString("plugin.ai.checkDiffBeforeSending"));
+            panel.add(checkDiffBeforeSending, constraints);
+            constraints.gridy++;
             panel.add(new JLabel(bundle.getString("plugin.ai.protocol")), constraints);
 
-            endpoint = new JTextField();
-            addLabeled(bundle.getString("plugin.ai.endpoint"), endpoint, constraints);
-            apiPath = new JTextField();
-            addLabeled(bundle.getString("plugin.ai.apiPath"), apiPath, constraints);
+            providerType = new JComboBox<>(AiProviderType.values());
+            providerType.setRenderer(new ProviderRenderer());
+            addLabeled(bundle.getString("plugin.ai.providerType"), providerType, constraints);
+
+            apiUrl = new JTextField();
+            addLabeled(bundle.getString("plugin.ai.apiUrl"), apiUrl, constraints);
+            providerHint = new JLabel();
+            providerHint.setBorder(JBUI.Borders.emptyLeft(4));
+            constraints.gridy++;
+            panel.add(providerHint, constraints);
+
             model = new JTextField();
             addLabeled(bundle.getString("plugin.ai.model"), model, constraints);
 
-            temperature = new JSpinner(new SpinnerNumberModel(0.2D, 0.0D, 2.0D, 0.1D));
-            addLabeled(bundle.getString("plugin.ai.temperature"), temperature, constraints);
-            maxTokens = new JSpinner(new SpinnerNumberModel(1024, 1, 16384, 1));
-            addLabeled(bundle.getString("plugin.ai.maxTokens"), maxTokens, constraints);
-
-            constraints.gridy++;
-            panel.add(new JLabel(bundle.getString("plugin.ai.systemPrompt")), constraints);
-            constraints.gridy++;
-            systemPrompt = new JTextArea(10, 0);
-            systemPrompt.setLineWrap(true);
-            systemPrompt.setWrapStyleWord(true);
-            JScrollPane systemPromptScrollPane = new JScrollPane(systemPrompt);
-            systemPromptScrollPane.setMinimumSize(new Dimension(0, JBUI.scale(180)));
-            systemPromptScrollPane.setPreferredSize(new Dimension(0, JBUI.scale(200)));
-            systemPromptScrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
-            systemPromptScrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-            constraints.fill = GridBagConstraints.BOTH;
-            constraints.weighty = 0.5D;
-            panel.add(systemPromptScrollPane, constraints);
-            constraints.fill = GridBagConstraints.HORIZONTAL;
-            constraints.weighty = 0;
-
-            constraints.gridy++;
-            allowDiffTransfer = new JCheckBox(bundle.getString("plugin.ai.allowDiffTransfer"));
-            panel.add(allowDiffTransfer, constraints);
-            constraints.gridy++;
-            JLabel exclusionHint = new JLabel(bundle.getString("plugin.ai.excludePatterns"));
-            panel.add(exclusionHint, constraints);
-            constraints.gridy++;
-            // 排除规则按行编辑，必须保留足够的可见高度，不能因父级 GridBagLayout 压缩为单行。
-            excludePatterns = new JTextArea(8, 0);
-            excludePatterns.setLineWrap(false);
-            excludePatterns.setMinimumSize(new Dimension(0, JBUI.scale(140)));
-            JScrollPane patternScrollPane = new JScrollPane(excludePatterns);
-            patternScrollPane.setMinimumSize(new Dimension(0, JBUI.scale(140)));
-            patternScrollPane.setPreferredSize(new Dimension(0, JBUI.scale(160)));
-            patternScrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
-            patternScrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-            constraints.fill = GridBagConstraints.BOTH;
-            constraints.weighty = 0.4D;
-            panel.add(patternScrollPane, constraints);
-            constraints.fill = GridBagConstraints.HORIZONTAL;
-            constraints.weighty = 0;
-
-            constraints.gridy++;
             JPanel credentials = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
             credentialStatus = new JLabel();
             saveKey = new JButton(bundle.getString("plugin.ai.saveApiKey"));
@@ -124,12 +95,39 @@ final class AiPreferencesConfigurable {
             credentials.add(credentialStatus);
             credentials.add(saveKey);
             credentials.add(clearKey);
+            constraints.gridy++;
             panel.add(credentials, constraints);
 
+            constraints.gridy++;
+            showAdvancedSettings = new JCheckBox(bundle.getString("plugin.ai.moreSettings"));
+            panel.add(showAdvancedSettings, constraints);
+            constraints.gridy++;
+            advancedSettings = createAdvancedSettings(bundle);
+            panel.add(advancedSettings, constraints);
+
+            constraints.gridy++;
+            panel.add(new JLabel(bundle.getString("plugin.ai.excludePatterns")), constraints);
+            constraints.gridy++;
+            // 排除规则按行编辑，必须保留足够的可见高度，不能因父级 GridBagLayout 压缩为单行。
+            excludePatterns = new JTextArea(8, 0);
+            excludePatterns.setLineWrap(false);
+            JScrollPane patternScrollPane = new JScrollPane(excludePatterns);
+            patternScrollPane.setMinimumSize(new Dimension(0, JBUI.scale(140)));
+            patternScrollPane.setPreferredSize(new Dimension(0, JBUI.scale(160)));
+            constraints.fill = GridBagConstraints.BOTH;
+            constraints.weighty = 0.4D;
+            panel.add(patternScrollPane, constraints);
+            constraints.fill = GridBagConstraints.HORIZONTAL;
+            constraints.weighty = 0;
+
             enabled.addActionListener(event -> updateOptionsVisibility());
+            showAdvancedSettings.addActionListener(event -> updateAdvancedSettingsVisibility());
+            providerType.addActionListener(event -> switchProvider());
             saveKey.addActionListener(event -> saveApiKey());
             clearKey.addActionListener(event -> clearApiKey());
-            // 滚动视口比表单更高时，容器负责将表单固定在顶部，避免 GridBagLayout 垂直居中。
+            restorePrompt.addActionListener(event -> restoreDefaultPrompt());
+            apiUrl.getDocument().addDocumentListener(new SimpleDocumentListener(this::refreshCredentialStatus));
+
             JPanel scrollContent = new JPanel(new BorderLayout());
             scrollContent.add(panel, BorderLayout.NORTH);
             scrollPane = new JScrollPane(scrollContent,
@@ -137,23 +135,6 @@ final class AiPreferencesConfigurable {
                     ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
             scrollPane.setBorder(JBUI.Borders.empty());
             scrollPane.getVerticalScrollBar().setUnitIncrement(JBUI.scale(16));
-
-            endpoint.getDocument().addDocumentListener(new DocumentListener() {
-                @Override
-                public void insertUpdate(DocumentEvent event) {
-                    refreshCredentialStatus();
-                }
-
-                @Override
-                public void removeUpdate(DocumentEvent event) {
-                    refreshCredentialStatus();
-                }
-
-                @Override
-                public void changedUpdate(DocumentEvent event) {
-                    refreshCredentialStatus();
-                }
-            });
         }
         reset();
         return scrollPane;
@@ -161,26 +142,33 @@ final class AiPreferencesConfigurable {
 
     boolean isModified() {
         return panel != null && (enabled.isSelected() != state.isEnabled()
-                || !endpoint.getText().trim().equals(state.getEndpoint())
-                || !apiPath.getText().trim().equals(state.getApiPath())
+                || checkDiffBeforeSending.isSelected() != state.isCheckDiffBeforeSending()
+                || showAdvancedSettings.isSelected() != state.isShowAdvancedSettings()
+                || selectedProvider() != state.getProviderType()
+                || !apiUrl.getText().trim().equals(state.getApiUrl())
                 || !model.getText().trim().equals(state.getModel())
                 || Double.compare((Double) temperature.getValue(), state.getTemperature()) != 0
                 || !maxTokens.getValue().equals(state.getMaxTokens())
-                || !systemPrompt.getText().equals(state.getSystemPrompt())
-                || allowDiffTransfer.isSelected() != state.isAllowDiffTransfer()
+                || !draftPromptsWithCurrentEditor().equals(normalizePrompts(state.getCustomSystemPrompts()))
                 || !patternsFromEditor().equals(state.getExcludePatterns()));
     }
 
     void apply() throws ConfigurationException {
         validateConfiguration();
+        boolean wasEnabled = state.isEnabled();
         state.setEnabled(enabled.isSelected());
-        state.setEndpoint(endpoint.getText().trim());
-        state.setApiPath(apiPath.getText().trim());
+        if (!wasEnabled && enabled.isSelected() && state.getDataTransferConsent() == AiDataTransferConsent.DECLINED) {
+            state.setDataTransferConsent(AiDataTransferConsent.UNDECIDED);
+        }
+        state.setCheckDiffBeforeSending(checkDiffBeforeSending.isSelected());
+        state.setShowAdvancedSettings(showAdvancedSettings.isSelected());
+        state.setProviderType(selectedProvider());
+        state.setApiUrl(apiUrl.getText().trim());
         state.setModel(model.getText().trim());
         state.setTemperature((Double) temperature.getValue());
         state.setMaxTokens((Integer) maxTokens.getValue());
-        state.setSystemPrompt(systemPrompt.getText());
-        state.setAllowDiffTransfer(allowDiffTransfer.isSelected());
+        savePromptFor(selectedProvider());
+        state.setCustomSystemPrompts(normalizePrompts(draftSystemPrompts));
         state.setExcludePatterns(new ArrayList<>(patternsFromEditor()));
     }
 
@@ -189,21 +177,109 @@ final class AiPreferencesConfigurable {
             return;
         }
         enabled.setSelected(state.isEnabled());
-        endpoint.setText(state.getEndpoint());
-        apiPath.setText(state.getApiPath());
+        checkDiffBeforeSending.setSelected(state.isCheckDiffBeforeSending());
+        showAdvancedSettings.setSelected(state.isShowAdvancedSettings());
+        displayedProvider = null;
+        draftSystemPrompts = normalizePrompts(state.getCustomSystemPrompts());
+        providerType.setSelectedItem(state.getProviderType());
         model.setText(state.getModel());
         temperature.setValue(state.getTemperature());
         maxTokens.setValue(state.getMaxTokens());
-        systemPrompt.setText(state.getSystemPrompt());
-        allowDiffTransfer.setSelected(state.isAllowDiffTransfer());
         excludePatterns.setText(String.join("\n", state.getExcludePatterns()));
+        switchProvider();
+        // 重置时恢复用户保存的地址，不能被供应商预设的推荐地址覆盖。
+        apiUrl.setText(state.getApiUrl());
         refreshCredentialStatus();
+        updateAdvancedSettingsVisibility();
         updateOptionsVisibility();
     }
 
-    /**
-     * AI 总开关关闭时只保留开关本身，避免配置表单与快捷入口处于可见但不可用的状态。
-     */
+    private void switchProvider() {
+        if (systemPrompt == null) {
+            return;
+        }
+        savePromptFor(displayedProvider);
+        AiProviderType provider = selectedProvider();
+        displayedProvider = provider;
+        if (provider.usesPresetApiUrl()) {
+            apiUrl.setText(provider.apiUrl());
+            providerHint.setText(bundle().getString("plugin.ai.providerApiKeyHint"));
+        } else {
+            if (apiUrl.getText().equals(AiProviderType.QWEN.apiUrl()) || apiUrl.getText().equals(AiProviderType.CHATGPT.apiUrl())
+                    || apiUrl.getText().equals(AiProviderType.DEEPSEEK.apiUrl())) {
+                apiUrl.setText("");
+            }
+            providerHint.setText(bundle().getString("plugin.ai.customProviderHint"));
+        }
+        apiUrl.setEditable(true);
+        model.putClientProperty("JTextField.placeholderText", bundle().getString(provider.modelPlaceholderKey()));
+        systemPrompt.setText(promptFor(provider));
+        refreshCredentialStatus();
+    }
+
+    private void restoreDefaultPrompt() {
+        AiProviderType provider = selectedProvider();
+        systemPrompt.setText(AiSystemPromptTemplates.forProvider(provider));
+    }
+
+    private void savePromptFor(AiProviderType provider) {
+        if (provider == null || systemPrompt == null) {
+            return;
+        }
+        String current = systemPrompt.getText().trim();
+        String defaultPrompt = AiSystemPromptTemplates.forProvider(provider);
+        if (current.isBlank() || current.equals(defaultPrompt)) {
+            draftSystemPrompts.remove(provider);
+        } else {
+            draftSystemPrompts.put(provider, current);
+        }
+    }
+
+    private String promptFor(AiProviderType provider) {
+        String custom = draftSystemPrompts.get(provider);
+        return custom == null || custom.isBlank() ? AiSystemPromptTemplates.forProvider(provider) : custom;
+    }
+
+    private JPanel createAdvancedSettings(ResourceBundle bundle) {
+        JPanel content = new JPanel(new GridBagLayout());
+        GridBagConstraints constraints = constraints(0);
+        constraints.insets = JBUI.insetsBottom(4);
+        temperature = new JSpinner(new SpinnerNumberModel(0.2D, 0.0D, 2.0D, 0.1D));
+        addAdvancedLabeled(content, bundle.getString("plugin.ai.temperature"), temperature, constraints);
+        constraints.gridy++;
+        maxTokens = new JSpinner(new SpinnerNumberModel(1024, 1, 16384, 1));
+        addAdvancedLabeled(content, bundle.getString("plugin.ai.maxTokens"), maxTokens, constraints);
+        constraints.gridy++;
+        content.add(new JLabel(bundle.getString("plugin.ai.systemPrompt")), constraints);
+        constraints.gridy++;
+        systemPrompt = new JTextArea(10, 0);
+        systemPrompt.setLineWrap(true);
+        systemPrompt.setWrapStyleWord(true);
+        JScrollPane promptScroll = new JScrollPane(systemPrompt);
+        promptScroll.setMinimumSize(new Dimension(0, JBUI.scale(180)));
+        promptScroll.setPreferredSize(new Dimension(0, JBUI.scale(200)));
+        constraints.fill = GridBagConstraints.BOTH;
+        constraints.weighty = 1;
+        content.add(promptScroll, constraints);
+        constraints.fill = GridBagConstraints.HORIZONTAL;
+        constraints.weighty = 0;
+        constraints.gridy++;
+        restorePrompt = new JButton(bundle.getString("plugin.ai.restoreDefaultPrompt"));
+        JPanel promptActions = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        promptActions.add(restorePrompt);
+        content.add(promptActions, constraints);
+        return content;
+    }
+
+    private void updateAdvancedSettingsVisibility() {
+        if (advancedSettings == null) {
+            return;
+        }
+        advancedSettings.setVisible(showAdvancedSettings.isSelected());
+        panel.revalidate();
+        panel.repaint();
+    }
+
     private void updateOptionsVisibility() {
         if (panel == null) {
             return;
@@ -213,20 +289,23 @@ final class AiPreferencesConfigurable {
                 component.setVisible(enabled.isSelected());
             }
         }
+        if (enabled.isSelected()) {
+            updateAdvancedSettingsVisibility();
+        }
         panel.revalidate();
         panel.repaint();
     }
 
     private void validateConfiguration() throws ConfigurationException {
-        if (endpoint.getText().isBlank() || model.getText().isBlank()) {
-            throw new ConfigurationException(bundle().getString("plugin.ai.error.endpointAndModelRequired"));
+        if (apiUrl.getText().isBlank() || model.getText().isBlank()) {
+            throw new ConfigurationException(bundle().getString("plugin.ai.error.apiUrlAndModelRequired"));
+        }
+        String value = apiUrl.getText().trim().toLowerCase();
+        if (!value.startsWith("https://") && !value.startsWith("http://localhost") && !value.startsWith("http://127.0.0.1")) {
+            throw new ConfigurationException(bundle().getString("plugin.ai.error.httpsRequired"));
         }
         if (systemPrompt.getText().isBlank()) {
             throw new ConfigurationException(bundle().getString("plugin.ai.error.systemPromptRequired"));
-        }
-        String value = endpoint.getText().trim().toLowerCase();
-        if (!value.startsWith("https://") && !value.startsWith("http://localhost") && !value.startsWith("http://127.0.0.1")) {
-            throw new ConfigurationException(bundle().getString("plugin.ai.error.httpsRequired"));
         }
     }
 
@@ -234,7 +313,7 @@ final class AiPreferencesConfigurable {
         String key = Messages.showPasswordDialog(null, bundle().getString("plugin.ai.apiKeyHint"),
                 bundle().getString("plugin.ai.saveApiKeyTitle"), null, null);
         if (key != null && !key.isBlank()) {
-            credentialStore.saveApiKey(endpoint.getText().trim(), key.trim());
+            credentialStore.saveApiKey(apiUrl.getText().trim(), key.trim());
         }
         refreshCredentialStatus();
     }
@@ -243,16 +322,46 @@ final class AiPreferencesConfigurable {
         int result = Messages.showYesNoDialog(panel, bundle().getString("plugin.ai.clearApiKeyConfirmation"),
                 bundle().getString("plugin.ai.clearApiKeyTitle"), null);
         if (result == Messages.YES) {
-            credentialStore.clearApiKey(endpoint.getText().trim());
+            credentialStore.clearApiKey(apiUrl.getText().trim());
         }
         refreshCredentialStatus();
     }
 
     private void refreshCredentialStatus() {
         if (credentialStatus != null) {
-            boolean configured = credentialStore.hasCredential(endpoint == null ? state.getEndpoint() : endpoint.getText().trim());
+            boolean configured = credentialStore.hasCredential(apiUrl == null ? state.getApiUrl() : apiUrl.getText().trim());
             credentialStatus.setText(bundle().getString(configured ? "plugin.ai.apiKeyConfigured" : "plugin.ai.apiKeyNotConfigured"));
         }
+    }
+
+    private AiProviderType selectedProvider() {
+        Object selected = providerType == null ? state.getProviderType() : providerType.getSelectedItem();
+        return selected instanceof AiProviderType provider ? provider : AiProviderType.QWEN;
+    }
+
+
+
+    private Map<AiProviderType, String> draftPromptsWithCurrentEditor() {
+        Map<AiProviderType, String> result = normalizePrompts(draftSystemPrompts);
+        String current = systemPrompt.getText().trim();
+        if (current.isBlank() || current.equals(AiSystemPromptTemplates.forProvider(selectedProvider()))) {
+            result.remove(selectedProvider());
+        } else {
+            result.put(selectedProvider(), current);
+        }
+        return result;
+    }
+
+    private static Map<AiProviderType, String> normalizePrompts(Map<AiProviderType, String> prompts) {
+        Map<AiProviderType, String> result = new LinkedHashMap<>();
+        if (prompts != null) {
+            prompts.forEach((provider, prompt) -> {
+                if (provider != null && prompt != null && !prompt.isBlank()) {
+                    result.put(provider, prompt.trim());
+                }
+            });
+        }
+        return result;
     }
 
     private List<String> patternsFromEditor() {
@@ -262,11 +371,50 @@ final class AiPreferencesConfigurable {
                 .toList();
     }
 
+    private static void addAdvancedLabeled(JPanel panel, String label, JComponent component, GridBagConstraints constraints) {
+        JPanel row = new JPanel(new BorderLayout(8, 0));
+        row.add(new JLabel(label), BorderLayout.WEST);
+        row.add(component, BorderLayout.CENTER);
+        panel.add(row, constraints);
+    }
+
     private void addLabeled(String label, JComponent component, GridBagConstraints constraints) {
         constraints.gridy++;
         JPanel row = new JPanel(new BorderLayout(8, 0));
         row.add(new JLabel(label), BorderLayout.WEST);
         row.add(component, BorderLayout.CENTER);
         panel.add(row, constraints);
+    }
+
+    private record SimpleDocumentListener(Runnable action) implements DocumentListener {
+
+        @Override
+            public void insertUpdate(DocumentEvent event) {
+                action.run();
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent event) {
+                action.run();
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent event) {
+                action.run();
+            }
+        }
+
+    private static final class ProviderRenderer extends DefaultListCellRenderer {
+        @Override
+        public Component getListCellRendererComponent(JList<?> list, Object value, int index,
+                                                      boolean isSelected, boolean cellHasFocus) {
+            String key = switch (value instanceof AiProviderType provider ? provider : AiProviderType.CUSTOM) {
+                case QWEN -> "plugin.ai.provider.qwen";
+                case CHATGPT -> "plugin.ai.provider.chatgpt";
+                case DEEPSEEK -> "plugin.ai.provider.deepseek";
+                case CUSTOM -> "plugin.ai.provider.custom";
+            };
+            return super.getListCellRendererComponent(list, bundle().getString(key), index, isSelected, cellHasFocus);
+        }
     }
 }

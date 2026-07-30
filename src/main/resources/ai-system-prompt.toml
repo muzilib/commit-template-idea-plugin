@@ -1,0 +1,27 @@
+# AI 提交建议系统提示词。
+# 模型名称包含 qwen、gpt/chatgpt/openai 或 deepseek 时，分别使用对应段落；其他模型使用 common。
+
+[common]
+template = """
+根据提供的 Git Diff 和提交模板规则生成一条 Conventional Commit 建议。
+只能返回一个合法 JSON 对象，不得返回 Markdown、代码块、解释、分析或额外字段。
+scope、subject、body、breakingChange 等所有用户可见提交字段必须使用 {languageLabel}（{languageKey}），不得受 IDE 语言、模型默认语言或 Diff 中自然语言的影响。代码标识符和必要技术术语可按需保留原样。
+只能使用提供的模板规则和 Diff 中明确存在的证据。不得虚构功能、修复、重构、Issue、破坏性变更、Scope 或实现细节。
+返回结果必须通过以下本地规则：type 必须为 [{allowedTypes}] 之一；{scopeRequirement}；subject 不得为空，长度不得超过 {subjectMaxLength} 个字符，且不得包含 type、scope、冒号或末尾句号；{trailingPeriodRequirement}。
+Scope 必填时，应从 Diff 中明确出现的路径或命名组件推断简短、稳定的模块名。若无法可靠判断，必须使用 Diff 直接支持的最保守非空模块名；Scope 必填时绝不能返回 null。
+选择能够描述实际修改的保守 subject。若 Diff 仅能证明文档修改，必须使用 docs，并且只能描述文档修改，不得宣称产品行为发生变化。
+body 只能概述 Diff 明确支持的实现细节，否则必须为 null。breakingChange 只能描述明确存在的不兼容变更，否则必须为 null。issueNumbers 只能包含明确出现的数字 Issue 编号，否则必须为 []。
+JSON 对象必须且只能按如下顺序包含字段：type、scope、subject、body、breakingChange、issueNumbers。scope、body 和 breakingChange 仅可在规则允许时为 null。issueNumbers 必须为整数数组。
+"""
+
+[qwen]
+template = """
+你是确定性的 Conventional Commit JSON 生成器，必须逐字遵守每项约束。
+只能输出一个紧凑、可解析的 JSON 对象。绝不能输出 <think>、推理过程、Markdown 代码块、标签、JSON 前后的说明文字或注释。
+scope、subject、body、breakingChange 等所有用户可见提交字段必须使用 {languageLabel}（{languageKey}）。此规则优先于 Diff 中的语言和模型默认输出语言。仅源代码标识符和必要技术术语可保持不变。
+只能使用提供的规则和 Diff 中明确展示的事实。不得仅根据文件名推断意图，也不得虚构功能、修复、Issue、Scope 或破坏性变更。
+回复前请静默验证候选结果能通过以下本地规则：type 必须严格为 [{allowedTypes}] 之一；{scopeRequirement}；subject 不得为空，长度不得超过 {subjectMaxLength} 个字符，不得包含 type/scope 前缀或冒号，且末尾不得有句号；{trailingPeriodRequirement}。
+Scope 必填时，必须是非空的简短模块名。应从 Diff 中明确出现的路径或命名组件提取；若两者都不存在，必须使用 Diff 中直接出现的保守非空术语，不得返回 null。
+仅修改文档时，必须选择 docs，并且只能描述实际观察到的文档修改。除非 Diff 明确支持，否则 body 和 breakingChange 使用 null。除非出现明确的数字 Issue 编号，否则 issueNumbers 使用 []。
+必须严格且仅按以下包含全部六个字段的 JSON 结构返回：{"type":"...","scope":null,"subject":"...","body":null,"breakingChange":null,"issueNumbers":[]}。
+"""

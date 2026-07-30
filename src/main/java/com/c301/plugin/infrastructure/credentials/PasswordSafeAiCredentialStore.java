@@ -25,7 +25,25 @@ public final class PasswordSafeAiCredentialStore implements AiCredentialStore {
     @Override
     public String readApiKey(String endpoint) {
         Credentials credentials = PasswordSafe.getInstance().get(attributes(endpoint));
-        return credentials == null ? null : credentials.getPasswordAsString();
+        if (credentials != null && credentials.getPasswordAsString() != null) {
+            return credentials.getPasswordAsString();
+        }
+        // 兼容旧版以服务地址（不含 /chat/completions）索引保存的 API Key。
+        String legacyEndpoint = legacyEndpoint(endpoint);
+        if (legacyEndpoint == null) {
+            return null;
+        }
+        Credentials legacyCredentials = PasswordSafe.getInstance().get(attributes(legacyEndpoint));
+        return legacyCredentials == null ? null : legacyCredentials.getPasswordAsString();
+    }
+
+    private static String legacyEndpoint(String apiUrl) {
+        if (apiUrl == null) {
+            return null;
+        }
+        String value = apiUrl.trim();
+        String suffix = "/chat/completions";
+        return value.endsWith(suffix) ? value.substring(0, value.length() - suffix.length()) : null;
     }
 
     @Override

@@ -8,7 +8,7 @@ import com.c301.plugin.model.CommitTypeDomain;
 import com.c301.plugin.model.GitCommitDomain;
 import com.c301.plugin.model.LanguageDomain;
 import com.c301.plugin.model.WindowsConfigDomain;
-import com.c301.plugin.platform.vcs.AiIncludedChangesCollector;
+
 import com.c301.plugin.utils.CommUtil;
 import com.c301.plugin.utils.StrUtil;
 import com.intellij.openapi.actionSystem.AnActionEvent;
@@ -51,7 +51,7 @@ public class CommitTemplateDialog extends JDialog {
     private final StoreCommitTemplateState store = StoreCommitTemplateState.getInstance();
     private final CommitMessageI commitMessageI;
     private final Project project;
-    private final AnActionEvent actionEvent;
+
     private final EffectiveCommitTemplateSettings effectiveSettings;
     /**
      * 保存本地化后的纯文本标签，与依赖宽度的 HTML 渲染结果分离。
@@ -94,6 +94,7 @@ public class CommitTemplateDialog extends JDialog {
     private JTextArea previewCommitMessage;
     private JPanel commitTypeListPanel;
     private JScrollPane commitTypeListScrollPane;
+    private JLabel aiSettingsLink;
 
     /**
      * 创建弹窗信息
@@ -103,10 +104,11 @@ public class CommitTemplateDialog extends JDialog {
         setModal(true);
         this.commitMessageI = commitMessageI;
         this.project = project;
-        this.actionEvent = actionEvent;
+
         this.effectiveSettings = resolveEffectiveSettings(project);
         setContentPane(createDialogContent());
         configureResponsiveCommitTypeList();
+        installAiSettingsLink();
         setResizable(true);
         getRootPane().setDefaultButton(buttonOK);
         labelCommitTypeNoData.setVisible(false);
@@ -279,6 +281,13 @@ public class CommitTemplateDialog extends JDialog {
     }
 
     /**
+     * 根据最终生效的提交规则标记必填项，不修改 GUI Designer 生成的控件结构。
+     */
+    private static void setRequiredLabel(JLabel label, String text, boolean required) {
+        label.setText(required ? "<html>" + text + " <span style='color:#D32F2F'>*</span></html>" : text);
+    }
+
+    /**
      * 处理语言显示事件
      *
      * @param language 语言对象
@@ -293,8 +302,10 @@ public class CommitTemplateDialog extends JDialog {
 
         //标题信息
         labelLanguage.setText(resourceBundle.getString("plugin.label.language"));
-        labelTypeOfChange.setText(resourceBundle.getString("plugin.label.typeOfChange"));
-        labelScopeChang.setText(resourceBundle.getString("plugin.label.scopeOfThisChange"));
+        setRequiredLabel(labelTypeOfChange, resourceBundle.getString("plugin.label.typeOfChange"),
+                effectiveSettings.commitMessageRules().requireCommitType());
+        setRequiredLabel(labelScopeChang, resourceBundle.getString("plugin.label.scopeOfThisChange"),
+                effectiveSettings.commitMessageRules().requireScope());
         labelShortDescription.setText(resourceBundle.getString("plugin.label.shortDescription"));
         labelLongDescription.setText(resourceBundle.getString("plugin.label.longDescription"));
         labelBreakingChange.setText(resourceBundle.getString("plugin.label.breakingChanges"));
@@ -474,14 +485,6 @@ public class CommitTemplateDialog extends JDialog {
         dialogContent.add(contentPane, BorderLayout.CENTER);
 
         var bottomPanel = new JPanel(new BorderLayout(0, 6));
-        if (AiPreferencesState.getInstance().isEnabled() && actionEvent != null) {
-            JButton generateAiSuggestion = new JButton(CommUtil.i18nResourceBundle(null)
-                    .getString("plugin.ai.generateAndApplyToForm"));
-            generateAiSuggestion.addActionListener(event -> openAiGenerationDialog());
-            JPanel aiActions = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
-            aiActions.add(generateAiSuggestion);
-            bottomPanel.add(aiActions, BorderLayout.NORTH);
-        }
 
         var previewPanel = new JPanel(new BorderLayout(0, 6));
         previewPanel.setBorder(BorderFactory.createCompoundBorder(
@@ -510,31 +513,37 @@ public class CommitTemplateDialog extends JDialog {
         return dialogContent;
     }
 
-    private void openAiGenerationDialog() {
-        var changes = AiIncludedChangesCollector.collectMetadata(actionEvent, AiPreferencesState.getInstance());
-        new AiGenerationDialog(project, changes, this::applyAiSuggestionToForm).setVisible(true);
+    /**
+     * 通过“跳过 CI?”同行的链接打开提交模板设置；该入口不读取变更或触发 AI 请求。
+     */
+    private void openCommitTemplateSettings() {
+        ShowSettingsUtil.getInstance().showSettingsDialog(project, UnifiedCommitTemplateSettingsConfigurable.class);
     }
 
     /**
-     * 用户在 AI 对话框中确认后才回填表单，且不触发提交、暂存或任何 Git 操作。
+     * GUI Designer 不支持同一行的超链接控件，在运行时为“跳过 CI?”增加设置快捷入口。
      */
-    private void applyAiSuggestionToForm(GitCommitDomain suggestion) {
-        if (suggestion.getCommitType() != null) {
-            var buttons = typeChangeGroup.getElements();
-            while (buttons.hasMoreElements()) {
-                var button = buttons.nextElement();
-                if (suggestion.getCommitType().getType().equalsIgnoreCase(button.getActionCommand())) {
-                    button.setSelected(true);
-                    break;
-                }
-            }
+    private void installAiSettingsLink() {
+        if (!(checkBoxSkipCI.getParent() instanceof JPanel parent)
+                || !(parent.getLayout() instanceof GridLayoutManager)) {
+            return;
         }
-        optionScopeChange.setSelectedItem(suggestion.getChangeScope());
-        inputShortDescription.setText(suggestion.getShortDescription());
-        inputLongDescription.setText(suggestion.getLongDescription() == null ? "" : suggestion.getLongDescription());
-        inputBreakingChanges.setText(suggestion.getBreakingChanges() == null ? "" : suggestion.getBreakingChanges());
-        inputClosedIssues.setText(suggestion.getClosedIssuesNumbers());
-        refreshPreview();
+        parent.remove(checkBoxSkipCI);
+        JPanel row = new JPanel(new BorderLayout());
+        row.add(checkBoxSkipCI, BorderLayout.WEST);
+        aiSettingsLink = new JLabel("<html><a href='settings'>"
+                + CommUtil.i18nResourceBundle(null).getString("plugin.commitTemplate.openSettings") + "</a></html>");
+        aiSettingsLink.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        aiSettingsLink.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent event) {
+                openCommitTemplateSettings();
+            }
+        });
+        row.add(aiSettingsLink, BorderLayout.EAST);
+        parent.add(row, new GridConstraints(8, 1, 1, 2, GridConstraints.ANCHOR_WEST,
+                GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
+                GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
     }
 
     private void installPreviewListeners() {

@@ -16,6 +16,12 @@ public final class AiPromptRenderer {
         String types = request.allowedCommitTypes().stream()
                 .map(CommitTypeDomain::getType)
                 .collect(Collectors.joining(", "));
+        String scopeRequirement = request.rules().requireScope()
+                ? "scope is REQUIRED and must be a non-empty string"
+                : "scope is optional and may be null only when it cannot be reliably inferred";
+        String trailingPeriodRequirement = request.rules().forbidSubjectTrailingPeriod()
+                ? "a trailing period is forbidden"
+                : "a trailing period is allowed by the local rule";
         String template = request.systemPromptTemplate();
         if (template == null || template.isBlank()) {
             throw new IllegalArgumentException("未配置 AI 系统提示词。");
@@ -24,11 +30,13 @@ public final class AiPromptRenderer {
                 .replace("{languageLabel}", request.contentLanguage().getLabel())
                 .replace("{languageKey}", request.contentLanguage().getKey())
                 .replace("{allowedTypes}", types)
-                .replace("{subjectMaxLength}", String.valueOf(request.rules().subjectMaxLength()));
+                .replace("{subjectMaxLength}", String.valueOf(request.rules().subjectMaxLength()))
+                .replace("{scopeRequirement}", scopeRequirement)
+                .replace("{trailingPeriodRequirement}", trailingPeriodRequirement);
     }
 
     public static String userPrompt(AiGenerationRequest request) {
-        String title = request.transferMode().name().equals("DIFF") ? "已审核的变更 Diff：" : "已审核的变更元数据：";
-        return title + "\n" + request.sanitizedChangeContent();
+        return "当前提交模板规则：\n" + request.commitTemplateContext()
+                + "\n\n待提交的已筛选 Diff：\n" + request.sanitizedDiff();
     }
 }

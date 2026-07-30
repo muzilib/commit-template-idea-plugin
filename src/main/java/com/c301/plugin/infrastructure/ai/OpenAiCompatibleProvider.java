@@ -1,6 +1,7 @@
 package com.c301.plugin.infrastructure.ai;
 
 import com.c301.plugin.domain.ai.*;
+import com.c301.plugin.utils.CommUtil;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.intellij.openapi.progress.ProgressIndicator;
@@ -14,10 +15,7 @@ import org.apache.http.impl.client.HttpClients;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.URI;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
-import java.util.Map;
 
 /**
  * OpenAI Chat Completions 兼容协议的 SSE 实现，可对接兼容该标准的模型服务。
@@ -26,60 +24,47 @@ import java.util.Map;
 public final class OpenAiCompatibleProvider implements AiProvider {
     private static final ObjectMapper JSON = new ObjectMapper();
 
-    private static String resolveUrl(String endpoint, String apiPath) {
-        String base = endpoint == null ? "" : endpoint.trim();
-        String path = apiPath == null || apiPath.isBlank() ? "/chat/completions" : apiPath.trim();
-        if (!base.endsWith("/") && !path.startsWith("/")) {
-            return URI.create(base + "/" + path).toString();
-        }
-        if (base.endsWith("/") && path.startsWith("/")) {
-            return URI.create(base + path.substring(1)).toString();
-        }
-        return URI.create(base + path).toString();
-    }
+
 
     @Override
     public void generate(AiGenerationRequest request, AiCredentials credentials,
                          ProgressIndicator indicator, AiStreamingListener listener) {
         if (credentials == null || credentials.apiKey() == null || credentials.apiKey().isBlank()) {
-            listener.onError(new AiGenerationError(AiGenerationError.Kind.CONFIGURATION, "未配置 API Key。"));
+            listener.onError(new AiGenerationError(AiGenerationError.Kind.CONFIGURATION, text("plugin.ai.error.apiKeyMissing")));
             return;
         }
         try (CloseableHttpClient client = HttpClients.custom()
                 .disableAutomaticRetries()
                 .build()) {
-            HttpPost post = new HttpPost(resolveUrl(request.endpoint(), request.apiPath()));
+            HttpPost post = new HttpPost(OpenAiCompatibleRequestRenderer.resolveUrl(request));
             post.setHeader("Authorization", "Bearer " + credentials.apiKey());
             post.setHeader("Accept", "text/event-stream");
             post.setHeader("Content-Type", "application/json");
-            post.setEntity(new StringEntity(JSON.writeValueAsString(Map.of(
-                    "model", request.model(),
-                    "stream", true,
-                    "temperature", request.temperature(),
-                    "max_tokens", request.maxTokens(),
-                    "messages", List.of(
-                            Map.of("role", "system", "content", AiPromptRenderer.systemPrompt(request)),
-                            Map.of("role", "user", "content", AiPromptRenderer.userPrompt(request))
-                    )
-            )), ContentType.APPLICATION_JSON));
+            post.setEntity(new StringEntity(OpenAiCompatibleRequestRenderer.requestBody(request),
+                    ContentType.APPLICATION_JSON));
 
             try (CloseableHttpResponse response = client.execute(post)) {
                 int status = response.getStatusLine().getStatusCode();
                 if (status < 200 || status >= 300) {
                     listener.onError(new AiGenerationError(AiGenerationError.Kind.PROVIDER,
-                            "AI 服务请求失败（HTTP " + status + "）。请检查服务地址、模型和密钥。"));
+                            text("plugin.ai.error.provider").replace("{status}", String.valueOf(status))));
                     return;
                 }
                 if (response.getEntity() == null) {
-                    listener.onError(new AiGenerationError(AiGenerationError.Kind.RESPONSE, "AI 服务未返回内容。"));
+                    listener.onError(new AiGenerationError(AiGenerationError.Kind.RESPONSE,
+                            text("plugin.ai.error.emptyResponse")));
                     return;
                 }
                 stream(response, indicator, listener);
             }
         } catch (Exception exception) {
             listener.onError(new AiGenerationError(AiGenerationError.Kind.NETWORK,
-                    "无法连接 AI 服务。请检查网络和服务配置。"));
+                    text("plugin.ai.error.network")));
         }
+    }
+
+    private static String text(String key) {
+        return CommUtil.i18nResourceBundle(null).getString(key);
     }
 
     private void stream(CloseableHttpResponse response, ProgressIndicator indicator,
@@ -89,7 +74,8 @@ public final class OpenAiCompatibleProvider implements AiProvider {
             String line;
             while ((line = reader.readLine()) != null) {
                 if (indicator.isCanceled()) {
-                    listener.onError(new AiGenerationError(AiGenerationError.Kind.CANCELED, "已取消生成。"));
+                    listener.onError(new AiGenerationError(AiGenerationError.Kind.CANCELED,
+                            text("plugin.ai.error.canceled")));
                     return;
                 }
                 if (!line.startsWith("data:")) {

@@ -10,7 +10,6 @@ import com.c301.plugin.ui.render.CustomTableCellRenderer;
 import com.c301.plugin.ui.render.JBCommitTypeTable;
 import com.c301.plugin.ui.render.LanguageListCellRendererRender;
 import com.c301.plugin.utils.CommUtil;
-import com.intellij.notification.NotificationGroupManager;
 import com.intellij.notification.NotificationType;
 import com.intellij.ui.DoubleClickListener;
 import com.intellij.ui.ToolbarDecorator;
@@ -182,7 +181,7 @@ public class CommitTemplateSettingUI {
         icon.setImage(image);
         imageIcon.setIcon(icon);
 
-        //设置版本信息。version.properties only exists in packaged builds, so development runs use a clear fallback.
+        // 正式构建优先读取生成的 version.properties；直接运行 IDE Sandbox 时使用开发默认值。
         var platformVersion = formatBuildProperty("platformVersion", "platformType");
         var buildVersion = formatBuildProperty("pluginVersion", "channelCode");
         var buildTime = buildPropertyOrFallback("builderTime");
@@ -206,11 +205,11 @@ public class CommitTemplateSettingUI {
                     .replace("{platformVersion}", platformVersion);
             try {
                 Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(information), null);
-                NotificationGroupManager.getInstance().getNotificationGroup("commit-template-notify")
-                        .createNotification("Plugin information copied to the clipboard.", NotificationType.INFORMATION).notify(null);
+                PluginNotifications.notify(null, CommUtil.i18nResourceBundle(null).getString("plugin.about.copySuccess"),
+                        NotificationType.INFORMATION);
             } catch (IllegalStateException | HeadlessException ex) {
-                NotificationGroupManager.getInstance().getNotificationGroup("commit-template-notify")
-                        .createNotification("Unable to access the system clipboard.", NotificationType.WARNING).notify(null);
+                PluginNotifications.notify(null, CommUtil.i18nResourceBundle(null).getString("plugin.about.copyFailure"),
+                        NotificationType.WARNING);
             }
         });
 
@@ -336,9 +335,23 @@ public class CommitTemplateSettingUI {
         labelLocationPreview.setText(textPreview);
     }
 
+    /**
+     * IDE Sandbox 不会执行 Gradle 的资源生成任务，不能因缺少构建资源而让关于页全部显示不可用。
+     */
     private String buildPropertyOrFallback(String key) {
         String value = CommUtil.handleReadProperties(key);
-        return value == null || value.isBlank() || "-".equals(value) ? "Not available" : value;
+        if (value != null && !value.isBlank() && !"-".equals(value)) {
+            return value;
+        }
+        return switch (key) {
+            case "pluginVersion" -> "1.0.8-B3";
+            case "javaVersion" -> "17";
+            case "platformVersion" -> "2023.3";
+            case "platformType" -> "IC";
+            case "channelCode" -> "Development";
+            case "builderTime" -> "IDE Sandbox";
+            default -> "Not available";
+        };
     }
 
     private String formatBuildProperty(String primaryKey, String detailKey) {
