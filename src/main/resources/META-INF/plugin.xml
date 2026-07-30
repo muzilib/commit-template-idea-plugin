@@ -4,7 +4,7 @@
     <version>1.0.9</version>
     <vendor email="muzi@muzilib.com" url="https://github.com/muzilib">Chenbing</vendor>
 
-    <description><![CDATA[Git Commit Template
+    <description><![CDATA[Git Commit Template helps IntelliJ IDEA users create, format, and validate structured Git commit messages directly in the Commit tool window.
         <p><b>中文介绍</b></p>
         <p>Git Commit Template 是一个用于创建、格式化和校验 Git 提交信息的 IntelliJ IDEA 插件，帮助你更方便地遵循 Conventional Commits 等提交规范。</p>
         <p>默认提交信息模板：</p>
