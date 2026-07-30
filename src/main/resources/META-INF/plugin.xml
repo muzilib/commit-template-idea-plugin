@@ -5,33 +5,79 @@
     <vendor email="muzi@muzilib.com" url="https://github.com/muzilib">Chenbing</vendor>
 
     <description>
-        <![CDATA[
-        <p>Git Commit Template helps IntelliJ IDEA users create, format, and validate structured Git commit messages directly in the Commit tool window.</p>
-        <p>The default message format follows a Conventional Commits-style template:</p>
-        <pre>
-        &lt;type&gt;(&lt;scope&gt;): &lt;subject&gt;
-        &lt;BLANK LINE&gt;
-        &lt;body&gt;
-        &lt;BLANK LINE&gt;
-        &lt;footer&gt;
-        </pre>
-        <p><b>Key features:</b></p>
-        <ul>
-            <li>Configurable commit templates, commit types, scope requirements, and local validation rules.</li>
-            <li>Global defaults with per-project template overrides.</li>
-            <li>AI commit-message suggestions generated only from the currently selected Included Changes.</li>
-            <li>Support for Qwen, ChatGPT/OpenAI, DeepSeek, and custom OpenAI-Compatible services.</li>
-            <li>Request-review mode and direct streaming mode, followed by strict local JSON and commit-rule validation.</li>
-            <li>Privacy filters for binary and sensitive files, user-defined exclusion patterns, and explicit consent before the first Diff transfer.</li>
-            <li>API keys stored in IntelliJ Password Safe; AI never commits, pushes, stages files, or changes source code.</li>
-            <li>Optional Qwen sampling, thinking, search, streaming-usage, and data-inspection settings.</li>
-        </ul>
-        <p>For installation, configuration, privacy, troubleshooting, and developer guidance, see the <a href="https://github.com/muzilib/commit-template-idea-plugin/blob/main/docs/Plugin-Documentation.md">English documentation</a> or <a href="https://github.com/muzilib/commit-template-idea-plugin/blob/main/docs/%E6%8F%92%E4%BB%B6%E8%AF%B4%E6%98%8E%E6%96%87%E6%A1%A3.md">Chinese documentation</a>.</p>
-        <p>This project continues maintenance and development of the original plugin.</p>
-        <a href="https://github.com/muzilib/commit-template-idea-plugin">Project repository</a><br/>
-        <a href="https://github.com/MobileTribe/commit-template-idea-plugin">Original project</a><br/>
-        <a href="https://github.com/muzilib/commit-template-idea-plugin/issues">Submit an issue</a><br/>
-        ]]>
+        ## 中文介绍
+
+        使用以下模板创建规范的 Git 提交信息：
+
+        ```text
+        <type>(<scope>): <subject>
+
+        <body>
+
+        <footer>
+        ```
+
+        这是一个用于创建、格式化和校验 Git 提交信息的 IntelliJ IDEA 插件，帮助你更方便地遵循 Conventional Commits 等提交规范。
+
+        我很喜欢原始项目的设计，但原项目已经停止维护，因此我 Fork 了该项目并持续进行功能完善与维护，欢迎使用和反馈。
+
+        ### 主要功能
+
+        - **结构化提交信息**：通过提交类型、作用域、主题、正文和页脚，快速生成规范的提交信息。
+        - **提交规则校验**：可配置提交类型、长度、必填项等规则，减少不符合团队规范的提交。
+        - **Gitmoji 支持**：可选择在提交信息中加入 Gitmoji，让提交记录更直观。
+        - **AI 提交信息生成**：基于当前 Commit 窗口中已勾选的改动，生成符合提交规范的提交信息。
+        - 支持 **Qwen、ChatGPT/OpenAI、DeepSeek** 及 **自定义 OpenAI-Compatible** 服务。
+        - 支持请求发送前预览，也支持直接流式生成。
+        - 仅处理当前已包含的改动，并提供敏感文件过滤、排除规则和数据传输确认，尽量保护代码与隐私。
+        - **更灵活的多语言配置**：
+        - 可分别设置 **插件窗口显示语言**；
+        - 可分别设置 **AI 生成的提交信息语言**；
+        - 让界面语言和提交信息语言不再必须保持一致，适应国际化团队与不同项目的协作需求。
+        - **全局与项目级配置**：支持为不同项目设置独立的提交模板和规则。
+
+        [当前项目地址](https://github.com/muzilib/commit-template-idea-plugin.git)
+        [原始项目地址](https://github.com/MobileTribe/commit-template-idea-plugin.git)
+        [常见问题（FAQ）](https://plugins.jetbrains.com/plugin/23641-git-commit-template/faq)
+        [提交 Issue](https://github.com/muzilib/commit-template-idea-plugin/issues)
+
+        ---
+
+        ## English
+
+        Create structured Git commit messages with the following template:
+
+        ```text
+        <type>(<scope>): <subject>
+
+        <body>
+
+        <footer>
+        ```
+
+        This IntelliJ IDEA plugin helps you create, format, and validate Git commit messages, making it easier to follow conventions such as Conventional Commits.
+
+        I really liked the original project, but it is no longer maintained. Therefore, I forked it and continue to improve and maintain it. Feedback and contributions are welcome.
+
+        ### Key Features
+
+        - **Structured commit messages**: Quickly create consistent messages using a type, scope, subject, body, and footer.
+        - **Commit rule validation**: Configure commit types, length limits, required fields, and other rules to keep commits aligned with your team's conventions.
+        - **Gitmoji support**: Add Gitmoji to commit messages for clearer and more recognizable commit history.
+        - **AI-powered commit suggestions**: Generate convention-compliant commit messages from the changes currently included in the Commit tool window.
+        - Supports **Qwen, ChatGPT/OpenAI, DeepSeek**, and **custom OpenAI-compatible** services.
+        - Supports both request review before sending and direct streaming generation.
+        - Processes only the currently included changes, with sensitive-file filtering, custom exclusion rules, and data-transfer consent to help protect your code and privacy.
+        - **More flexible multilingual configuration**:
+        - Configure the **plugin UI language** independently.
+        - Configure the **language used for AI-generated commit messages** independently.
+        - Use different languages for the interface and commit messages, which is useful for international teams and multi-language projects.
+        - **Global and project-level settings**: Configure different commit templates and rules for individual projects.
+
+        [Current project](https://github.com/muzilib/commit-template-idea-plugin.git)
+        [Original project](https://github.com/MobileTribe/commit-template-idea-plugin.git)
+        [FAQ](https://plugins.jetbrains.com/plugin/23641-git-commit-template/faq)
+        [Submit an issue](https://github.com/muzilib/commit-template-idea-plugin/issues)
     </description>
 
     <change-notes>
