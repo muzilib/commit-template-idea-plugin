@@ -1,12 +1,13 @@
 <idea-plugin>
     <id>commit-template-plugin</id>
     <name>Git Commit Template</name>
-    <version>1.0.8-B3</version>
+    <version>1.0.9</version>
     <vendor email="muzi@muzilib.com" url="https://github.com/muzilib">Chenbing</vendor>
 
     <description>
         <![CDATA[
-        <p>Create a commit message with the following template:</p>
+        <p>Git Commit Template helps IntelliJ IDEA users create, format, and validate structured Git commit messages directly in the Commit tool window.</p>
+        <p>The default message format follows a Conventional Commits-style template:</p>
         <pre>
         &lt;type&gt;(&lt;scope&gt;): &lt;subject&gt;
         &lt;BLANK LINE&gt;
@@ -14,17 +15,34 @@
         &lt;BLANK LINE&gt;
         &lt;footer&gt;
         </pre>
-
-        <p>I really like using this submission template plug-in, but the original project has stopped being maintained, so I cloned it and made modifications. Welcome to use it!<p/>
-        <a href="https://github.com/muzilib/commit-template-idea-plugin.git">Current project link</a><br/>
-        <a href="https://github.com/MobileTribe/commit-template-idea-plugin.git">Original project link</a><br/>
-        <a href="https://plugins.jetbrains.com/plugin/23641-git-commit-template/faq">FAQ Page</a><br/>
-        <a href="https://github.com/muzilib/commit-template-idea-plugin/issues">Submit Issue</a><br/>
+        <p><b>Key features:</b></p>
+        <ul>
+            <li>Configurable commit templates, commit types, scope requirements, and local validation rules.</li>
+            <li>Global defaults with per-project template overrides.</li>
+            <li>AI commit-message suggestions generated only from the currently selected Included Changes.</li>
+            <li>Support for Qwen, ChatGPT/OpenAI, DeepSeek, and custom OpenAI-Compatible services.</li>
+            <li>Request-review mode and direct streaming mode, followed by strict local JSON and commit-rule validation.</li>
+            <li>Privacy filters for binary and sensitive files, user-defined exclusion patterns, and explicit consent before the first Diff transfer.</li>
+            <li>API keys stored in IntelliJ Password Safe; AI never commits, pushes, stages files, or changes source code.</li>
+            <li>Optional Qwen sampling, thinking, search, streaming-usage, and data-inspection settings.</li>
+        </ul>
+        <p>For installation, configuration, privacy, troubleshooting, and developer guidance, see the <a href="https://github.com/muzilib/commit-template-idea-plugin/blob/main/docs/Plugin-Documentation.md">English documentation</a> or <a href="https://github.com/muzilib/commit-template-idea-plugin/blob/main/docs/%E6%8F%92%E4%BB%B6%E8%AF%B4%E6%98%8E%E6%96%87%E6%A1%A3.md">Chinese documentation</a>.</p>
+        <p>This project continues maintenance and development of the original plugin.</p>
+        <a href="https://github.com/muzilib/commit-template-idea-plugin">Project repository</a><br/>
+        <a href="https://github.com/MobileTribe/commit-template-idea-plugin">Original project</a><br/>
+        <a href="https://github.com/muzilib/commit-template-idea-plugin/issues">Submit an issue</a><br/>
         ]]>
     </description>
 
     <change-notes>
         <![CDATA[
+        <p>
+            <h4>Version 1.0.9</h4>
+            <p>1. Added AI-powered commit-message suggestions with request review, direct streaming drafts, and local output validation.</p>
+            <p>2. Added Qwen, ChatGPT/OpenAI, DeepSeek, and custom OpenAI-Compatible provider configuration, with API keys secured in Password Safe.</p>
+            <p>3. Added Included Changes Diff filtering, data-transfer consent, sensitive-file protection, and Qwen-specific generation options.</p>
+            <p>4. Added Chinese and English project documentation with user and developer guidance.</p>
+        </p>
         <p>
             <h4>V260102-0123</h4>
             <p>1. Fixed UI anomalies caused by coroutine context conflicts.
