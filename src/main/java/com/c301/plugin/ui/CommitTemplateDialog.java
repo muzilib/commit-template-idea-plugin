@@ -148,6 +148,13 @@ public class CommitTemplateDialog extends JDialog {
     }
 
     /**
+     * 根据最终生效的提交规则标记必填项，不修改 GUI Designer 生成的控件结构。
+     */
+    private static void setRequiredLabel(JLabel label, String text, boolean required) {
+        label.setText(required ? "<html>" + text + " <span style='color:#D32F2F'>*</span></html>" : text);
+    }
+
+    /**
      * 处理确定事件
      */
     private void handleOKEvent() {
@@ -278,13 +285,6 @@ public class CommitTemplateDialog extends JDialog {
             }
         }
         return false;
-    }
-
-    /**
-     * 根据最终生效的提交规则标记必填项，不修改 GUI Designer 生成的控件结构。
-     */
-    private static void setRequiredLabel(JLabel label, String text, boolean required) {
-        label.setText(required ? "<html>" + text + " <span style='color:#D32F2F'>*</span></html>" : text);
     }
 
     /**

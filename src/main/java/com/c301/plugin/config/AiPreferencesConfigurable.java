@@ -59,6 +59,25 @@ final class AiPreferencesConfigurable {
         return constraints;
     }
 
+    private static Map<AiProviderType, String> normalizePrompts(Map<AiProviderType, String> prompts) {
+        Map<AiProviderType, String> result = new LinkedHashMap<>();
+        if (prompts != null) {
+            prompts.forEach((provider, prompt) -> {
+                if (provider != null && prompt != null && !prompt.isBlank()) {
+                    result.put(provider, prompt.trim());
+                }
+            });
+        }
+        return result;
+    }
+
+    private static void addAdvancedLabeled(JPanel panel, String label, JComponent component, GridBagConstraints constraints) {
+        JPanel row = new JPanel(new BorderLayout(8, 0));
+        row.add(new JLabel(label), BorderLayout.WEST);
+        row.add(component, BorderLayout.CENTER);
+        panel.add(row, constraints);
+    }
+
     JComponent createComponent() {
         if (panel == null) {
             panel = new JPanel(new GridBagLayout());
@@ -339,8 +358,6 @@ final class AiPreferencesConfigurable {
         return selected instanceof AiProviderType provider ? provider : AiProviderType.QWEN;
     }
 
-
-
     private Map<AiProviderType, String> draftPromptsWithCurrentEditor() {
         Map<AiProviderType, String> result = normalizePrompts(draftSystemPrompts);
         String current = systemPrompt.getText().trim();
@@ -352,30 +369,11 @@ final class AiPreferencesConfigurable {
         return result;
     }
 
-    private static Map<AiProviderType, String> normalizePrompts(Map<AiProviderType, String> prompts) {
-        Map<AiProviderType, String> result = new LinkedHashMap<>();
-        if (prompts != null) {
-            prompts.forEach((provider, prompt) -> {
-                if (provider != null && prompt != null && !prompt.isBlank()) {
-                    result.put(provider, prompt.trim());
-                }
-            });
-        }
-        return result;
-    }
-
     private List<String> patternsFromEditor() {
         return Arrays.stream(excludePatterns.getText().split("\\R"))
                 .map(String::trim)
                 .filter(value -> !value.isEmpty())
                 .toList();
-    }
-
-    private static void addAdvancedLabeled(JPanel panel, String label, JComponent component, GridBagConstraints constraints) {
-        JPanel row = new JPanel(new BorderLayout(8, 0));
-        row.add(new JLabel(label), BorderLayout.WEST);
-        row.add(component, BorderLayout.CENTER);
-        panel.add(row, constraints);
     }
 
     private void addLabeled(String label, JComponent component, GridBagConstraints constraints) {
@@ -389,20 +387,20 @@ final class AiPreferencesConfigurable {
     private record SimpleDocumentListener(Runnable action) implements DocumentListener {
 
         @Override
-            public void insertUpdate(DocumentEvent event) {
-                action.run();
-            }
-
-            @Override
-            public void removeUpdate(DocumentEvent event) {
-                action.run();
-            }
-
-            @Override
-            public void changedUpdate(DocumentEvent event) {
-                action.run();
-            }
+        public void insertUpdate(DocumentEvent event) {
+            action.run();
         }
+
+        @Override
+        public void removeUpdate(DocumentEvent event) {
+            action.run();
+        }
+
+        @Override
+        public void changedUpdate(DocumentEvent event) {
+            action.run();
+        }
+    }
 
     private static final class ProviderRenderer extends DefaultListCellRenderer {
         @Override

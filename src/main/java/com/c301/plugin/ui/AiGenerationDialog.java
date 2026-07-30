@@ -91,6 +91,16 @@ public final class AiGenerationDialog extends JDialog {
         PluginNotifications.notify(project, message, type);
     }
 
+    private static void appendLines(StringBuilder value, java.util.List<String> entries) {
+        for (String entry : entries) {
+            value.append("- ").append(entry).append("\n");
+        }
+    }
+
+    private static String text(String key) {
+        return CommUtil.i18nResourceBundle(null).getString(key);
+    }
+
     private JComponent createContent() {
         JPanel content = new JPanel(new BorderLayout(0, 8));
         content.setBorder(JBUI.Borders.empty(12));
@@ -198,12 +208,6 @@ public final class AiGenerationDialog extends JDialog {
         return value.toString();
     }
 
-    private static void appendLines(StringBuilder value, java.util.List<String> entries) {
-        for (String entry : entries) {
-            value.append("- ").append(entry).append("\n");
-        }
-    }
-
     private void generate() {
         if (request == null) {
             return;
@@ -253,10 +257,6 @@ public final class AiGenerationDialog extends JDialog {
     private java.util.List<com.c301.plugin.model.CommitTypeDomain> allowedTypes() {
         return effectiveSettings.customEnable() ? effectiveSettings.customCommitTypeList()
                 : CommUtil.getDefaultCommitTypeList(effectiveSettings.language().getKey());
-    }
-
-    private static String text(String key) {
-        return CommUtil.i18nResourceBundle(null).getString(key);
     }
 
     private final class Listener implements AiStreamingListener {

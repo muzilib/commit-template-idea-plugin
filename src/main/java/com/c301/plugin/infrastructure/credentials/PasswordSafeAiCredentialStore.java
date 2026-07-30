@@ -11,6 +11,15 @@ import com.intellij.ide.passwordSafe.PasswordSafe;
 public final class PasswordSafeAiCredentialStore implements AiCredentialStore {
     private static final String SERVICE_NAME = "commit-template-ai";
 
+    private static String legacyEndpoint(String apiUrl) {
+        if (apiUrl == null) {
+            return null;
+        }
+        String value = apiUrl.trim();
+        String suffix = "/chat/completions";
+        return value.endsWith(suffix) ? value.substring(0, value.length() - suffix.length()) : null;
+    }
+
     private CredentialAttributes attributes(String endpoint) {
         String accountName = endpoint == null ? "default" : endpoint.trim().toLowerCase();
         return new CredentialAttributes(CredentialAttributesKt.generateServiceName(SERVICE_NAME, accountName));
@@ -35,15 +44,6 @@ public final class PasswordSafeAiCredentialStore implements AiCredentialStore {
         }
         Credentials legacyCredentials = PasswordSafe.getInstance().get(attributes(legacyEndpoint));
         return legacyCredentials == null ? null : legacyCredentials.getPasswordAsString();
-    }
-
-    private static String legacyEndpoint(String apiUrl) {
-        if (apiUrl == null) {
-            return null;
-        }
-        String value = apiUrl.trim();
-        String suffix = "/chat/completions";
-        return value.endsWith(suffix) ? value.substring(0, value.length() - suffix.length()) : null;
     }
 
     @Override

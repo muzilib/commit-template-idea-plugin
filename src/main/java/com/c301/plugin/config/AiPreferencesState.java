@@ -31,7 +31,9 @@ public class AiPreferencesState implements PersistentStateComponent<AiPreference
     private AiProviderType providerType = AiProviderType.QWEN;
     private String apiUrl = AiProviderType.QWEN.apiUrl();
     private String model = "qwen3.7-max";
-    /** 兼容旧版配置，升级后会将 endpoint 与 apiPath 合并为 apiUrl。 */
+    /**
+     * 兼容旧版配置，升级后会将 endpoint 与 apiPath 合并为 apiUrl。
+     */
     @Deprecated
     private String endpoint;
     @Deprecated
@@ -51,6 +53,21 @@ public class AiPreferencesState implements PersistentStateComponent<AiPreference
 
     public static AiPreferencesState getInstance() {
         return ApplicationManager.getApplication().getService(AiPreferencesState.class);
+    }
+
+    private static String joinLegacyApiUrl(String legacyEndpoint, String legacyApiPath) {
+        if (legacyEndpoint == null || legacyEndpoint.isBlank()) {
+            return "";
+        }
+        String base = legacyEndpoint.trim();
+        String path = legacyApiPath == null || legacyApiPath.isBlank() ? "/chat/completions" : legacyApiPath.trim();
+        if (base.endsWith("/") && path.startsWith("/")) {
+            return base + path.substring(1);
+        }
+        if (!base.endsWith("/") && !path.startsWith("/")) {
+            return base + "/" + path;
+        }
+        return base + path;
     }
 
     @Override
@@ -84,20 +101,5 @@ public class AiPreferencesState implements PersistentStateComponent<AiPreference
         if (dataTransferConsent == null) {
             dataTransferConsent = AiDataTransferConsent.UNDECIDED;
         }
-    }
-
-    private static String joinLegacyApiUrl(String legacyEndpoint, String legacyApiPath) {
-        if (legacyEndpoint == null || legacyEndpoint.isBlank()) {
-            return "";
-        }
-        String base = legacyEndpoint.trim();
-        String path = legacyApiPath == null || legacyApiPath.isBlank() ? "/chat/completions" : legacyApiPath.trim();
-        if (base.endsWith("/") && path.startsWith("/")) {
-            return base + path.substring(1);
-        }
-        if (!base.endsWith("/") && !path.startsWith("/")) {
-            return base + "/" + path;
-        }
-        return base + path;
     }
 }

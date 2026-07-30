@@ -20,12 +20,11 @@ import java.awt.*;
 public class UnifiedCommitTemplateSettingsConfigurable implements SearchableConfigurable, Configurable.NoScroll {
 
 
+    private static volatile boolean selectAiModelTabOnOpen;
     private final GitCommitSettingConfigurable globalConfigurable = new GitCommitSettingConfigurable();
     private final ProjectGitCommitSettingConfigurable projectConfigurable;
     private final CommitMessageRulesConfigurable rulesConfigurable;
     private final PluginPreferencesConfigurable preferencesConfigurable = new PluginPreferencesConfigurable();
-    private static volatile boolean selectAiModelTabOnOpen;
-
     private final AiPreferencesConfigurable aiConfigurable = new AiPreferencesConfigurable();
     private JTabbedPane tabs;
 
@@ -51,6 +50,13 @@ public class UnifiedCommitTemplateSettingsConfigurable implements SearchableConf
         return wrapper;
     }
 
+    /**
+     * 请求下一次打开设置时直接定位到 AI 模型标签页。
+     */
+    public static void requestAiModelTabOnOpen() {
+        selectAiModelTabOnOpen = true;
+    }
+
     @Override
     public @NotNull @NonNls String getId() {
         return "plugins.muzilib.commit.template";
@@ -59,11 +65,6 @@ public class UnifiedCommitTemplateSettingsConfigurable implements SearchableConf
     @Override
     public @NlsContexts.ConfigurableName String getDisplayName() {
         return CommUtil.i18nResourceBundle(null).getString("plugin.setting.displayName");
-    }
-
-    /** 请求下一次打开设置时直接定位到 AI 模型标签页。 */
-    public static void requestAiModelTabOnOpen() {
-        selectAiModelTabOnOpen = true;
     }
 
     private void selectRequestedTab() {

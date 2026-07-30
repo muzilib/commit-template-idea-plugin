@@ -24,7 +24,9 @@ import java.nio.charset.StandardCharsets;
 public final class OpenAiCompatibleProvider implements AiProvider {
     private static final ObjectMapper JSON = new ObjectMapper();
 
-
+    private static String text(String key) {
+        return CommUtil.i18nResourceBundle(null).getString(key);
+    }
 
     @Override
     public void generate(AiGenerationRequest request, AiCredentials credentials,
@@ -61,10 +63,6 @@ public final class OpenAiCompatibleProvider implements AiProvider {
             listener.onError(new AiGenerationError(AiGenerationError.Kind.NETWORK,
                     text("plugin.ai.error.network")));
         }
-    }
-
-    private static String text(String key) {
-        return CommUtil.i18nResourceBundle(null).getString(key);
     }
 
     private void stream(CloseableHttpResponse response, ProgressIndicator indicator,
