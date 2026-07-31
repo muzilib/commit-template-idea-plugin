@@ -36,7 +36,8 @@ public class UnifiedCommitTemplateSettingsConfigurable implements SearchableConf
         this.project = project;
         projectConfigurable = new ProjectGitCommitSettingConfigurable(project);
         rulesConfigurable = new CommitMessageRulesConfigurable();
-        preferencesConfigurable = new PluginPreferencesConfigurable(this::resetAllConfiguration);
+        preferencesConfigurable = new PluginPreferencesConfigurable(this::resetAllConfiguration,
+                this::showCurrentVersionAnnouncement);
     }
 
     /**
@@ -155,6 +156,7 @@ public class UnifiedCommitTemplateSettingsConfigurable implements SearchableConf
     }
 
     private void showCurrentVersionAnnouncement() {
+        PluginOnboardingState.getInstance().clearAnnouncementHistory();
         PluginOnboardingStartupActivity.showAnnouncementIfNeeded(project);
     }
 

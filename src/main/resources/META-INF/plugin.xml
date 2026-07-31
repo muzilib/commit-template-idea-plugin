@@ -134,6 +134,8 @@
         <!-- Add your extensions here -->
         <notificationGroup id="commit-template-notify" displayType="BALLOON" key="action.plugin_commit_button.text"
                            isLogByDefault="false"/>
+        <notificationGroup id="commit-template-announcement" displayType="STICKY_BALLOON"
+                           key="plugin.announcement.notificationGroup" isLogByDefault="true"/>
 
         <applicationService
                 serviceImplementation="com.c301.plugin.config.StoreCommitTemplateState"/>

@@ -18,7 +18,7 @@ import com.intellij.openapi.vcs.ui.Refreshable;
 import com.intellij.vcs.commit.CommitProjectPanelAdapter;
 import org.jetbrains.annotations.NotNull;
 
-import javax.swing.SwingUtilities;
+import javax.swing.*;
 import java.awt.event.KeyEvent;
 
 /**

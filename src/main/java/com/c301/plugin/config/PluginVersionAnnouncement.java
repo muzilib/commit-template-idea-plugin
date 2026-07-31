@@ -1,8 +1,8 @@
 package com.c301.plugin.config;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Properties;
+import com.intellij.ide.plugins.PluginManager;
+import com.intellij.openapi.extensions.PluginDescriptor;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * 按插件版本维护首次安装与升级提示。发布新版本时在此处新增对应条目和国际化文案。
@@ -18,33 +18,28 @@ public enum PluginVersionAnnouncement {
         this.messageKeyPrefix = messageKeyPrefix;
     }
 
-    public String version() {
-        return version;
+    /**
+     * 从 IDEA 已加载插件的描述符读取版本，避免公告依赖未被打包进插件 JAR 的额外资源。
+     */
+    public static @Nullable PluginVersionAnnouncement current() {
+        PluginDescriptor descriptor = PluginManager.getPluginByClass(PluginVersionAnnouncement.class);
+        return descriptor == null ? null : find(descriptor.getVersion());
     }
 
-    public String messageKeyPrefix() {
-        return messageKeyPrefix;
-    }
-
-    public static PluginVersionAnnouncement current() {
-        Properties properties = new Properties();
-        try (InputStream input = PluginVersionAnnouncement.class.getResourceAsStream("/version.properties")) {
-            if (input == null) {
-                return null;
-            }
-            properties.load(input);
-            return find(properties.getProperty("pluginVersion"));
-        } catch (IOException exception) {
-            return null;
-        }
-    }
-
-    private static PluginVersionAnnouncement find(String version) {
+    private static @Nullable PluginVersionAnnouncement find(String version) {
         for (PluginVersionAnnouncement announcement : values()) {
             if (announcement.version.equals(version)) {
                 return announcement;
             }
         }
         return null;
+    }
+
+    public String version() {
+        return version;
+    }
+
+    public String messageKeyPrefix() {
+        return messageKeyPrefix;
     }
 }

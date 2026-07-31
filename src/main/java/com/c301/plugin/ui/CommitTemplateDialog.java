@@ -1,6 +1,9 @@
 package com.c301.plugin.ui;
 
-import com.c301.plugin.config.*;
+import com.c301.plugin.config.CommitTemplateSettingsResolver;
+import com.c301.plugin.config.EffectiveCommitTemplateSettings;
+import com.c301.plugin.config.PluginUiLanguageSettings;
+import com.c301.plugin.config.StoreCommitTemplateState;
 import com.c301.plugin.constant.Constant;
 import com.c301.plugin.domain.commit.CommitMessageFormatter;
 import com.c301.plugin.domain.commit.CommitMessageValidator;
@@ -8,7 +11,6 @@ import com.c301.plugin.model.CommitTypeDomain;
 import com.c301.plugin.model.GitCommitDomain;
 import com.c301.plugin.model.LanguageDomain;
 import com.c301.plugin.model.WindowsConfigDomain;
-
 import com.c301.plugin.utils.CommUtil;
 import com.c301.plugin.utils.StrUtil;
 import com.intellij.openapi.actionSystem.AnActionEvent;

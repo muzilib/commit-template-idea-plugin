@@ -4,8 +4,11 @@ import com.c301.plugin.config.PluginVersionAnnouncement;
 import com.c301.plugin.config.UnifiedCommitTemplateSettingsConfigurable;
 import com.c301.plugin.utils.CommUtil;
 import com.intellij.ide.BrowserUtil;
+import com.intellij.notification.NotificationAction;
+import com.intellij.notification.NotificationGroup;
 import com.intellij.notification.NotificationGroupManager;
 import com.intellij.notification.NotificationType;
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.options.ShowSettingsUtil;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.IconLoader;
@@ -18,6 +21,9 @@ import java.awt.*;
  * 统一创建带插件名称和图标的 IDEA 通知，避免不同入口的展示样式不一致。
  */
 public final class PluginNotifications {
+    private static final Logger LOG = Logger.getInstance(PluginNotifications.class);
+    private static final String DEFAULT_NOTIFICATION_GROUP_ID = "commit-template-notify";
+    private static final String ANNOUNCEMENT_NOTIFICATION_GROUP_ID = "commit-template-announcement";
     private static final Icon PLUGIN_ICON = scaledIcon(
             IconLoader.getIcon("/META-INF/pluginIcon.svg", PluginNotifications.class), JBUI.scale(32));
 
@@ -25,14 +31,21 @@ public final class PluginNotifications {
     }
 
     public static void notify(Project project, String content, NotificationType type) {
-        var notification = NotificationGroupManager.getInstance().getNotificationGroup("commit-template-notify")
-                .createNotification(CommUtil.i18nResourceBundle(null).getString("plugin.setting.displayName"), content, type);
+        NotificationGroup notificationGroup = getNotificationGroup(DEFAULT_NOTIFICATION_GROUP_ID);
+        if (notificationGroup == null) {
+            return;
+        }
+        var notification = notificationGroup.createNotification(
+                CommUtil.i18nResourceBundle(null).getString("plugin.setting.displayName"), content, type);
         notification.setIcon(PLUGIN_ICON);
         notification.notify(project);
     }
 
-    @SuppressWarnings("deprecation")
-    public static void notifyVersionAnnouncement(Project project, PluginVersionAnnouncement announcement) {
+    public static boolean notifyVersionAnnouncement(Project project, PluginVersionAnnouncement announcement) {
+        NotificationGroup notificationGroup = getNotificationGroup(ANNOUNCEMENT_NOTIFICATION_GROUP_ID);
+        if (notificationGroup == null) {
+            return false;
+        }
         var bundle = CommUtil.i18nResourceBundle(null);
         String prefix = announcement.messageKeyPrefix();
         String title = bundle.getString(prefix + ".title").replace("{version}", announcement.version());
@@ -40,24 +53,27 @@ public final class PluginNotifications {
                 + bundle.getString(prefix + ".greeting") + "<br/><br/>"
                 + bundle.getString(prefix + ".feedback") + "<br/><br/>"
                 + "<b>" + bundle.getString(prefix + ".tipsTitle") + "</b><br/>"
-                + bundle.getString(prefix + ".tips") + "<br/><br/>"
-                + "<a href='ai-settings'>" + bundle.getString(prefix + ".openAiSettings") + "</a>"
-                + "&nbsp;&nbsp;<a href='repository'>" + bundle.getString(prefix + ".openRepository") + "</a>"
+                + bundle.getString(prefix + ".tips")
                 + "</html>";
-        var notification = NotificationGroupManager.getInstance().getNotificationGroup("commit-template-notify")
-                .createNotification(title, content, NotificationType.INFORMATION);
-        // 安装/升级公告属于用户主动触发的关键提示，避免被普通提示合并或直接收起。
-        notification.setImportant(true);
-        notification.setListener((clicked, event) -> {
-            if ("ai-settings".equals(event.getDescription())) {
-                UnifiedCommitTemplateSettingsConfigurable.requestAiModelTabOnOpen();
-                ShowSettingsUtil.getInstance().showSettingsDialog(project, "plugins.muzilib.commit.template");
-            } else if ("repository".equals(event.getDescription())) {
-                BrowserUtil.browse("https://github.com/muzilib/commit-template-idea-plugin");
-            }
-        });
+        var notification = notificationGroup.createNotification(title, content, NotificationType.INFORMATION);
+        notification.addAction(NotificationAction.createSimpleExpiring(bundle.getString(prefix + ".openAiSettings"), () -> {
+            UnifiedCommitTemplateSettingsConfigurable.requestAiModelTabOnOpen();
+            ShowSettingsUtil.getInstance().showSettingsDialog(project, "plugins.muzilib.commit.template");
+        }));
+        notification.addAction(NotificationAction.createSimpleExpiring(bundle.getString(prefix + ".openRepository"),
+                () -> BrowserUtil.browse("https://github.com/muzilib/commit-template-idea-plugin")));
         notification.setIcon(PLUGIN_ICON);
         notification.notify(project);
+        LOG.info("已提交版本公告通知: " + announcement.version());
+        return true;
+    }
+
+    private static NotificationGroup getNotificationGroup(String groupId) {
+        NotificationGroup notificationGroup = NotificationGroupManager.getInstance().getNotificationGroup(groupId);
+        if (notificationGroup == null) {
+            LOG.warn("未注册通知组: " + groupId);
+        }
+        return notificationGroup;
     }
 
     /**

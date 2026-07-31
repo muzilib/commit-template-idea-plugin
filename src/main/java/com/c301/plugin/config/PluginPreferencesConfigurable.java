@@ -17,14 +17,17 @@ final class PluginPreferencesConfigurable {
     private final PluginUiLanguageConfigurable uiLanguageConfigurable = new PluginUiLanguageConfigurable();
     private final PluginPresentationConfigurable presentationConfigurable = new PluginPresentationConfigurable();
     private final Runnable resetAllAction;
+    private final Runnable showAnnouncementAction;
     private JPanel panel;
     private TitledSeparator presentationSection;
     private TitledSeparator uiLanguageSection;
     private TitledSeparator advancedSection;
     private JButton resetAllButton;
+    private JButton showAnnouncementButton;
 
-    PluginPreferencesConfigurable(Runnable resetAllAction) {
+    PluginPreferencesConfigurable(Runnable resetAllAction, Runnable showAnnouncementAction) {
         this.resetAllAction = resetAllAction;
+        this.showAnnouncementAction = showAnnouncementAction;
     }
 
     JComponent createComponent() {
@@ -65,6 +68,10 @@ final class PluginPreferencesConfigurable {
             resetAllButton = new JButton();
             resetAllButton.addActionListener(event -> resetAllAction.run());
             advancedActions.add(resetAllButton);
+            showAnnouncementButton = new JButton();
+            showAnnouncementButton.addActionListener(event -> showAnnouncementAction.run());
+            advancedActions.add(Box.createHorizontalStrut(JBUI.scale(8)));
+            advancedActions.add(showAnnouncementButton);
             panel.add(advancedActions, constraints);
 
             constraints.gridy++;
@@ -106,6 +113,9 @@ final class PluginPreferencesConfigurable {
         }
         if (resetAllButton != null) {
             resetAllButton.setText(bundle.getString("plugin.preferences.resetAll"));
+        }
+        if (showAnnouncementButton != null) {
+            showAnnouncementButton.setText(bundle.getString("plugin.preferences.showAnnouncement"));
         }
     }
 }
