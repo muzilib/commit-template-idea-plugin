@@ -515,7 +515,7 @@ public class CommitTemplateDialog extends JDialog {
             }
         }
         if (targetProject != null) {
-            ShowSettingsUtil.getInstance().showSettingsDialog(targetProject, UnifiedCommitTemplateSettingsConfigurable.class);
+            ShowSettingsUtil.getInstance().showSettingsDialog(targetProject, "plugins.muzilib.commit.template");
         }
     }
 

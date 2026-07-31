@@ -259,7 +259,7 @@ public final class AiGenerationDialog extends JDialog {
         dispose();
         UnifiedCommitTemplateSettingsConfigurable.requestAiModelTabOnOpen();
         com.intellij.openapi.options.ShowSettingsUtil.getInstance().showSettingsDialog(project,
-                UnifiedCommitTemplateSettingsConfigurable.class);
+                "plugins.muzilib.commit.template");
     }
 
     private java.util.List<com.c301.plugin.model.CommitTypeDomain> allowedTypes() {

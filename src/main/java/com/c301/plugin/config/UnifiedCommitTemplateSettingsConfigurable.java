@@ -146,11 +146,15 @@ public class UnifiedCommitTemplateSettingsConfigurable implements SearchableConf
         ProjectCommitTemplateOverrideState.getInstance(project).clearOverrides();
         PluginOnboardingState.getInstance().clearAnnouncementHistory();
         ApplicationManager.getApplication().executeOnPooledThread(() -> {
-            new PasswordSafeAiCredentialStore().clearAllApiKeys();
-            ApplicationManager.getApplication().invokeLater(() -> {
-                reset();
-                showCurrentVersionAnnouncement();
-            });
+            try {
+                new PasswordSafeAiCredentialStore().clearAllApiKeys();
+            } finally {
+                // 无论系统钥匙串是否可用，都恢复设置页的默认显示状态。
+                ApplicationManager.getApplication().invokeLater(() -> {
+                    reset();
+                    showCurrentVersionAnnouncement();
+                });
+            }
         });
     }
 

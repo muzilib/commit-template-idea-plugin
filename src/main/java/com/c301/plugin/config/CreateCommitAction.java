@@ -18,6 +18,7 @@ import com.intellij.openapi.vcs.ui.Refreshable;
 import com.intellij.vcs.commit.CommitProjectPanelAdapter;
 import org.jetbrains.annotations.NotNull;
 
+import javax.swing.SwingUtilities;
 import java.awt.event.KeyEvent;
 
 /**
@@ -99,16 +100,15 @@ public class CreateCommitAction extends AnAction implements DumbAware {
             project = ((CommitProjectPanelAdapter) commitMessageI).getProject();
         }
 
-        // 使用 invokeLater 确保在 EDT 线程上创建和显示对话框，避免协程上下文冲突
-        Project finalProject = project;
-        GitCommitDomain finalGitCommit = gitCommit;
-        ApplicationManager.getApplication().invokeLater(() -> {
-            //java传递回调方法
-            var dialog = new CommitTemplateDialog(commitMessageI, finalProject, actionEvent);
+        // 等当前 Action 上下文结束后再打开模态窗口，避免 IDEA 2023.3 在嵌套事件循环中重复安装 ActionContext。
+        Project targetProject = project;
+        GitCommitDomain targetGitCommit = gitCommit;
+        SwingUtilities.invokeLater(() -> {
+            var dialog = new CommitTemplateDialog(commitMessageI, targetProject, actionEvent);
             dialog.handleUIInit();
-            dialog.resetUIFrom(finalGitCommit);
+            dialog.resetUIFrom(targetGitCommit);
             dialog.setVisible(true);
-        }, ModalityState.current());
+        });
     }
 
 }
