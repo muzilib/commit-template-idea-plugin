@@ -15,6 +15,8 @@ public interface AiCredentialStore {
 
     void clearApiKey(AiProviderType providerType);
 
+    void clearAllApiKeys();
+
     /**
      * 将旧版按 API 地址保存的密钥迁移为按供应商保存，并删除所有旧索引。
      * 返回 false 表示迁移过程中发生异常，调用方可提示用户重新设置密钥。

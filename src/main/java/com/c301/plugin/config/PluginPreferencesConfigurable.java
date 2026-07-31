@@ -16,9 +16,16 @@ import java.util.ResourceBundle;
 final class PluginPreferencesConfigurable {
     private final PluginUiLanguageConfigurable uiLanguageConfigurable = new PluginUiLanguageConfigurable();
     private final PluginPresentationConfigurable presentationConfigurable = new PluginPresentationConfigurable();
+    private final Runnable resetAllAction;
     private JPanel panel;
     private TitledSeparator presentationSection;
     private TitledSeparator uiLanguageSection;
+    private TitledSeparator advancedSection;
+    private JButton resetAllButton;
+
+    PluginPreferencesConfigurable(Runnable resetAllAction) {
+        this.resetAllAction = resetAllAction;
+    }
 
     JComponent createComponent() {
         if (panel == null) {
@@ -46,6 +53,19 @@ final class PluginPreferencesConfigurable {
             constraints.insets = JBUI.emptyInsets();
             panel.add(uiLanguageConfigurable.createComponent(), constraints);
 
+
+            constraints.gridy++;
+            constraints.insets = JBUI.insetsTop(16);
+            advancedSection = new TitledSeparator();
+            panel.add(advancedSection, constraints);
+
+            constraints.gridy++;
+            constraints.insets = JBUI.emptyInsets();
+            JPanel advancedActions = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+            resetAllButton = new JButton();
+            resetAllButton.addActionListener(event -> resetAllAction.run());
+            advancedActions.add(resetAllButton);
+            panel.add(advancedActions, constraints);
 
             constraints.gridy++;
             constraints.weighty = 1;
@@ -81,6 +101,11 @@ final class PluginPreferencesConfigurable {
         if (uiLanguageSection != null) {
             uiLanguageSection.setText(bundle.getString("plugin.preferences.section.uiLanguage"));
         }
-
+        if (advancedSection != null) {
+            advancedSection.setText(bundle.getString("plugin.preferences.section.advanced"));
+        }
+        if (resetAllButton != null) {
+            resetAllButton.setText(bundle.getString("plugin.preferences.resetAll"));
+        }
     }
 }

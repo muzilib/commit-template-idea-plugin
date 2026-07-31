@@ -36,6 +36,7 @@ public class AiPreferencesState implements PersistentStateComponent<AiPreference
 
     private boolean enabled;
     private int migrationVersion;
+    private transient boolean credentialMigrationScheduled;
     private AiProviderType providerType = AiProviderType.QWEN;
     private String apiUrl = AiProviderType.QWEN.apiUrl();
     private String model = "qwen3.7-max";
@@ -128,13 +129,13 @@ public class AiPreferencesState implements PersistentStateComponent<AiPreference
                 || entry.getValue().isBlank());
     }
 
-    private boolean migrateCredentials(String legacyApiUrl) {
+    private boolean migrateCredentials(String legacyApiUrl, AiProviderType provider, String configuredApiUrl) {
         PasswordSafeAiCredentialStore credentialStore = new PasswordSafeAiCredentialStore();
         boolean migrated = true;
         migrated &= credentialStore.migrateLegacyApiKey(AiProviderType.QWEN, AiProviderType.QWEN.apiUrl());
         migrated &= credentialStore.migrateLegacyApiKey(AiProviderType.CHATGPT, AiProviderType.CHATGPT.apiUrl());
         migrated &= credentialStore.migrateLegacyApiKey(AiProviderType.DEEPSEEK, AiProviderType.DEEPSEEK.apiUrl());
-        migrated &= credentialStore.migrateLegacyApiKey(providerType, legacyApiUrl, apiUrl);
+        migrated &= credentialStore.migrateLegacyApiKey(provider, legacyApiUrl, configuredApiUrl);
         return migrated;
     }
 
@@ -147,14 +148,39 @@ public class AiPreferencesState implements PersistentStateComponent<AiPreference
         providerType = legacyApiUrl.isBlank() ? providerForApiUrl(apiUrl, providerType)
                 : providerForApiUrl(legacyApiUrl, AiProviderType.CUSTOM);
         sanitizePreferences();
-        boolean credentialsMigrated = migrateCredentials(legacyApiUrl);
         endpoint = null;
         apiPath = null;
-        migrationVersion = CURRENT_MIGRATION_VERSION;
-        if (!credentialsMigrated) {
-            PluginNotifications.notify(null, CommUtil.i18nResourceBundle(null)
-                    .getString("plugin.ai.credentialMigrationFailed"), NotificationType.WARNING);
+        scheduleCredentialMigration(legacyApiUrl, providerType, apiUrl);
+    }
+
+    /**
+     * Password Safe 可能访问系统钥匙串，禁止在 EDT 中读写。
+     */
+    private void scheduleCredentialMigration(String legacyApiUrl, AiProviderType provider, String configuredApiUrl) {
+        if (credentialMigrationScheduled) {
+            return;
         }
+        credentialMigrationScheduled = true;
+        ApplicationManager.getApplication().executeOnPooledThread(() -> {
+            boolean migrated = migrateCredentials(legacyApiUrl, provider, configuredApiUrl);
+            ApplicationManager.getApplication().invokeLater(() -> {
+                migrationVersion = CURRENT_MIGRATION_VERSION;
+                credentialMigrationScheduled = false;
+                if (!migrated) {
+                    PluginNotifications.notify(null, CommUtil.i18nResourceBundle(null)
+                            .getString("plugin.ai.credentialMigrationFailed"), NotificationType.WARNING);
+                }
+            });
+        });
+    }
+
+    /**
+     * 重置时不需要尝试访问或迁移旧凭据，直接恢复非敏感配置默认值。
+     */
+    public void resetToDefaults() {
+        XmlSerializerUtil.copyBean(new AiPreferencesState(), this);
+        migrationVersion = CURRENT_MIGRATION_VERSION;
+        credentialMigrationScheduled = false;
     }
 
     @Override

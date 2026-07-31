@@ -8,6 +8,7 @@ import com.c301.plugin.infrastructure.credentials.AiCredentialStore;
 import com.c301.plugin.infrastructure.credentials.PasswordSafeAiCredentialStore;
 import com.c301.plugin.utils.CommUtil;
 import com.intellij.icons.AllIcons;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.util.ui.JBUI;
@@ -341,7 +342,7 @@ final class AiPreferencesConfigurable {
     private JLabel createApiKeyHelp(ResourceBundle bundle) {
         JLabel help = new JLabel(AllIcons.General.ContextHelp);
         help.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        help.setToolTipText(bundle.getString("plugin.ai.qwen.apiKeyHelp.accessibleDescription"));
+        help.setToolTipText(bundle.getString("plugin.ai.apiKeyHelp.accessibleDescription"));
         help.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseEntered(MouseEvent event) {
@@ -360,7 +361,7 @@ final class AiPreferencesConfigurable {
         if (apiKeyHelp == null) {
             return;
         }
-        boolean visible = selectedProvider() == AiProviderType.QWEN;
+        boolean visible = selectedProvider().hasApiKeyHelp();
         apiKeyHelp.setVisible(visible);
         if (!visible) {
             hideApiKeyHelp();
@@ -368,37 +369,38 @@ final class AiPreferencesConfigurable {
     }
 
     private void showApiKeyHelp() {
-        if (apiKeyHelp == null || !apiKeyHelp.isShowing() || selectedProvider() != AiProviderType.QWEN) {
+        AiProviderType provider = selectedProvider();
+        if (apiKeyHelp == null || !apiKeyHelp.isShowing() || !provider.hasApiKeyHelp()) {
             return;
         }
         cancelApiKeyHelpClose();
-        if (apiKeyHelpPopup == null) {
-            apiKeyHelpPopup = createApiKeyHelpPopup(bundle());
-        }
+        hideApiKeyHelp();
+        apiKeyHelpPopup = createApiKeyHelpPopup(bundle(), provider);
         apiKeyHelpPopup.show(apiKeyHelp, apiKeyHelp.getWidth(), 0);
     }
 
-    private JPopupMenu createApiKeyHelpPopup(ResourceBundle bundle) {
+    private JPopupMenu createApiKeyHelpPopup(ResourceBundle bundle, AiProviderType provider) {
         JPopupMenu popup = new JPopupMenu();
         popup.setFocusable(false);
         JPanel content = new JPanel();
         content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
         content.setBorder(JBUI.Borders.empty(10, 12));
-        JLabel line1 = new JLabel(bundle.getString("plugin.ai.qwen.apiKeyHelp.line1"));
-        JLabel line2 = new JLabel(bundle.getString("plugin.ai.qwen.apiKeyHelp.line2"));
-        content.add(line1);
-        content.add(Box.createVerticalStrut(JBUI.scale(4)));
-        content.add(line2);
-        content.add(Box.createVerticalStrut(JBUI.scale(8)));
-        JLabel link = new JLabel("<html><a href='#'>" + bundle.getString("plugin.ai.qwen.apiKeyHelp.link") + "</a></html>");
-        link.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        link.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent event) {
-                openQwenApiKeyPage();
-            }
-        });
-        content.add(link);
+        String message = bundle.getString(provider.apiKeyHelpMessageKey());
+        for (String line : message.split("\\n")) {
+            content.add(new JLabel(line));
+        }
+        if (provider.hasApiKeyHelpLink()) {
+            content.add(Box.createVerticalStrut(JBUI.scale(8)));
+            JLabel link = new JLabel("<html><a href='#'>" + bundle.getString(provider.apiKeyHelpLinkTextKey()) + "</a></html>");
+            link.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+            link.addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseClicked(MouseEvent event) {
+                    openApiKeyHelpPage(provider);
+                }
+            });
+            content.add(link);
+        }
         MouseAdapter hoverListener = new MouseAdapter() {
             @Override
             public void mouseEntered(MouseEvent event) {
@@ -411,9 +413,9 @@ final class AiPreferencesConfigurable {
             }
         };
         content.addMouseListener(hoverListener);
-        line1.addMouseListener(hoverListener);
-        line2.addMouseListener(hoverListener);
-        link.addMouseListener(hoverListener);
+        for (Component component : content.getComponents()) {
+            component.addMouseListener(hoverListener);
+        }
         popup.add(content);
         return popup;
     }
@@ -439,12 +441,12 @@ final class AiPreferencesConfigurable {
         }
     }
 
-    private void openQwenApiKeyPage() {
+    private void openApiKeyHelpPage(AiProviderType provider) {
         try {
-            Desktop.getDesktop().browse(new URI("https://bailian.console.aliyun.com"));
+            Desktop.getDesktop().browse(new URI(provider.apiKeyHelpUrl()));
         } catch (IOException | URISyntaxException | UnsupportedOperationException exception) {
-            Messages.showErrorDialog(panel, bundle().getString("plugin.ai.qwen.apiKeyHelp.openLinkFailure"),
-                    bundle().getString("plugin.ai.qwen.apiKeyHelp.openLinkFailureTitle"));
+            Messages.showErrorDialog(panel, bundle().getString("plugin.ai.apiKeyHelp.openLinkFailure"),
+                    bundle().getString("plugin.ai.apiKeyHelp.openLinkFailureTitle"));
         }
     }
 
@@ -699,26 +701,43 @@ final class AiPreferencesConfigurable {
     private void saveApiKey() {
         String key = Messages.showPasswordDialog(null, bundle().getString("plugin.ai.apiKeyHint"),
                 bundle().getString("plugin.ai.saveApiKeyTitle"), null, null);
-        if (key != null && !key.isBlank()) {
-            credentialStore.saveApiKey(selectedProvider(), key.trim());
+        if (key == null || key.isBlank()) {
+            return;
         }
-        refreshCredentialStatus();
+        AiProviderType provider = selectedProvider();
+        ApplicationManager.getApplication().executeOnPooledThread(() -> {
+            credentialStore.saveApiKey(provider, key.trim());
+            ApplicationManager.getApplication().invokeLater(this::refreshCredentialStatus);
+        });
     }
 
     private void clearApiKey() {
         int result = Messages.showYesNoDialog(panel, bundle().getString("plugin.ai.clearApiKeyConfirmation"),
                 bundle().getString("plugin.ai.clearApiKeyTitle"), null);
-        if (result == Messages.YES) {
-            credentialStore.clearApiKey(selectedProvider());
+        if (result != Messages.YES) {
+            return;
         }
-        refreshCredentialStatus();
+        AiProviderType provider = selectedProvider();
+        ApplicationManager.getApplication().executeOnPooledThread(() -> {
+            credentialStore.clearApiKey(provider);
+            ApplicationManager.getApplication().invokeLater(this::refreshCredentialStatus);
+        });
     }
 
     private void refreshCredentialStatus() {
-        if (credentialStatus != null) {
-            boolean configured = credentialStore.hasCredential(selectedProvider());
-            credentialStatus.setText(bundle().getString(configured ? "plugin.ai.apiKeyConfigured" : "plugin.ai.apiKeyNotConfigured"));
+        if (credentialStatus == null) {
+            return;
         }
+        AiProviderType provider = selectedProvider();
+        ApplicationManager.getApplication().executeOnPooledThread(() -> {
+            boolean configured = credentialStore.hasCredential(provider);
+            ApplicationManager.getApplication().invokeLater(() -> {
+                if (credentialStatus != null && selectedProvider() == provider) {
+                    credentialStatus.setText(bundle().getString(configured
+                            ? "plugin.ai.apiKeyConfigured" : "plugin.ai.apiKeyNotConfigured"));
+                }
+            });
+        });
     }
 
     private AiProviderType selectedProvider() {
@@ -774,13 +793,8 @@ final class AiPreferencesConfigurable {
         @Override
         public Component getListCellRendererComponent(JList<?> list, Object value, int index,
                                                       boolean isSelected, boolean cellHasFocus) {
-            String key = switch (value instanceof AiProviderType provider ? provider : AiProviderType.CUSTOM) {
-                case QWEN -> "plugin.ai.provider.qwen";
-                case CHATGPT -> "plugin.ai.provider.chatgpt";
-                case DEEPSEEK -> "plugin.ai.provider.deepseek";
-                case CUSTOM -> "plugin.ai.provider.custom";
-            };
-            return super.getListCellRendererComponent(list, bundle().getString(key), index, isSelected, cellHasFocus);
+            AiProviderType provider = value instanceof AiProviderType item ? item : AiProviderType.CUSTOM;
+            return super.getListCellRendererComponent(list, bundle().getString(provider.displayNameKey()), index, isSelected, cellHasFocus);
         }
     }
 }

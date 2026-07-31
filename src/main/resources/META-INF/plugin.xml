@@ -139,6 +139,10 @@
                 serviceImplementation="com.c301.plugin.config.StoreCommitTemplateState"/>
         <applicationService
                 serviceImplementation="com.c301.plugin.config.AiPreferencesState"/>
+        <applicationService
+                serviceImplementation="com.c301.plugin.config.PluginOnboardingState"/>
+        <postStartupActivity
+                implementation="com.c301.plugin.config.PluginOnboardingStartupActivity"/>
         <projectService
                 serviceImplementation="com.c301.plugin.config.ProjectCommitTemplateOverrideState"/>
         <projectService

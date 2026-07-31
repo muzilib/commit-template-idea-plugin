@@ -75,11 +75,6 @@ public final class AiDirectStreamingGenerator {
         if (!AiDataTransferConsentDialog.ensureAccepted(project)) {
             return;
         }
-        String apiKey = new PasswordSafeAiCredentialStore().readApiKey(preferences.getProviderType());
-        if (apiKey == null || apiKey.isBlank()) {
-            notify(text("plugin.ai.apiKeyMissingHint"), NotificationType.ERROR);
-            return;
-        }
         String prompt = preferences.getCustomSystemPrompts().get(preferences.getProviderType());
         if (prompt == null || prompt.isBlank()) {
             prompt = AiSystemPromptTemplates.forProvider(preferences.getProviderType());
@@ -92,6 +87,12 @@ public final class AiDirectStreamingGenerator {
                 text("plugin.ai.generationTaskTitle"), true) {
             @Override
             public void run(@NotNull ProgressIndicator indicator) {
+                String apiKey = new PasswordSafeAiCredentialStore().readApiKey(preferences.getProviderType());
+                if (apiKey == null || apiKey.isBlank()) {
+                    ApplicationManager.getApplication().invokeLater(() -> AiDirectStreamingGenerator.this.notify(
+                            text("plugin.ai.apiKeyMissingHint"), NotificationType.ERROR));
+                    return;
+                }
                 AiProviderFactory.create(preferences.getProviderType()).generate(request, new AiCredentials(apiKey), indicator,
                         new StreamingListener());
             }

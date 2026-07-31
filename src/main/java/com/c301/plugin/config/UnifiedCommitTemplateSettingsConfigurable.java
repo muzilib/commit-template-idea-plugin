@@ -1,11 +1,15 @@
 package com.c301.plugin.config;
 
+import com.c301.plugin.infrastructure.credentials.PasswordSafeAiCredentialStore;
 import com.c301.plugin.ui.CommitTemplateSettingUI;
+import com.c301.plugin.ui.PluginNotifications;
 import com.c301.plugin.utils.CommUtil;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.options.Configurable;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.options.SearchableConfigurable;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.util.NlsContexts;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
@@ -21,16 +25,19 @@ public class UnifiedCommitTemplateSettingsConfigurable implements SearchableConf
 
 
     private static volatile boolean selectAiModelTabOnOpen;
+    private final Project project;
     private final GitCommitSettingConfigurable globalConfigurable = new GitCommitSettingConfigurable();
     private final ProjectGitCommitSettingConfigurable projectConfigurable;
     private final CommitMessageRulesConfigurable rulesConfigurable;
-    private final PluginPreferencesConfigurable preferencesConfigurable = new PluginPreferencesConfigurable();
+    private final PluginPreferencesConfigurable preferencesConfigurable;
     private final AiPreferencesConfigurable aiConfigurable = new AiPreferencesConfigurable();
     private JTabbedPane tabs;
 
     public UnifiedCommitTemplateSettingsConfigurable(@NotNull Project project) {
+        this.project = project;
         projectConfigurable = new ProjectGitCommitSettingConfigurable(project);
         rulesConfigurable = new CommitMessageRulesConfigurable();
+        preferencesConfigurable = new PluginPreferencesConfigurable(this::resetAllConfiguration);
     }
 
     /**
@@ -124,6 +131,34 @@ public class UnifiedCommitTemplateSettingsConfigurable implements SearchableConf
         preferencesConfigurable.reset();
         aiConfigurable.reset();
         resetTabTitles();
+    }
+
+    private void resetAllConfiguration() {
+        var bundle = CommUtil.i18nResourceBundle(null);
+        int choice = Messages.showYesNoDialog(project, bundle.getString("plugin.preferences.resetAll.confirmation"),
+                bundle.getString("plugin.preferences.resetAll.confirmationTitle"),
+                bundle.getString("plugin.preferences.resetAll.confirm"), bundle.getString("plugin.preferences.resetAll.cancel"), null);
+        if (choice != Messages.YES) {
+            return;
+        }
+        StoreCommitTemplateState.getInstance().loadState(new StoreCommitTemplateState());
+        AiPreferencesState.getInstance().resetToDefaults();
+        ProjectCommitTemplateOverrideState.getInstance(project).clearOverrides();
+        PluginOnboardingState.getInstance().clearAnnouncementHistory();
+        ApplicationManager.getApplication().executeOnPooledThread(() -> {
+            new PasswordSafeAiCredentialStore().clearAllApiKeys();
+            ApplicationManager.getApplication().invokeLater(() -> {
+                reset();
+                showCurrentVersionAnnouncement();
+            });
+        });
+    }
+
+    private void showCurrentVersionAnnouncement() {
+        PluginVersionAnnouncement announcement = PluginVersionAnnouncement.current();
+        if (announcement != null && PluginOnboardingState.getInstance().markAnnouncementNeeded(announcement.version())) {
+            PluginNotifications.notifyVersionAnnouncement(project, announcement);
+        }
     }
 
     private void resetTabTitles() {

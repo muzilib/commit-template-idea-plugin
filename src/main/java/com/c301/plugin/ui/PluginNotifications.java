@@ -1,8 +1,12 @@
 package com.c301.plugin.ui;
 
+import com.c301.plugin.config.PluginVersionAnnouncement;
+import com.c301.plugin.config.UnifiedCommitTemplateSettingsConfigurable;
 import com.c301.plugin.utils.CommUtil;
+import com.intellij.ide.BrowserUtil;
 import com.intellij.notification.NotificationGroupManager;
 import com.intellij.notification.NotificationType;
+import com.intellij.openapi.options.ShowSettingsUtil;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.IconLoader;
 import com.intellij.util.ui.JBUI;
@@ -23,6 +27,33 @@ public final class PluginNotifications {
     public static void notify(Project project, String content, NotificationType type) {
         var notification = NotificationGroupManager.getInstance().getNotificationGroup("commit-template-notify")
                 .createNotification(CommUtil.i18nResourceBundle(null).getString("plugin.setting.displayName"), content, type);
+        notification.setIcon(PLUGIN_ICON);
+        notification.notify(project);
+    }
+
+    @SuppressWarnings("deprecation")
+    public static void notifyVersionAnnouncement(Project project, PluginVersionAnnouncement announcement) {
+        var bundle = CommUtil.i18nResourceBundle(null);
+        String prefix = announcement.messageKeyPrefix();
+        String title = bundle.getString(prefix + ".title").replace("{version}", announcement.version());
+        String content = "<html>"
+                + bundle.getString(prefix + ".greeting") + "<br/><br/>"
+                + bundle.getString(prefix + ".feedback") + "<br/><br/>"
+                + "<b>" + bundle.getString(prefix + ".tipsTitle") + "</b><br/>"
+                + bundle.getString(prefix + ".tips") + "<br/><br/>"
+                + "<a href='ai-settings'>" + bundle.getString(prefix + ".openAiSettings") + "</a>"
+                + "&nbsp;&nbsp;<a href='repository'>" + bundle.getString(prefix + ".openRepository") + "</a>"
+                + "</html>";
+        var notification = NotificationGroupManager.getInstance().getNotificationGroup("commit-template-notify")
+                .createNotification(title, content, NotificationType.INFORMATION);
+        notification.setListener((clicked, event) -> {
+            if ("ai-settings".equals(event.getDescription())) {
+                UnifiedCommitTemplateSettingsConfigurable.requestAiModelTabOnOpen();
+                ShowSettingsUtil.getInstance().showSettingsDialog(project, "plugins.muzilib.commit.template");
+            } else if ("repository".equals(event.getDescription())) {
+                BrowserUtil.browse("https://github.com/muzilib/commit-template-idea-plugin");
+            }
+        });
         notification.setIcon(PLUGIN_ICON);
         notification.notify(project);
     }

@@ -63,6 +63,13 @@ public final class PasswordSafeAiCredentialStore implements AiCredentialStore {
     }
 
     @Override
+    public void clearAllApiKeys() {
+        for (AiProviderType providerType : AiProviderType.values()) {
+            clearApiKey(providerType);
+        }
+    }
+
+    @Override
     public boolean migrateLegacyApiKey(AiProviderType providerType, String... legacyApiUrls) {
         Set<String> legacyAccounts = new LinkedHashSet<>();
         if (legacyApiUrls != null) {

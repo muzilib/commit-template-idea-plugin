@@ -218,13 +218,6 @@ public final class AiGenerationDialog extends JDialog {
         if (request == null) {
             return;
         }
-        String apiKey = new PasswordSafeAiCredentialStore().readApiKey(preferences.getProviderType());
-        if (apiKey == null || apiKey.isBlank()) {
-            String message = text("plugin.ai.apiKeyMissingHint");
-            Messages.showWarningDialog(this, message, text("plugin.ai.apiKeyMissingTitle"));
-            notify(project, message, NotificationType.ERROR);
-            return;
-        }
         response.setLength(0);
         completed.set(false);
         preview.setText(requestPreview + "\n\n----------------------------------------\nAI response\n");
@@ -234,6 +227,15 @@ public final class AiGenerationDialog extends JDialog {
                 text("plugin.ai.generationTaskTitle"), true) {
             @Override
             public void run(@NotNull ProgressIndicator indicator) {
+                String apiKey = new PasswordSafeAiCredentialStore().readApiKey(preferences.getProviderType());
+                if (apiKey == null || apiKey.isBlank()) {
+                    ApplicationManager.getApplication().invokeLater(() -> {
+                        String message = text("plugin.ai.apiKeyMissingHint");
+                        Messages.showWarningDialog(AiGenerationDialog.this, message, text("plugin.ai.apiKeyMissingTitle"));
+                        AiGenerationDialog.notify(project, message, NotificationType.ERROR);
+                    });
+                    return;
+                }
                 AiProviderFactory.create(preferences.getProviderType()).generate(request, new AiCredentials(apiKey), indicator,
                         new Listener());
             }
