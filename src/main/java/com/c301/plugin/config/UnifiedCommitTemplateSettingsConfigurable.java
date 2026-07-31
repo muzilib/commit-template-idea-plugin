@@ -2,7 +2,6 @@ package com.c301.plugin.config;
 
 import com.c301.plugin.infrastructure.credentials.PasswordSafeAiCredentialStore;
 import com.c301.plugin.ui.CommitTemplateSettingUI;
-import com.c301.plugin.ui.PluginNotifications;
 import com.c301.plugin.utils.CommUtil;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.options.Configurable;
@@ -145,24 +144,18 @@ public class UnifiedCommitTemplateSettingsConfigurable implements SearchableConf
         AiPreferencesState.getInstance().resetToDefaults();
         ProjectCommitTemplateOverrideState.getInstance(project).clearOverrides();
         PluginOnboardingState.getInstance().clearAnnouncementHistory();
-        ApplicationManager.getApplication().executeOnPooledThread(() -> {
-            try {
-                new PasswordSafeAiCredentialStore().clearAllApiKeys();
-            } finally {
-                // 无论系统钥匙串是否可用，都恢复设置页的默认显示状态。
-                ApplicationManager.getApplication().invokeLater(() -> {
-                    reset();
-                    showCurrentVersionAnnouncement();
-                });
-            }
-        });
+
+        // 先在 EDT 恢复所有页面，避免用户在系统钥匙串操作期间点击 Apply 又写回旧值。
+        reset();
+        showCurrentVersionAnnouncement();
+
+        // Password Safe 可能访问系统钥匙串，只允许在后台清理 API Key。
+        ApplicationManager.getApplication().executeOnPooledThread(() ->
+                new PasswordSafeAiCredentialStore().clearAllApiKeys());
     }
 
     private void showCurrentVersionAnnouncement() {
-        PluginVersionAnnouncement announcement = PluginVersionAnnouncement.current();
-        if (announcement != null && PluginOnboardingState.getInstance().markAnnouncementNeeded(announcement.version())) {
-            PluginNotifications.notifyVersionAnnouncement(project, announcement);
-        }
+        PluginOnboardingStartupActivity.showAnnouncementIfNeeded(project);
     }
 
     private void resetTabTitles() {

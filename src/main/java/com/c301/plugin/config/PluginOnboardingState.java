@@ -32,12 +32,17 @@ public final class PluginOnboardingState implements PersistentStateComponent<Plu
         announcedVersion = state.announcedVersion;
     }
 
-    public boolean markAnnouncementNeeded(String version) {
-        if (version == null || version.isBlank() || version.equals(announcedVersion)) {
-            return false;
+    public boolean isAnnouncementNeeded(String version) {
+        return version != null && !version.isBlank() && !version.equals(announcedVersion);
+    }
+
+    /**
+     * 仅在公告已提交给 IDEA 通知系统后记录版本，避免 UI 尚未就绪时丢失首次提示。
+     */
+    public void markAnnouncementShown(String version) {
+        if (version != null && !version.isBlank()) {
+            announcedVersion = version;
         }
-        announcedVersion = version;
-        return true;
     }
 
     public void clearAnnouncementHistory() {

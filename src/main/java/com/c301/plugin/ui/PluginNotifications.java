@@ -46,6 +46,8 @@ public final class PluginNotifications {
                 + "</html>";
         var notification = NotificationGroupManager.getInstance().getNotificationGroup("commit-template-notify")
                 .createNotification(title, content, NotificationType.INFORMATION);
+        // 安装/升级公告属于用户主动触发的关键提示，避免被普通提示合并或直接收起。
+        notification.setImportant(true);
         notification.setListener((clicked, event) -> {
             if ("ai-settings".equals(event.getDescription())) {
                 UnifiedCommitTemplateSettingsConfigurable.requestAiModelTabOnOpen();

@@ -1,35 +1,30 @@
-23:39:01: Executing 'runIde --stacktrace'…
+00:07:55: Executing 'runIde --stacktrace'…
 
 > Task :initializeIntelliJPlugin SKIPPED
 > Task :patchPluginXml UP-TO-DATE
 > Task :verifyPluginConfiguration
-> Task :compileJava
+> Task :compileJava UP-TO-DATE
 > Task :generateBuildInfo UP-TO-DATE
 > Task :processResources UP-TO-DATE
-> Task :classes
-
-> Task :instrumentCode
-[ant:instrumentIdeaExtensions] /Users/muzi/Documents/Code_Class/IDEA_Class/commit-template-idea-plugin/src/main/java/com/c301/plugin/ui/CommitTemplateDialog.form: Class to bind does not exist: com.c301.plugin.ui.CommitTemplateDialog
-[ant:instrumentIdeaExtensions] /Users/muzi/Documents/Code_Class/IDEA_Class/commit-template-idea-plugin/src/main/java/com/c301/plugin/ui/CommitTemplateSettingUI.form: Class to bind does not exist: com.c301.plugin.ui.CommitTemplateSettingUI
-[ant:instrumentIdeaExtensions] /Users/muzi/Documents/Code_Class/IDEA_Class/commit-template-idea-plugin/src/main/java/com/c301/plugin/ui/EditCommitTypeDialog.form: Class to bind does not exist: com.c301.plugin.ui.EditCommitTypeDialog
-
-> Task :instrumentedJar
-> Task :jar
-> Task :prepareSandbox
+> Task :classes UP-TO-DATE
+> Task :instrumentCode UP-TO-DATE
+> Task :instrumentedJar UP-TO-DATE
+> Task :jar UP-TO-DATE
+> Task :prepareSandbox UP-TO-DATE
 
 > Task :runIde
 CompileCommand: exclude com/intellij/openapi/vfs/impl/FilePartNodeRoot.trieDescend bool exclude = true
-2026-07-31 23:39:05,036 [    363]   WARN - #c.i.s.ComponentManagerImpl - `preload=true` must be used only for core services (service=com.jetbrains.rdserver.statistics.BackendStatisticsManager, plugin=com.jetbrains.codeWithMe)
-2026-07-31 23:39:05,292 [    619]   WARN - #c.i.o.a.Application - No URL bundle (CFBundleURLTypes) is defined in the main bundle.
+2026-08-01 00:07:57,304 [    361]   WARN - #c.i.s.ComponentManagerImpl - `preload=true` must be used only for core services (service=com.jetbrains.rdserver.statistics.BackendStatisticsManager, plugin=com.jetbrains.codeWithMe)
+2026-08-01 00:07:57,554 [    611]   WARN - #c.i.o.a.Application - No URL bundle (CFBundleURLTypes) is defined in the main bundle.
 To be able to open external links, specify protocols in the app layout section of the build file.
 Example: args.urlSchemes = ["your-protocol"] will handle following links: your-protocol://open?file=file&line=line
-2026-07-31 23:39:05,305 [    632]   WARN - #c.i.u.n.s.ConfirmingTrustManager - Received an empty list of custom trusted root certificates from the system. Check log above for possible errors, enable debug logging in category 'org.jetbrains.nativecerts' for more information
-2026-07-31 23:39:05,307 [    634]   WARN - #c.i.i.u.l.LafManagerImpl - VersionControl.Log.Commit.rowHeight = null in LookAndFeelThemeAdapter; it may lead to performance degradation
-2026-07-31 23:39:05,387 [    714]   WARN - #c.i.s.ComponentManagerImpl - com.intellij.psi.search.FilenameIndex initializer requests com.intellij.ide.plugins.PluginUtil instance
-2026-07-31 23:39:05,746 [   1073]   WARN - #c.i.s.ComponentManagerImpl - org.jetbrains.kotlin.idea.gradleJava.scripting.roots.GradleBuildRootDataSerializer initializer requests com.intellij.util.gist.storage.GistStorage instance
-2026-07-31 23:39:06,193 [   1520]   WARN - #c.i.s.ComponentManagerImpl - com.intellij.psi.LanguageSubstitutors initializer requests com.intellij.psi.LanguageSubstitutors instance
-2026-07-31 23:39:06,222 [   1549]   WARN - #c.i.s.ComponentManagerImpl - org.zmlx.hg4idea.provider.HgChangeProvider initializer requests com.intellij.openapi.vcs.FileStatusFactory instance
-2026-07-31 23:39:06,519 [   1846] SEVERE - #c.i.c.ComponentStoreImpl - Cannot init component state (componentName=GradleJvmSupportMatrix, componentClass=GradleJvmSupportMatrix) [Plugin: com.intellij.gradle]
+2026-08-01 00:07:57,568 [    625]   WARN - #c.i.u.n.s.ConfirmingTrustManager - Received an empty list of custom trusted root certificates from the system. Check log above for possible errors, enable debug logging in category 'org.jetbrains.nativecerts' for more information
+2026-08-01 00:07:57,635 [    692]   WARN - #c.i.i.u.l.LafManagerImpl - VersionControl.Log.Commit.rowHeight = null in LookAndFeelThemeAdapter; it may lead to performance degradation
+2026-08-01 00:07:57,646 [    703]   WARN - #c.i.s.ComponentManagerImpl - com.intellij.psi.search.FilenameIndex initializer requests com.intellij.ide.plugins.PluginUtil instance
+2026-08-01 00:07:58,002 [   1059]   WARN - #c.i.s.ComponentManagerImpl - org.jetbrains.kotlin.idea.gradleJava.scripting.roots.GradleBuildRootDataSerializer initializer requests com.intellij.util.gist.storage.GistStorage instance
+2026-08-01 00:07:58,359 [   1416]   WARN - #c.i.s.ComponentManagerImpl - com.intellij.psi.LanguageSubstitutors initializer requests com.intellij.psi.LanguageSubstitutors instance
+2026-08-01 00:07:58,361 [   1418]   WARN - #c.i.s.ComponentManagerImpl - org.zmlx.hg4idea.provider.HgChangeProvider initializer requests com.intellij.openapi.vcs.FileStatusFactory instance
+2026-08-01 00:07:58,607 [   1664] SEVERE - #c.i.c.ComponentStoreImpl - Cannot init component state (componentName=GradleJvmSupportMatrix, componentClass=GradleJvmSupportMatrix) [Plugin: com.intellij.gradle]
 com.intellij.diagnostic.PluginException: Cannot init component state (componentName=GradleJvmSupportMatrix, componentClass=GradleJvmSupportMatrix) [Plugin: com.intellij.gradle]
 	at com.intellij.configurationStore.ComponentStoreImpl.initComponent(ComponentStoreImpl.kt:174)
 	at com.intellij.configurationStore.ComponentStoreWithExtraComponents.initComponent(ComponentStoreWithExtraComponents.kt:48)
@@ -143,11 +138,11 @@ Caused by: java.lang.IllegalArgumentException: 25
 	at com.intellij.configurationStore.ComponentStoreImpl.initComponent(ComponentStoreImpl.kt:409)
 	at com.intellij.configurationStore.ComponentStoreImpl.initComponent(ComponentStoreImpl.kt:131)
 	... 95 more
-2026-07-31 23:39:06,554 [   1881] SEVERE - #c.i.c.ComponentStoreImpl - IntelliJ IDEA 2023.3  Build #IC-233.11799.241
-2026-07-31 23:39:06,554 [   1881] SEVERE - #c.i.c.ComponentStoreImpl - JDK: 17.0.9; VM: OpenJDK 64-Bit Server VM; Vendor: JetBrains s.r.o.
-2026-07-31 23:39:06,554 [   1881] SEVERE - #c.i.c.ComponentStoreImpl - OS: Mac OS X
-2026-07-31 23:39:06,555 [   1882] SEVERE - #c.i.c.ComponentStoreImpl - Last Action: 
-2026-07-31 23:39:06,619 [   1946]   WARN - #c.i.i.s.i.StartupManagerImpl - Migrate com.c301.plugin.config.PluginOnboardingStartupActivity to ProjectActivity [Plugin: commit-template-plugin]
+2026-08-01 00:07:58,622 [   1679] SEVERE - #c.i.c.ComponentStoreImpl - IntelliJ IDEA 2023.3  Build #IC-233.11799.241
+2026-08-01 00:07:58,623 [   1680] SEVERE - #c.i.c.ComponentStoreImpl - JDK: 17.0.9; VM: OpenJDK 64-Bit Server VM; Vendor: JetBrains s.r.o.
+2026-08-01 00:07:58,623 [   1680] SEVERE - #c.i.c.ComponentStoreImpl - OS: Mac OS X
+2026-08-01 00:07:58,623 [   1680] SEVERE - #c.i.c.ComponentStoreImpl - Last Action: 
+2026-08-01 00:07:58,698 [   1755]   WARN - #c.i.i.s.i.StartupManagerImpl - Migrate com.c301.plugin.config.PluginOnboardingStartupActivity to ProjectActivity [Plugin: commit-template-plugin]
 com.intellij.diagnostic.PluginException: Migrate com.c301.plugin.config.PluginOnboardingStartupActivity to ProjectActivity [Plugin: commit-template-plugin]
 	at com.intellij.ide.startup.impl.StartupManagerImpl.runPostStartupActivities(StartupManagerImpl.kt:277)
 	at com.intellij.ide.startup.impl.StartupManagerImpl.access$runPostStartupActivities(StartupManagerImpl.kt:69)
@@ -164,10 +159,11 @@ com.intellij.diagnostic.PluginException: Migrate com.c301.plugin.config.PluginOn
 	at kotlinx.coroutines.scheduling.CoroutineScheduler$Worker.executeTask(CoroutineScheduler.kt:793)
 	at kotlinx.coroutines.scheduling.CoroutineScheduler$Worker.runWorker(CoroutineScheduler.kt:697)
 	at kotlinx.coroutines.scheduling.CoroutineScheduler$Worker.run(CoroutineScheduler.kt:684)
-2026-07-31 23:39:06,980 [   2307]   WARN - #o.j.p.t.TextMateService - Cannot find referenced file `./language-configuration.json` in bundle `/Users/muzi/Documents/Code_Class/Maven_Class/repository/caches/modules-2/files-2.1/com.jetbrains.intellij.idea/ideaIC/2023.3/6105b81c6142f62379ad6c5afb542c77350a71eb/ideaIC-2023.3/plugins/textmate/lib/bundles/mdx`
-2026-07-31 23:39:07,662 [   2989]   WARN - #c.i.o.a.i.ActionUpdater - 651 ms to grab EDT for ToolWindowHeader$2#Update@ToolwindowTitle (com.intellij.toolWindow.ToolWindowHeader$2)
-2026-07-31 23:39:08,305 [   3632]   WARN - #c.i.u.x.Binding - no accessors for org.jetbrains.idea.maven.project.MavenHomeType
-2026-07-31 23:39:09.128 java[35071:4211581] error messaging the mach port for IMKCFRunLoopWakeUpReliable
-2026-07-31 23:39:09,913 [   5240]   WARN - #c.i.d.IdeErrorsDialog - com.intellij.util.io.HttpRequests$HttpStatusException: Request failed with status code 404. Status=404, Url=https://ea-report.jetbrains.com/developer/list
-2026-07-31 23:39:14,743 [  10070]   WARN - #c.i.o.o.e.ConfigurableExtensionPointUtil - ignore deprecated groupId: language for id: preferences.language.Kotlin.scripting
-2026-07-31 23:39:37,374 [  32701]   WARN - #c.i.o.o.e.ConfigurableExtensionPointUtil - ignore deprecated groupId: language for id: preferences.language.Kotlin.scripting
+2026-08-01 00:07:58,921 [   1978]   WARN - #o.j.p.t.TextMateService - Cannot find referenced file `./language-configuration.json` in bundle `/Users/muzi/Documents/Code_Class/Maven_Class/repository/caches/modules-2/files-2.1/com.jetbrains.intellij.idea/ideaIC/2023.3/6105b81c6142f62379ad6c5afb542c77350a71eb/ideaIC-2023.3/plugins/textmate/lib/bundles/mdx`
+2026-08-01 00:07:59,773 [   2830]   WARN - #c.i.o.a.i.ActionUpdater - 961 ms to grab EDT for ToolWindowHeader$2#Update@ToolwindowTitle (com.intellij.toolWindow.ToolWindowHeader$2)
+2026-08-01 00:08:00,378 [   3435]   WARN - #c.i.u.x.Binding - no accessors for org.jetbrains.idea.maven.project.MavenHomeType
+2026-08-01 00:08:03.532 java[38673:4264659] error messaging the mach port for IMKCFRunLoopWakeUpReliable
+2026-08-01 00:08:04,118 [   7175]   WARN - #c.i.d.IdeErrorsDialog - com.intellij.util.io.HttpRequests$HttpStatusException: Request failed with status code 404. Status=404, Url=https://ea-report.jetbrains.com/developer/list
+2026-08-01 00:08:16,709 [  19766]   WARN - #c.i.o.o.e.ConfigurableExtensionPointUtil - ignore deprecated groupId: language for id: preferences.language.Kotlin.scripting
+2026-08-01 00:08:26,510 [  29567]   WARN - #c.i.o.o.e.ConfigurableExtensionPointUtil - ignore deprecated groupId: language for id: preferences.language.Kotlin.scripting
+2026-08-01 00:08:43,230 [  46287]   WARN - #c.i.o.o.e.ConfigurableExtensionPointUtil - ignore deprecated groupId: language for id: preferences.language.Kotlin.scripting
