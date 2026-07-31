@@ -7,6 +7,7 @@ import com.c301.plugin.infrastructure.ai.AiSystemPromptTemplates;
 import com.c301.plugin.infrastructure.credentials.AiCredentialStore;
 import com.c301.plugin.infrastructure.credentials.PasswordSafeAiCredentialStore;
 import com.c301.plugin.utils.CommUtil;
+import com.intellij.icons.AllIcons;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.util.ui.JBUI;
@@ -15,6 +16,11 @@ import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.*;
 import java.util.List;
 
@@ -41,6 +47,9 @@ final class AiPreferencesConfigurable {
     private JLabel credentialStatus;
     private JButton saveKey;
     private JButton clearKey;
+    private JLabel apiKeyHelp;
+    private JPopupMenu apiKeyHelpPopup;
+    private javax.swing.Timer apiKeyHelpCloseTimer;
     private JButton restorePrompt;
     private JPanel qwenSettings;
     private JCheckBox qwenIncludeUsage;
@@ -198,6 +207,8 @@ final class AiPreferencesConfigurable {
             credentials.add(credentialStatus);
             credentials.add(saveKey);
             credentials.add(clearKey);
+            apiKeyHelp = createApiKeyHelp(bundle);
+            credentials.add(apiKeyHelp);
             constraints.gridy++;
             panel.add(credentials, constraints);
 
@@ -323,7 +334,118 @@ final class AiPreferencesConfigurable {
         model.putClientProperty("JTextField.placeholderText", bundle().getString(provider.modelPlaceholderKey()));
         systemPrompt.setText(promptFor(provider));
         updateQwenSettingsVisibility();
+        updateApiKeyHelpVisibility();
         refreshCredentialStatus();
+    }
+
+    private JLabel createApiKeyHelp(ResourceBundle bundle) {
+        JLabel help = new JLabel(AllIcons.General.ContextHelp);
+        help.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        help.setToolTipText(bundle.getString("plugin.ai.qwen.apiKeyHelp.accessibleDescription"));
+        help.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent event) {
+                showApiKeyHelp();
+            }
+
+            @Override
+            public void mouseExited(MouseEvent event) {
+                scheduleApiKeyHelpClose();
+            }
+        });
+        return help;
+    }
+
+    private void updateApiKeyHelpVisibility() {
+        if (apiKeyHelp == null) {
+            return;
+        }
+        boolean visible = selectedProvider() == AiProviderType.QWEN;
+        apiKeyHelp.setVisible(visible);
+        if (!visible) {
+            hideApiKeyHelp();
+        }
+    }
+
+    private void showApiKeyHelp() {
+        if (apiKeyHelp == null || !apiKeyHelp.isShowing() || selectedProvider() != AiProviderType.QWEN) {
+            return;
+        }
+        cancelApiKeyHelpClose();
+        if (apiKeyHelpPopup == null) {
+            apiKeyHelpPopup = createApiKeyHelpPopup(bundle());
+        }
+        apiKeyHelpPopup.show(apiKeyHelp, apiKeyHelp.getWidth(), 0);
+    }
+
+    private JPopupMenu createApiKeyHelpPopup(ResourceBundle bundle) {
+        JPopupMenu popup = new JPopupMenu();
+        popup.setFocusable(false);
+        JPanel content = new JPanel();
+        content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
+        content.setBorder(JBUI.Borders.empty(10, 12));
+        JLabel line1 = new JLabel(bundle.getString("plugin.ai.qwen.apiKeyHelp.line1"));
+        JLabel line2 = new JLabel(bundle.getString("plugin.ai.qwen.apiKeyHelp.line2"));
+        content.add(line1);
+        content.add(Box.createVerticalStrut(JBUI.scale(4)));
+        content.add(line2);
+        content.add(Box.createVerticalStrut(JBUI.scale(8)));
+        JLabel link = new JLabel("<html><a href='#'>" + bundle.getString("plugin.ai.qwen.apiKeyHelp.link") + "</a></html>");
+        link.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        link.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent event) {
+                openQwenApiKeyPage();
+            }
+        });
+        content.add(link);
+        MouseAdapter hoverListener = new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent event) {
+                cancelApiKeyHelpClose();
+            }
+
+            @Override
+            public void mouseExited(MouseEvent event) {
+                scheduleApiKeyHelpClose();
+            }
+        };
+        content.addMouseListener(hoverListener);
+        line1.addMouseListener(hoverListener);
+        line2.addMouseListener(hoverListener);
+        link.addMouseListener(hoverListener);
+        popup.add(content);
+        return popup;
+    }
+
+    private void scheduleApiKeyHelpClose() {
+        if (apiKeyHelpCloseTimer == null) {
+            apiKeyHelpCloseTimer = new javax.swing.Timer(250, event -> hideApiKeyHelp());
+            apiKeyHelpCloseTimer.setRepeats(false);
+        }
+        apiKeyHelpCloseTimer.restart();
+    }
+
+    private void cancelApiKeyHelpClose() {
+        if (apiKeyHelpCloseTimer != null) {
+            apiKeyHelpCloseTimer.stop();
+        }
+    }
+
+    private void hideApiKeyHelp() {
+        cancelApiKeyHelpClose();
+        if (apiKeyHelpPopup != null) {
+            apiKeyHelpPopup.setVisible(false);
+        }
+    }
+
+    private void openQwenApiKeyPage() {
+        try {
+            Desktop.getDesktop().browse(new URI("https://bailian.console.aliyun.com"));
+        } catch (IOException | URISyntaxException | UnsupportedOperationException exception) {
+            Messages.showErrorDialog(panel, bundle().getString("plugin.ai.qwen.apiKeyHelp.openLinkFailure"),
+                    bundle().getString("plugin.ai.qwen.apiKeyHelp.openLinkFailureTitle"));
+        }
     }
 
     private void restoreDefaultPrompt() {
