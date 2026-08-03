@@ -76,7 +76,8 @@ tasks.register('generateBuildInfo') {
 
 tasks.named('processResources') {
     dependsOn tasks.named('generateBuildInfo')
-    exclude 'version.properties'
+    // 仅排除源码目录中的静态版本文件，保留构建生成的版本信息进入插件 JAR。
+    exclude { details -> details.file == file('src/main/resources/version.properties') }
     from(generatedResourcesDir)
 }
 

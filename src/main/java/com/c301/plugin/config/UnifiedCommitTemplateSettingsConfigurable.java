@@ -2,6 +2,7 @@ package com.c301.plugin.config;
 
 import com.c301.plugin.infrastructure.credentials.PasswordSafeAiCredentialStore;
 import com.c301.plugin.ui.CommitTemplateSettingUI;
+import com.c301.plugin.ui.PluginNotifications;
 import com.c301.plugin.utils.CommUtil;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.options.Configurable;
@@ -23,7 +24,9 @@ import java.awt.*;
 public class UnifiedCommitTemplateSettingsConfigurable implements SearchableConfigurable, Configurable.NoScroll {
 
 
-    private static volatile boolean selectAiModelTabOnOpen;
+    private static final int COMMIT_TEMPLATE_TAB_INDEX = 0;
+    private static final int AI_MODEL_TAB_INDEX = 4;
+    private static volatile Integer requestedTabIndex;
     private final Project project;
     private final GitCommitSettingConfigurable globalConfigurable = new GitCommitSettingConfigurable();
     private final ProjectGitCommitSettingConfigurable projectConfigurable;
@@ -58,10 +61,39 @@ public class UnifiedCommitTemplateSettingsConfigurable implements SearchableConf
     }
 
     /**
+     * 请求下一次打开设置时直接定位到提交模板标签页。
+     */
+    public static void requestCommitTemplateTabOnOpen() {
+        requestedTabIndex = COMMIT_TEMPLATE_TAB_INDEX;
+    }
+
+    /**
      * 请求下一次打开设置时直接定位到 AI 模型标签页。
      */
     public static void requestAiModelTabOnOpen() {
-        selectAiModelTabOnOpen = true;
+        requestedTabIndex = AI_MODEL_TAB_INDEX;
+    }
+
+    /**
+     * 打开插件的统一设置项，使 IDEA 左侧设置树选中 Tools 下的插件节点。
+     */
+    public static void openCommitTemplateSettings(Project project) {
+        requestCommitTemplateTabOnOpen();
+        openSettings(project);
+    }
+
+    /**
+     * 打开插件的统一设置项，并定位到 AI 模型标签页。
+     */
+    public static void openAiModelSettings(Project project) {
+        requestAiModelTabOnOpen();
+        openSettings(project);
+    }
+
+    private static void openSettings(Project project) {
+        ApplicationManager.getApplication().invokeLater(() ->
+                com.intellij.openapi.options.ShowSettingsUtil.getInstance().showSettingsDialog(project,
+                        "plugins.muzilib.commit.template"));
     }
 
     @Override
@@ -75,9 +107,10 @@ public class UnifiedCommitTemplateSettingsConfigurable implements SearchableConf
     }
 
     private void selectRequestedTab() {
-        if (selectAiModelTabOnOpen && tabs != null) {
-            tabs.setSelectedIndex(4);
-            selectAiModelTabOnOpen = false;
+        Integer tabIndex = requestedTabIndex;
+        if (tabIndex != null && tabs != null && tabIndex >= 0 && tabIndex < tabs.getTabCount()) {
+            tabs.setSelectedIndex(tabIndex);
+            requestedTabIndex = null;
         }
     }
 
@@ -132,6 +165,7 @@ public class UnifiedCommitTemplateSettingsConfigurable implements SearchableConf
         preferencesConfigurable.reset();
         aiConfigurable.reset();
         resetTabTitles();
+        selectRequestedTab();
     }
 
     private void resetAllConfiguration() {
@@ -157,8 +191,10 @@ public class UnifiedCommitTemplateSettingsConfigurable implements SearchableConf
     }
 
     private void showCurrentVersionAnnouncement() {
-        PluginOnboardingState.getInstance().clearAnnouncementHistory();
-        PluginOnboardingStartupActivity.showAnnouncementIfNeeded(project);
+        PluginVersionAnnouncement announcement = PluginVersionAnnouncement.current();
+        if (announcement != null) {
+            PluginNotifications.showVersionAnnouncementBalloon(project, announcement);
+        }
     }
 
     private void resetTabTitles() {

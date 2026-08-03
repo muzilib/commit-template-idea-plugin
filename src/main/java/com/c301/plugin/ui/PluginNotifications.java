@@ -8,8 +8,9 @@ import com.intellij.notification.NotificationAction;
 import com.intellij.notification.NotificationGroup;
 import com.intellij.notification.NotificationGroupManager;
 import com.intellij.notification.NotificationType;
+
 import com.intellij.openapi.diagnostic.Logger;
-import com.intellij.openapi.options.ShowSettingsUtil;
+
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.IconLoader;
 import com.intellij.util.ui.JBUI;
@@ -46,26 +47,43 @@ public final class PluginNotifications {
         if (notificationGroup == null) {
             return false;
         }
-        var bundle = CommUtil.i18nResourceBundle(null);
-        String prefix = announcement.messageKeyPrefix();
-        String title = bundle.getString(prefix + ".title").replace("{version}", announcement.version());
-        String content = "<html>"
-                + bundle.getString(prefix + ".greeting") + "<br/><br/>"
-                + bundle.getString(prefix + ".feedback") + "<br/><br/>"
-                + "<b>" + bundle.getString(prefix + ".tipsTitle") + "</b><br/>"
-                + bundle.getString(prefix + ".tips")
-                + "</html>";
+        String title = announcementTitle(announcement);
+        String content = announcementContent(announcement);
         var notification = notificationGroup.createNotification(title, content, NotificationType.INFORMATION);
-        notification.addAction(NotificationAction.createSimpleExpiring(bundle.getString(prefix + ".openAiSettings"), () -> {
-            UnifiedCommitTemplateSettingsConfigurable.requestAiModelTabOnOpen();
-            ShowSettingsUtil.getInstance().showSettingsDialog(project, "plugins.muzilib.commit.template");
-        }));
+        String prefix = announcement.messageKeyPrefix();
+        var bundle = CommUtil.i18nResourceBundle(null);
+        notification.addAction(NotificationAction.createSimpleExpiring(bundle.getString(prefix + ".openAiSettings"), () ->
+                UnifiedCommitTemplateSettingsConfigurable.openAiModelSettings(project)));
         notification.addAction(NotificationAction.createSimpleExpiring(bundle.getString(prefix + ".openRepository"),
                 () -> BrowserUtil.browse("https://github.com/muzilib/commit-template-idea-plugin")));
         notification.setIcon(PLUGIN_ICON);
         notification.notify(project);
         LOG.info("已提交版本公告通知: " + announcement.version());
         return true;
+    }
+
+    /**
+     * 手动触发时直接投递右下角公告气泡，不等待 Settings 窗口关闭。
+     */
+    public static boolean showVersionAnnouncementBalloon(Project project, PluginVersionAnnouncement announcement) {
+        return notifyVersionAnnouncement(project, announcement);
+    }
+
+    private static String announcementTitle(PluginVersionAnnouncement announcement) {
+        var bundle = CommUtil.i18nResourceBundle(null);
+        return bundle.getString(announcement.messageKeyPrefix() + ".title")
+                .replace("{version}", announcement.version());
+    }
+
+    private static String announcementContent(PluginVersionAnnouncement announcement) {
+        var bundle = CommUtil.i18nResourceBundle(null);
+        String prefix = announcement.messageKeyPrefix();
+        return "<html>"
+                + bundle.getString(prefix + ".greeting") + "<br/><br/>"
+                + bundle.getString(prefix + ".feedback") + "<br/><br/>"
+                + "<b>" + bundle.getString(prefix + ".tipsTitle") + "</b><br/>"
+                + bundle.getString(prefix + ".tips")
+                + "</html>";
     }
 
     private static NotificationGroup getNotificationGroup(String groupId) {

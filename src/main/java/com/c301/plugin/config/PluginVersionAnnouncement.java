@@ -39,12 +39,21 @@ public enum PluginVersionAnnouncement {
     }
 
     private static @Nullable PluginVersionAnnouncement find(String version) {
+        if (version == null || version.isBlank()) {
+            return null;
+        }
         for (PluginVersionAnnouncement announcement : values()) {
-            if (announcement.version.equals(version)) {
+            if (announcement.matches(version)) {
                 return announcement;
             }
         }
         return null;
+    }
+
+    private boolean matches(String actualVersion) {
+        return version.equals(actualVersion)
+                || actualVersion.startsWith(version + "-")
+                || actualVersion.startsWith(version + "+");
     }
 
     public String version() {

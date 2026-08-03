@@ -4,6 +4,7 @@ import com.c301.plugin.config.CommitTemplateSettingsResolver;
 import com.c301.plugin.config.EffectiveCommitTemplateSettings;
 import com.c301.plugin.config.PluginUiLanguageSettings;
 import com.c301.plugin.config.StoreCommitTemplateState;
+import com.c301.plugin.config.UnifiedCommitTemplateSettingsConfigurable;
 import com.c301.plugin.constant.Constant;
 import com.c301.plugin.domain.commit.CommitMessageFormatter;
 import com.c301.plugin.domain.commit.CommitMessageValidator;
@@ -15,7 +16,6 @@ import com.c301.plugin.utils.CommUtil;
 import com.c301.plugin.utils.StrUtil;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.options.ShowSettingsUtil;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManager;
 import com.intellij.openapi.vcs.CommitMessageI;
@@ -517,7 +517,7 @@ public class CommitTemplateDialog extends JDialog {
             }
         }
         if (targetProject != null) {
-            ShowSettingsUtil.getInstance().showSettingsDialog(targetProject, "plugins.muzilib.commit.template");
+            UnifiedCommitTemplateSettingsConfigurable.openCommitTemplateSettings(targetProject);
         }
     }
 
