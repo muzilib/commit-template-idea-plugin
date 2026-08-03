@@ -21,9 +21,14 @@ import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vcs.CheckinProjectPanel;
 import com.intellij.openapi.vcs.CommitMessageI;
+import com.intellij.util.concurrency.AppExecutorUtil;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.WeakHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -31,13 +36,19 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * 流式响应仅以已识别字段生成提交信息草稿，完整响应通过本地校验后才保留最终结果。
  */
 public final class AiDirectStreamingGenerator {
+    private static final long STREAM_UPDATE_INTERVAL_MILLIS = 100L;
+    private static final Map<CommitMessageI, Boolean> ACTIVE_GENERATIONS =
+            Collections.synchronizedMap(new WeakHashMap<>());
+
     private final Project project;
     private final CommitMessageI commitMessage;
     private final AiIncludedChangesCollector.CollectionResult changes;
     private final AiPreferencesState preferences = AiPreferencesState.getInstance();
     private final String previousMessage;
     private final StringBuilder response = new StringBuilder();
+    private final Object responseLock = new Object();
     private final AtomicBoolean completed = new AtomicBoolean();
+    private final AtomicBoolean draftUpdateScheduled = new AtomicBoolean();
     private final AtomicBoolean userTookOver = new AtomicBoolean();
     private final AtomicBoolean interruptionNotified = new AtomicBoolean();
 
@@ -61,6 +72,11 @@ public final class AiDirectStreamingGenerator {
     }
 
     public void generate() {
+        synchronized (ACTIVE_GENERATIONS) {
+            if (ACTIVE_GENERATIONS.putIfAbsent(commitMessage, Boolean.TRUE) != null) {
+                return;
+            }
+        }
         effectiveSettings = CommitTemplateSettingsResolver.getInstance(project).resolve();
         generationConfig = AiGenerationConfigSnapshot.capture(preferences, effectiveSettings);
         effectiveSettings = generationConfig.effectiveSettings();
@@ -81,13 +97,16 @@ public final class AiDirectStreamingGenerator {
 
     private void onDiffPrepared(AiIncludedChangesCollector.DiffCollectionResult result) {
         if (result.diff().isBlank()) {
+            releaseGeneration();
             AiGenerationDialog.notifyNoEligibleChanges(project);
             return;
         }
         if (!AiDataTransferConsentDialog.ensureAccepted(project)) {
+            releaseGeneration();
             return;
         }
         if (!canAiReplaceCommitMessage()) {
+            releaseGeneration();
             return;
         }
         request = generationConfig.createRequest(result.diff());
@@ -98,12 +117,14 @@ public final class AiDirectStreamingGenerator {
                 generationIndicator = indicator;
                 if (userTookOver.get()) {
                     indicator.cancel();
+                    releaseGeneration();
                     return;
                 }
                 String apiKey = new PasswordSafeAiCredentialStore().readApiKey(generationConfig.providerType());
                 if (apiKey == null || apiKey.isBlank()) {
                     ApplicationManager.getApplication().invokeLater(() -> AiDirectStreamingGenerator.this.notify(
                             text("plugin.ai.apiKeyMissingHint"), NotificationType.ERROR));
+                    releaseGeneration();
                     return;
                 }
                 AiProviderFactory.create(generationConfig.providerType()).generate(request, new AiCredentials(apiKey), indicator,
@@ -116,18 +137,35 @@ public final class AiDirectStreamingGenerator {
         return generationConfig.allowedTypes();
     }
 
-    private void updateDraft() {
-        String draft = IncrementalSuggestionDraft.render(response.toString());
-        if (draft.isBlank()) {
+    private void scheduleDraftUpdate() {
+        if (!draftUpdateScheduled.compareAndSet(false, true)) {
             return;
         }
-        ApplicationManager.getApplication().invokeLater(() -> {
-            if (project.isDisposed() || completed.get() || !canAiReplaceCommitMessage()) {
-                return;
-            }
-            lastAiDraft = draft;
-            commitMessage.setCommitMessage(draft);
-        });
+        AppExecutorUtil.getAppScheduledExecutorService().schedule(() ->
+                ApplicationManager.getApplication().invokeLater(() -> {
+                    draftUpdateScheduled.set(false);
+                    if (project.isDisposed() || completed.get() || !canAiReplaceCommitMessage()) {
+                        return;
+                    }
+                    String draft = IncrementalSuggestionDraft.render(responseSnapshot());
+                    if (draft.isBlank()) {
+                        return;
+                    }
+                    lastAiDraft = draft;
+                    commitMessage.setCommitMessage(draft);
+                }), STREAM_UPDATE_INTERVAL_MILLIS, TimeUnit.MILLISECONDS);
+    }
+
+    private void appendResponse(String text) {
+        synchronized (responseLock) {
+            response.append(text);
+        }
+    }
+
+    private String responseSnapshot() {
+        synchronized (responseLock) {
+            return response.toString();
+        }
     }
 
     private void complete() {
@@ -136,10 +174,11 @@ public final class AiDirectStreamingGenerator {
         }
         ApplicationManager.getApplication().invokeLater(() -> {
             if (project.isDisposed() || !canAiReplaceCommitMessage()) {
+                releaseGeneration();
                 return;
             }
             try {
-                var suggestion = AiSuggestionParser.parse(response.toString());
+                var suggestion = AiSuggestionParser.parse(responseSnapshot());
                 var commit = AiSuggestionValidator.validateAndConvert(suggestion, effectiveSettings, allowedTypes());
                 String formattedCommit = com.c301.plugin.domain.commit.CommitMessageFormatter.format(
                         commit, effectiveSettings.emojiEnable() ? effectiveSettings.emojiLocation() : null,
@@ -149,6 +188,8 @@ public final class AiDirectStreamingGenerator {
                 notify(text("plugin.ai.directGenerationSuccess"), NotificationType.INFORMATION);
             } catch (Exception exception) {
                 restorePreviousMessage(text("plugin.ai.directGenerationInvalid"));
+            } finally {
+                releaseGeneration();
             }
         });
     }
@@ -161,6 +202,7 @@ public final class AiDirectStreamingGenerator {
             if (!project.isDisposed() && canAiReplaceCommitMessage()) {
                 restorePreviousMessage(error.message());
             }
+            releaseGeneration();
         });
     }
 
@@ -178,7 +220,8 @@ public final class AiDirectStreamingGenerator {
             return false;
         }
         String currentMessage = currentCommitMessage();
-        if (currentMessage == null || lastAiDraft == null || lastAiDraft.equals(currentMessage)) {
+        if (currentMessage == null || lastAiDraft == null
+                || normalizeMessage(lastAiDraft).equals(normalizeMessage(currentMessage))) {
             return true;
         }
         if (userTookOver.compareAndSet(false, true)) {
@@ -197,6 +240,18 @@ public final class AiDirectStreamingGenerator {
         return commitMessage instanceof CheckinProjectPanel panel ? panel.getCommitMessage() : null;
     }
 
+    private static String normalizeMessage(String message) {
+        return message == null ? null : message.replace("\r\n", "\n").replace('\r', '\n');
+    }
+
+
+
+    private void releaseGeneration() {
+        synchronized (ACTIVE_GENERATIONS) {
+            ACTIVE_GENERATIONS.remove(commitMessage);
+        }
+    }
+
     private void notify(String message, NotificationType type) {
         PluginNotifications.notify(project, message, type);
     }
@@ -204,8 +259,8 @@ public final class AiDirectStreamingGenerator {
     private final class StreamingListener implements AiStreamingListener {
         @Override
         public void onText(String text) {
-            response.append(text);
-            updateDraft();
+            appendResponse(text);
+            scheduleDraftUpdate();
         }
 
         @Override

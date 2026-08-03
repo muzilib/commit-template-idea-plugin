@@ -21,17 +21,21 @@ import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.vcs.CommitMessageI;
+import com.intellij.util.concurrency.AppExecutorUtil;
 import com.intellij.util.ui.JBUI;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * AI 提交建议窗口：发送前完整展示实际请求参数，响应只会回填 Commit Message。
  */
 public final class AiGenerationDialog extends JDialog {
+    private static final long STREAM_UPDATE_INTERVAL_MILLIS = 100L;
+
     private final Project project;
     private final CommitMessageI commitMessage;
     private final AiPreferencesState preferences = AiPreferencesState.getInstance();
@@ -43,7 +47,11 @@ public final class AiGenerationDialog extends JDialog {
     private final JButton settings = new JButton();
     private final JButton close = new JButton();
     private final StringBuilder response = new StringBuilder();
+    private final Object responseLock = new Object();
+    private final StringBuilder pendingPreviewText = new StringBuilder();
+    private final Object pendingPreviewLock = new Object();
     private final AtomicBoolean completed = new AtomicBoolean();
+    private final AtomicBoolean previewUpdateScheduled = new AtomicBoolean();
     private volatile boolean disposed;
 
     private EffectiveCommitTemplateSettings effectiveSettings;
@@ -222,7 +230,12 @@ public final class AiGenerationDialog extends JDialog {
         if (request == null) {
             return;
         }
-        response.setLength(0);
+        synchronized (responseLock) {
+            response.setLength(0);
+        }
+        synchronized (pendingPreviewLock) {
+            pendingPreviewText.setLength(0);
+        }
         completed.set(false);
         preview.setText(requestPreview + "\n\n----------------------------------------\nAI response\n");
         apply.setEnabled(false);
@@ -251,7 +264,7 @@ public final class AiGenerationDialog extends JDialog {
 
     private void applySuggestion() {
         try {
-            var suggestion = AiSuggestionParser.parse(response.toString());
+            var suggestion = AiSuggestionParser.parse(responseSnapshot());
             var commit = AiSuggestionValidator.validateAndConvert(suggestion, effectiveSettings, allowedTypes());
             commitMessage.setCommitMessage(com.c301.plugin.domain.commit.CommitMessageFormatter.format(
                     commit, effectiveSettings.emojiEnable() ? effectiveSettings.emojiLocation() : null,
@@ -281,15 +294,52 @@ public final class AiGenerationDialog extends JDialog {
         return generationConfig.allowedTypes();
     }
 
+    private void appendResponse(String text) {
+        synchronized (responseLock) {
+            response.append(text);
+        }
+        synchronized (pendingPreviewLock) {
+            pendingPreviewText.append(text);
+        }
+    }
+
+    private String responseSnapshot() {
+        synchronized (responseLock) {
+            return response.toString();
+        }
+    }
+
+    private String drainPendingPreviewText() {
+        synchronized (pendingPreviewLock) {
+            String pending = pendingPreviewText.toString();
+            pendingPreviewText.setLength(0);
+            return pending;
+        }
+    }
+
+    private void schedulePreviewUpdate() {
+        if (!previewUpdateScheduled.compareAndSet(false, true)) {
+            return;
+        }
+        AppExecutorUtil.getAppScheduledExecutorService().schedule(() ->
+                ApplicationManager.getApplication().invokeLater(() -> {
+                    previewUpdateScheduled.set(false);
+                    appendPendingPreviewText();
+                }), STREAM_UPDATE_INTERVAL_MILLIS, TimeUnit.MILLISECONDS);
+    }
+
+    private void appendPendingPreviewText() {
+        String pending = drainPendingPreviewText();
+        if (isUiActive() && !pending.isEmpty()) {
+            preview.append(pending);
+        }
+    }
+
     private final class Listener implements AiStreamingListener {
         @Override
         public void onText(String text) {
-            response.append(text);
-            ApplicationManager.getApplication().invokeLater(() -> {
-                if (isUiActive()) {
-                    preview.append(text);
-                }
-            });
+            appendResponse(text);
+            schedulePreviewUpdate();
         }
 
         @Override
@@ -301,14 +351,16 @@ public final class AiGenerationDialog extends JDialog {
                 if (!isUiActive()) {
                     return;
                 }
+                appendPendingPreviewText();
                 generate.setEnabled(true);
-                if (response.isEmpty()) {
+                String responseText = responseSnapshot();
+                if (responseText.isEmpty()) {
                     preview.append("\n\n" + text("plugin.ai.emptyVisibleResponse"));
                     AiGenerationDialog.notify(project, text("plugin.ai.emptyVisibleResponse"), NotificationType.ERROR);
                     return;
                 }
                 try {
-                    AiSuggestionValidator.validateAndConvert(AiSuggestionParser.parse(response.toString()), effectiveSettings, allowedTypes());
+                    AiSuggestionValidator.validateAndConvert(AiSuggestionParser.parse(responseText), effectiveSettings, allowedTypes());
                     apply.setEnabled(true);
                     preview.append("\n\n" + text("plugin.ai.completed")
                             .replace("{target}", text("plugin.ai.target.commitMessage")));
@@ -327,6 +379,7 @@ public final class AiGenerationDialog extends JDialog {
                 if (!isUiActive()) {
                     return;
                 }
+                appendPendingPreviewText();
                 generate.setEnabled(true);
                 preview.append("\n\n-- " + error.message() + " --");
                 notifyAiError(project, error);
