@@ -43,6 +43,7 @@ public final class AiGenerationDialog extends JDialog {
     private final JButton close = new JButton();
     private final StringBuilder response = new StringBuilder();
     private final AtomicBoolean completed = new AtomicBoolean();
+    private volatile boolean disposed;
 
     private EffectiveCommitTemplateSettings effectiveSettings;
     private AiGenerationRequest request;
@@ -144,14 +145,19 @@ public final class AiGenerationDialog extends JDialog {
                 text("plugin.ai.generationTaskTitle"), true) {
             @Override
             public void run(@NotNull ProgressIndicator indicator) {
-                AiIncludedChangesCollector.DiffCollectionResult result = AiIncludedChangesCollector.collectDiff(project, changes);
-                ApplicationManager.getApplication().invokeLater(() -> onContextPrepared(result));
+                AiIncludedChangesCollector.DiffCollectionResult result =
+                        AiIncludedChangesCollector.collectDiff(project, changes, indicator);
+                ApplicationManager.getApplication().invokeLater(() -> {
+                    if (isUiActive()) {
+                        onContextPrepared(result);
+                    }
+                });
             }
         });
     }
 
     private void onContextPrepared(AiIncludedChangesCollector.DiffCollectionResult result) {
-        if (!isDisplayable()) {
+        if (!isUiActive()) {
             return;
         }
         if (result.diff().isBlank()) {
@@ -234,6 +240,9 @@ public final class AiGenerationDialog extends JDialog {
                 String apiKey = new PasswordSafeAiCredentialStore().readApiKey(preferences.getProviderType());
                 if (apiKey == null || apiKey.isBlank()) {
                     ApplicationManager.getApplication().invokeLater(() -> {
+                        if (!isUiActive()) {
+                            return;
+                        }
                         String message = text("plugin.ai.apiKeyMissingHint");
                         Messages.showWarningDialog(AiGenerationDialog.this, message, text("plugin.ai.apiKeyMissingTitle"));
                         AiGenerationDialog.notify(project, message, NotificationType.ERROR);
@@ -264,6 +273,16 @@ public final class AiGenerationDialog extends JDialog {
         UnifiedCommitTemplateSettingsConfigurable.openAiModelSettings(project);
     }
 
+    private boolean isUiActive() {
+        return !disposed && isDisplayable() && !project.isDisposed();
+    }
+
+    @Override
+    public void dispose() {
+        disposed = true;
+        super.dispose();
+    }
+
     private java.util.List<com.c301.plugin.model.CommitTypeDomain> allowedTypes() {
         return effectiveSettings.customEnable() ? effectiveSettings.customCommitTypeList()
                 : CommUtil.getDefaultCommitTypeList(effectiveSettings.language().getKey());
@@ -273,7 +292,11 @@ public final class AiGenerationDialog extends JDialog {
         @Override
         public void onText(String text) {
             response.append(text);
-            ApplicationManager.getApplication().invokeLater(() -> preview.append(text));
+            ApplicationManager.getApplication().invokeLater(() -> {
+                if (isUiActive()) {
+                    preview.append(text);
+                }
+            });
         }
 
         @Override
@@ -282,6 +305,9 @@ public final class AiGenerationDialog extends JDialog {
                 return;
             }
             ApplicationManager.getApplication().invokeLater(() -> {
+                if (!isUiActive()) {
+                    return;
+                }
                 generate.setEnabled(true);
                 if (response.isEmpty()) {
                     preview.append("\n\n" + text("plugin.ai.emptyVisibleResponse"));
@@ -305,6 +331,9 @@ public final class AiGenerationDialog extends JDialog {
                 return;
             }
             ApplicationManager.getApplication().invokeLater(() -> {
+                if (!isUiActive()) {
+                    return;
+                }
                 generate.setEnabled(true);
                 preview.append("\n\n-- " + error.message() + " --");
                 notifyAiError(project, error);

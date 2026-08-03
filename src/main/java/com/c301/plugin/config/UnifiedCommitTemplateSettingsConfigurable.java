@@ -77,8 +77,9 @@ public class UnifiedCommitTemplateSettingsConfigurable implements SearchableConf
     private static void openSettings(Project project, int tabIndex) {
         ApplicationManager.getApplication().invokeLater(() ->
                 com.intellij.openapi.options.ShowSettingsUtil.getInstance().showSettingsDialog(
-                        project, UnifiedCommitTemplateSettingsConfigurable.class,
-                        configurable -> configurable.selectTab(tabIndex)));
+                        project,
+                        configurable -> configurable instanceof UnifiedCommitTemplateSettingsConfigurable,
+                        configurable -> ((UnifiedCommitTemplateSettingsConfigurable) configurable).selectTab(tabIndex)));
     }
 
     @Override

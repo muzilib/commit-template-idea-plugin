@@ -19,7 +19,7 @@ public final class OpenAiCompatibleRequestRenderer {
     }
 
     public static String resolveUrl(AiGenerationRequest request) {
-        return URI.create(request.apiUrl().trim()).toString();
+        return AiEndpointValidator.requireSupported(request.apiUrl());
     }
 
     public static String requestBody(AiGenerationRequest request, AiProvider provider) throws Exception {

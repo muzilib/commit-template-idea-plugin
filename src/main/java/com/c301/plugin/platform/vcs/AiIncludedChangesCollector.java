@@ -6,6 +6,8 @@ import com.c301.plugin.infrastructure.pattern.GitIgnoreStylePathMatcher;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.diff.impl.patch.IdeaTextPatchBuilder;
 import com.intellij.openapi.diff.impl.patch.UnifiedDiffWriter;
+import com.intellij.openapi.progress.ProgressIndicator;
+import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vcs.VcsDataKeys;
 import com.intellij.openapi.vcs.VcsException;
@@ -78,9 +80,14 @@ public final class AiIncludedChangesCollector {
             return revision.getFile().getName();
         }
         try {
-            return Path.of(project.getBasePath()).relativize(Path.of(absolutePath)).toString().replace('\\', '/');
+            Path base = Path.of(project.getBasePath()).toAbsolutePath().normalize();
+            Path file = Path.of(absolutePath).toAbsolutePath().normalize();
+            if (!file.startsWith(base)) {
+                return null;
+            }
+            return base.relativize(file).toString().replace('\\', '/');
         } catch (IllegalArgumentException ignored) {
-            return revision.getFile().getName();
+            return null;
         }
     }
 
@@ -110,12 +117,17 @@ public final class AiIncludedChangesCollector {
     /**
      * 在用户确认发送 Diff 后才调用。Diff 不落盘，并在达到总字符限制时停止继续加入文件。
      */
-    public static DiffCollectionResult collectDiff(Project project, CollectionResult result) {
+    public static DiffCollectionResult collectDiff(Project project, CollectionResult result,
+                                                   ProgressIndicator indicator) {
         StringBuilder allDiffs = new StringBuilder();
         List<String> excluded = new ArrayList<>();
         int includedFileCount = 0;
         boolean truncated = false;
         for (int index = 0; index < result.acceptedChanges().size(); index++) {
+            ProgressManager.checkCanceled();
+            if (indicator != null && indicator.isCanceled()) {
+                throw new com.intellij.openapi.progress.ProcessCanceledException();
+            }
             Change change = result.acceptedChanges().get(index);
             String path = pathOf(project, change);
             try {

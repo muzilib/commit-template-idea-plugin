@@ -1,6 +1,7 @@
 package com.c301.plugin.config;
 
 import com.c301.plugin.domain.ai.*;
+import com.c301.plugin.infrastructure.ai.AiEndpointValidator;
 import com.c301.plugin.infrastructure.credentials.PasswordSafeAiCredentialStore;
 import com.c301.plugin.ui.PluginNotifications;
 import com.c301.plugin.utils.CommUtil;
@@ -82,12 +83,7 @@ public class AiPreferencesState implements PersistentStateComponent<AiPreference
     }
 
     private static boolean isSupportedApiUrl(String value) {
-        if (value == null || value.isBlank()) {
-            return false;
-        }
-        String normalized = value.trim().toLowerCase();
-        return normalized.startsWith("https://") || normalized.startsWith("http://localhost")
-                || normalized.startsWith("http://127.0.0.1");
+        return AiEndpointValidator.isSupported(value);
     }
 
     private static AiProviderType providerForApiUrl(String value, AiProviderType fallback) {

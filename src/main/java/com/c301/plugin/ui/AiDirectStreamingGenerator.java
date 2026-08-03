@@ -61,8 +61,13 @@ public final class AiDirectStreamingGenerator {
                 text("plugin.ai.generationTaskTitle"), true) {
             @Override
             public void run(@NotNull ProgressIndicator indicator) {
-                AiIncludedChangesCollector.DiffCollectionResult result = AiIncludedChangesCollector.collectDiff(project, changes);
-                ApplicationManager.getApplication().invokeLater(() -> onDiffPrepared(result));
+                AiIncludedChangesCollector.DiffCollectionResult result =
+                        AiIncludedChangesCollector.collectDiff(project, changes, indicator);
+                ApplicationManager.getApplication().invokeLater(() -> {
+                    if (!project.isDisposed()) {
+                        onDiffPrepared(result);
+                    }
+                });
             }
         });
     }
@@ -110,7 +115,11 @@ public final class AiDirectStreamingGenerator {
         if (draft.isBlank()) {
             return;
         }
-        ApplicationManager.getApplication().invokeLater(() -> commitMessage.setCommitMessage(draft));
+        ApplicationManager.getApplication().invokeLater(() -> {
+            if (!project.isDisposed() && !completed.get()) {
+                commitMessage.setCommitMessage(draft);
+            }
+        });
     }
 
     private void complete() {
@@ -118,6 +127,9 @@ public final class AiDirectStreamingGenerator {
             return;
         }
         ApplicationManager.getApplication().invokeLater(() -> {
+            if (project.isDisposed()) {
+                return;
+            }
             try {
                 var suggestion = AiSuggestionParser.parse(response.toString());
                 var commit = AiSuggestionValidator.validateAndConvert(suggestion, effectiveSettings, allowedTypes());
@@ -135,7 +147,11 @@ public final class AiDirectStreamingGenerator {
         if (!completed.compareAndSet(false, true)) {
             return;
         }
-        ApplicationManager.getApplication().invokeLater(() -> restorePreviousMessage(error.message()));
+        ApplicationManager.getApplication().invokeLater(() -> {
+            if (!project.isDisposed()) {
+                restorePreviousMessage(error.message());
+            }
+        });
     }
 
     private void restorePreviousMessage(String message) {
