@@ -17,6 +17,9 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.Collections;
+import java.util.Map;
+import java.util.WeakHashMap;
 
 /**
  * 统一的设置入口，同时展示全局默认配置和当前项目覆盖配置。
@@ -26,6 +29,13 @@ public class UnifiedCommitTemplateSettingsConfigurable implements SearchableConf
 
     private static final int COMMIT_TEMPLATE_TAB_INDEX = 0;
     private static final int AI_MODEL_TAB_INDEX = 4;
+    private static final String SETTINGS_DISPLAY_NAME = "Commit Template Idea Plugin";
+    /**
+     * Settings 树持有的是扩展点创建的 ConfigurableWrapper，不能用临时实例替代。
+     * 按项目暂存一次标签请求，由注册实例在创建或重置时消费。
+     */
+    private static final Map<Project, Integer> REQUESTED_TAB_INDEXES =
+            Collections.synchronizedMap(new WeakHashMap<>());
 
     private final Project project;
     private final GitCommitSettingConfigurable globalConfigurable = new GitCommitSettingConfigurable();
@@ -75,11 +85,14 @@ public class UnifiedCommitTemplateSettingsConfigurable implements SearchableConf
     }
 
     private static void openSettings(Project project, int tabIndex) {
-        ApplicationManager.getApplication().invokeLater(() ->
-                com.intellij.openapi.options.ShowSettingsUtil.getInstance().showSettingsDialog(
-                        project,
-                        configurable -> configurable instanceof UnifiedCommitTemplateSettingsConfigurable,
-                        configurable -> ((UnifiedCommitTemplateSettingsConfigurable) configurable).selectTab(tabIndex)));
+        ApplicationManager.getApplication().invokeLater(() -> {
+            if (project.isDisposed()) {
+                return;
+            }
+            REQUESTED_TAB_INDEXES.put(project, tabIndex);
+            // IDEA 2023.3 的该重载按 Settings 树节点的显示名称定位，不按 Configurable ID 定位。
+            com.intellij.openapi.options.ShowSettingsUtil.getInstance().showSettingsDialog(project, SETTINGS_DISPLAY_NAME);
+        });
     }
 
     @Override
@@ -92,11 +105,9 @@ public class UnifiedCommitTemplateSettingsConfigurable implements SearchableConf
         return CommUtil.i18nResourceBundle(null).getString("plugin.setting.displayName");
     }
 
-    private void selectTab(int tabIndex) {
-        if (tabs == null) {
-            createComponent();
-        }
-        if (tabs != null && tabIndex >= 0 && tabIndex < tabs.getTabCount()) {
+    private void applyRequestedTab() {
+        Integer tabIndex = REQUESTED_TAB_INDEXES.remove(project);
+        if (tabs != null && tabIndex != null && tabIndex >= 0 && tabIndex < tabs.getTabCount()) {
             tabs.setSelectedIndex(tabIndex);
         }
     }
@@ -117,6 +128,7 @@ public class UnifiedCommitTemplateSettingsConfigurable implements SearchableConf
             tabs.addTab("", responsiveTab(globalUI.detachAboutPanel()));
         }
         resetTabTitles();
+        applyRequestedTab();
         return tabs;
     }
 
@@ -151,6 +163,7 @@ public class UnifiedCommitTemplateSettingsConfigurable implements SearchableConf
         preferencesConfigurable.reset();
         aiConfigurable.reset();
         resetTabTitles();
+        applyRequestedTab();
     }
 
     private void resetAllConfiguration() {

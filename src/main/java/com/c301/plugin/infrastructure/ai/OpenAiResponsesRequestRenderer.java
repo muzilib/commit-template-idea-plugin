@@ -4,7 +4,6 @@ import com.c301.plugin.domain.ai.AiGenerationRequest;
 import com.c301.plugin.domain.ai.OpenAiGenerationOptions;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import java.net.URI;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
