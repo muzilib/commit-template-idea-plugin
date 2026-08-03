@@ -17,10 +17,11 @@ public final class AiSuggestionParser {
     }
 
     public static AiCommitSuggestion parse(String response) throws Exception {
-        String json = response == null ? "" : response.trim()
-                .replaceFirst("^```(?:json)?\\s*", "")
-                .replaceFirst("\\s*```$", "");
+        String json = extractJson(response);
         JsonNode root = JSON.readTree(json);
+        if (root == null || !root.isObject()) {
+            throw new IllegalArgumentException("AI 返回的内容不是有效的 JSON 对象。");
+        }
         List<Integer> issues = new ArrayList<>();
         for (JsonNode issue : root.path("issueNumbers")) {
             if (issue.canConvertToInt()) {
@@ -31,6 +32,20 @@ public final class AiSuggestionParser {
                 text(root, "type"), text(root, "scope"), text(root, "subject"),
                 nullableText(root, "body"), nullableText(root, "breakingChange"), issues
         );
+    }
+
+    private static String extractJson(String response) {
+        String value = response == null ? "" : response.trim();
+        if (value.startsWith("```")) {
+            value = value.replaceFirst("^```(?:json)?\\s*", "")
+                    .replaceFirst("\\s*```$", "").trim();
+        }
+        int objectStart = value.indexOf('{');
+        int objectEnd = value.lastIndexOf('}');
+        if (objectStart < 0 || objectEnd < objectStart) {
+            throw new IllegalArgumentException("AI 未返回可解析的 JSON 对象。");
+        }
+        return value.substring(objectStart, objectEnd + 1);
     }
 
     private static String text(JsonNode root, String field) {

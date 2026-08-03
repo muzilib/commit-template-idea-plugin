@@ -24,11 +24,12 @@ public final class AiSuggestionValidator {
                 .findFirst()
                 .orElse(null);
         if (type == null) {
-            throw new IllegalArgumentException("AI 返回了当前提交模板中不存在的提交类型。");
+            throw new IllegalArgumentException("AI 返回的提交类型不在当前模板允许列表中。");
         }
-        if (!CommitMessageValidator.validate(type, suggestion.scope(), suggestion.subject(),
-                settings.commitMessageRules()).isValid()) {
-            throw new IllegalArgumentException("AI 返回的提交建议不符合当前提交规则。");
+        CommitMessageValidator.ValidationResult validation = CommitMessageValidator.validate(type, suggestion.scope(),
+                suggestion.subject(), settings.commitMessageRules());
+        if (!validation.isValid()) {
+            throw new IllegalArgumentException(validationMessage(validation));
         }
         GitCommitDomain commit = new GitCommitDomain();
         commit.setCommitType(type);
@@ -38,5 +39,16 @@ public final class AiSuggestionValidator {
         commit.setBreakingChanges(suggestion.breakingChange());
         commit.setClosedIssues(new LinkedList<>(suggestion.issueNumbers()));
         return commit;
+    }
+
+    private static String validationMessage(CommitMessageValidator.ValidationResult result) {
+        return switch (result) {
+            case MISSING_COMMIT_TYPE -> "AI 返回内容缺少提交类型。";
+            case MISSING_SCOPE -> "AI 返回内容缺少必填的 Scope。";
+            case MISSING_SHORT_DESCRIPTION -> "AI 返回内容缺少提交标题。";
+            case SUBJECT_TOO_LONG -> "AI 返回的提交标题超过当前长度限制。";
+            case SUBJECT_TRAILING_PERIOD -> "AI 返回的提交标题末尾不符合当前规则。";
+            case VALID -> "AI 返回内容未通过本地提交规则校验。";
+        };
     }
 }

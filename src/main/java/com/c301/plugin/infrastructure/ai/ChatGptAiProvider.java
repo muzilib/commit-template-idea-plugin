@@ -38,38 +38,50 @@ public final class ChatGptAiProvider implements com.c301.plugin.domain.ai.AiProv
             listener.onError(new AiGenerationError(AiGenerationError.Kind.CONFIGURATION, text("plugin.ai.error.apiKeyMissing")));
             return;
         }
-        try (CloseableHttpClient client = HttpClients.custom().disableAutomaticRetries().build()) {
+        try (CloseableHttpClient client = HttpClients.custom()
+                .disableAutomaticRetries()
+                .setDefaultRequestConfig(AiHttpRequestSupport.requestConfig())
+                .build()) {
             HttpPost post = new HttpPost(OpenAiResponsesRequestRenderer.resolveUrl(request));
-            post.setHeader("Authorization", "Bearer " + credentials.apiKey());
-            post.setHeader("Accept", "text/event-stream");
-            post.setHeader("Content-Type", "application/json");
-            post.setEntity(new StringEntity(OpenAiResponsesRequestRenderer.requestBody(request), ContentType.APPLICATION_JSON));
-            try (CloseableHttpResponse response = client.execute(post)) {
-                int status = response.getStatusLine().getStatusCode();
-                if (status < 200 || status >= 300) {
-                    listener.onError(new AiGenerationError(AiGenerationError.Kind.PROVIDER,
-                            text("plugin.ai.error.provider").replace("{status}", String.valueOf(status))));
-                    return;
+            try (AiHttpRequestSupport.CancellationMonitor cancellation =
+                         AiHttpRequestSupport.monitorCancellation(post, indicator)) {
+                post.setHeader("Authorization", "Bearer " + credentials.apiKey());
+                post.setHeader("Accept", "text/event-stream");
+                post.setHeader("Content-Type", "application/json");
+                post.setEntity(new StringEntity(OpenAiResponsesRequestRenderer.requestBody(request), ContentType.APPLICATION_JSON));
+                try (CloseableHttpResponse response = client.execute(post)) {
+                    int status = response.getStatusLine().getStatusCode();
+                    if (status < 200 || status >= 300) {
+                        listener.onError(new AiGenerationError(AiGenerationError.Kind.PROVIDER,
+                                text("plugin.ai.error.provider").replace("{status}", String.valueOf(status))));
+                        return;
+                    }
+                    if (response.getEntity() == null) {
+                        listener.onError(new AiGenerationError(AiGenerationError.Kind.RESPONSE, text("plugin.ai.error.emptyResponse")));
+                        return;
+                    }
+                    stream(response, cancellation, listener);
                 }
-                if (response.getEntity() == null) {
-                    listener.onError(new AiGenerationError(AiGenerationError.Kind.RESPONSE, text("plugin.ai.error.emptyResponse")));
-                    return;
-                }
-                stream(response, indicator, listener);
             }
         } catch (Exception exception) {
-            listener.onError(new AiGenerationError(AiGenerationError.Kind.NETWORK, text("plugin.ai.error.network")));
+            if (indicator.isCanceled()) {
+                listener.onError(new AiGenerationError(AiGenerationError.Kind.CANCELED,
+                        text("plugin.ai.error.canceled")));
+            } else {
+                listener.onError(new AiGenerationError(AiGenerationError.Kind.NETWORK,
+                        text("plugin.ai.error.network")));
+            }
         }
     }
 
-    private void stream(CloseableHttpResponse response, ProgressIndicator indicator,
+    private void stream(CloseableHttpResponse response, AiHttpRequestSupport.CancellationMonitor cancellation,
                         AiStreamingListener listener) throws IOException {
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(
                 response.getEntity().getContent(), StandardCharsets.UTF_8))) {
             String event = null;
             String line;
             while ((line = reader.readLine()) != null) {
-                if (indicator.isCanceled()) {
+                if (cancellation.isCanceled()) {
                     listener.onError(new AiGenerationError(AiGenerationError.Kind.CANCELED, text("plugin.ai.error.canceled")));
                     return;
                 }

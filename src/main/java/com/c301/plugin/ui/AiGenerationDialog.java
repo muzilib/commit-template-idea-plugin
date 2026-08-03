@@ -29,6 +29,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * AI 提交建议窗口：发送前完整展示实际请求参数，响应只会回填 Commit Message。
@@ -52,7 +53,10 @@ public final class AiGenerationDialog extends JDialog {
     private final Object pendingPreviewLock = new Object();
     private final AtomicBoolean completed = new AtomicBoolean();
     private final AtomicBoolean previewUpdateScheduled = new AtomicBoolean();
+    private final AtomicLong generationSequence = new AtomicLong();
     private volatile boolean disposed;
+    private volatile long activeGenerationId;
+    private volatile ProgressIndicator activeIndicator;
 
     private EffectiveCommitTemplateSettings effectiveSettings;
     private AiGenerationConfigSnapshot generationConfig;
@@ -153,23 +157,26 @@ public final class AiGenerationDialog extends JDialog {
         effectiveSettings = CommitTemplateSettingsResolver.getInstance(project).resolve();
         generationConfig = AiGenerationConfigSnapshot.capture(preferences, effectiveSettings);
         effectiveSettings = generationConfig.effectiveSettings();
+        long contextGenerationId = generationSequence.incrementAndGet();
+        activeGenerationId = contextGenerationId;
         com.intellij.openapi.progress.ProgressManager.getInstance().run(new Task.Backgroundable(project,
                 text("plugin.ai.generationTaskTitle"), true) {
             @Override
             public void run(@NotNull ProgressIndicator indicator) {
+                activeIndicator = indicator;
                 AiIncludedChangesCollector.DiffCollectionResult result =
                         AiIncludedChangesCollector.collectDiff(project, changes, indicator);
                 ApplicationManager.getApplication().invokeLater(() -> {
-                    if (isUiActive()) {
-                        onContextPrepared(result);
+                    if (AiGenerationDialog.this.isGenerationActive(contextGenerationId)) {
+                        onContextPrepared(result, contextGenerationId);
                     }
                 });
             }
         });
     }
 
-    private void onContextPrepared(AiIncludedChangesCollector.DiffCollectionResult result) {
-        if (!isUiActive()) {
+    private void onContextPrepared(AiIncludedChangesCollector.DiffCollectionResult result, long contextGenerationId) {
+        if (!isGenerationActive(contextGenerationId)) {
             return;
         }
         if (result.diff().isBlank()) {
@@ -236,6 +243,8 @@ public final class AiGenerationDialog extends JDialog {
         synchronized (pendingPreviewLock) {
             pendingPreviewText.setLength(0);
         }
+        long requestGenerationId = generationSequence.incrementAndGet();
+        activeGenerationId = requestGenerationId;
         completed.set(false);
         preview.setText(requestPreview + "\n\n----------------------------------------\nAI response\n");
         apply.setEnabled(false);
@@ -244,10 +253,11 @@ public final class AiGenerationDialog extends JDialog {
                 text("plugin.ai.generationTaskTitle"), true) {
             @Override
             public void run(@NotNull ProgressIndicator indicator) {
+                activeIndicator = indicator;
                 String apiKey = new PasswordSafeAiCredentialStore().readApiKey(generationConfig.providerType());
                 if (apiKey == null || apiKey.isBlank()) {
                     ApplicationManager.getApplication().invokeLater(() -> {
-                        if (!isUiActive()) {
+                        if (!isGenerationActive(requestGenerationId)) {
                             return;
                         }
                         String message = text("plugin.ai.apiKeyMissingHint");
@@ -257,7 +267,7 @@ public final class AiGenerationDialog extends JDialog {
                     return;
                 }
                 AiProviderFactory.create(generationConfig.providerType()).generate(request, new AiCredentials(apiKey), indicator,
-                        new Listener());
+                        new Listener(requestGenerationId));
             }
         });
     }
@@ -284,9 +294,18 @@ public final class AiGenerationDialog extends JDialog {
         return !disposed && isDisplayable() && !project.isDisposed();
     }
 
+    private boolean isGenerationActive(long generationId) {
+        return isUiActive() && activeGenerationId == generationId;
+    }
+
     @Override
     public void dispose() {
         disposed = true;
+        activeGenerationId = generationSequence.incrementAndGet();
+        ProgressIndicator indicator = activeIndicator;
+        if (indicator != null) {
+            indicator.cancel();
+        }
         super.dispose();
     }
 
@@ -317,14 +336,16 @@ public final class AiGenerationDialog extends JDialog {
         }
     }
 
-    private void schedulePreviewUpdate() {
+    private void schedulePreviewUpdate(long generationId) {
         if (!previewUpdateScheduled.compareAndSet(false, true)) {
             return;
         }
         AppExecutorUtil.getAppScheduledExecutorService().schedule(() ->
                 ApplicationManager.getApplication().invokeLater(() -> {
                     previewUpdateScheduled.set(false);
-                    appendPendingPreviewText();
+                    if (isGenerationActive(generationId)) {
+                        appendPendingPreviewText();
+                    }
                 }), STREAM_UPDATE_INTERVAL_MILLIS, TimeUnit.MILLISECONDS);
     }
 
@@ -336,19 +357,28 @@ public final class AiGenerationDialog extends JDialog {
     }
 
     private final class Listener implements AiStreamingListener {
+        private final long generationId;
+
+        private Listener(long generationId) {
+            this.generationId = generationId;
+        }
+
         @Override
         public void onText(String text) {
+            if (!isGenerationActive(generationId)) {
+                return;
+            }
             appendResponse(text);
-            schedulePreviewUpdate();
+            schedulePreviewUpdate(generationId);
         }
 
         @Override
         public void onComplete() {
-            if (!completed.compareAndSet(false, true)) {
+            if (!isGenerationActive(generationId) || !completed.compareAndSet(false, true)) {
                 return;
             }
             ApplicationManager.getApplication().invokeLater(() -> {
-                if (!isUiActive()) {
+                if (!isGenerationActive(generationId)) {
                     return;
                 }
                 appendPendingPreviewText();
@@ -372,11 +402,11 @@ public final class AiGenerationDialog extends JDialog {
 
         @Override
         public void onError(AiGenerationError error) {
-            if (!completed.compareAndSet(false, true)) {
+            if (!isGenerationActive(generationId) || !completed.compareAndSet(false, true)) {
                 return;
             }
             ApplicationManager.getApplication().invokeLater(() -> {
-                if (!isUiActive()) {
+                if (!isGenerationActive(generationId)) {
                     return;
                 }
                 appendPendingPreviewText();

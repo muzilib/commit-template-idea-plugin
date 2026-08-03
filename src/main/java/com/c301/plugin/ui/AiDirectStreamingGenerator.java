@@ -151,8 +151,8 @@ public final class AiDirectStreamingGenerator {
                     if (draft.isBlank()) {
                         return;
                     }
-                    lastAiDraft = draft;
                     commitMessage.setCommitMessage(draft);
+                    lastAiDraft = currentCommitMessageOr(draft);
                 }), STREAM_UPDATE_INTERVAL_MILLIS, TimeUnit.MILLISECONDS);
     }
 
@@ -183,11 +183,16 @@ public final class AiDirectStreamingGenerator {
                 String formattedCommit = com.c301.plugin.domain.commit.CommitMessageFormatter.format(
                         commit, effectiveSettings.emojiEnable() ? effectiveSettings.emojiLocation() : null,
                         effectiveSettings.commitMessageRules());
-                lastAiDraft = formattedCommit;
                 commitMessage.setCommitMessage(formattedCommit);
+                lastAiDraft = currentCommitMessageOr(formattedCommit);
                 notify(text("plugin.ai.directGenerationSuccess"), NotificationType.INFORMATION);
             } catch (Exception exception) {
-                restorePreviousMessage(text("plugin.ai.directGenerationInvalid"));
+                String reason = exception.getMessage();
+                String message = text("plugin.ai.directGenerationInvalid");
+                if (reason != null && !reason.isBlank()) {
+                    message += " " + reason;
+                }
+                restorePreviousMessage(message);
             } finally {
                 releaseGeneration();
             }
@@ -241,7 +246,23 @@ public final class AiDirectStreamingGenerator {
     }
 
     private static String normalizeMessage(String message) {
-        return message == null ? null : message.replace("\r\n", "\n").replace('\r', '\n');
+        if (message == null) {
+            return null;
+        }
+        String[] lines = message.replace("\r\n", "\n").replace('\r', '\n').split("\\n", -1);
+        StringBuilder normalized = new StringBuilder();
+        for (int index = 0; index < lines.length; index++) {
+            if (index > 0) {
+                normalized.append('\n');
+            }
+            normalized.append(lines[index].stripTrailing());
+        }
+        return normalized.toString().stripTrailing();
+    }
+
+    private String currentCommitMessageOr(String fallback) {
+        String current = currentCommitMessage();
+        return current == null ? fallback : current;
     }
 
 
