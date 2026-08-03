@@ -1,8 +1,11 @@
 package com.c301.plugin.config;
 
 import com.c301.plugin.domain.ai.*;
+import com.c301.plugin.constant.Constant;
 import com.c301.plugin.infrastructure.ai.AiSystemPromptTemplates;
 import com.c301.plugin.infrastructure.credentials.AiCredentialStore;
+import com.c301.plugin.model.LanguageDomain;
+import com.c301.plugin.ui.render.LanguageListCellRendererRender;
 import com.c301.plugin.infrastructure.credentials.PasswordSafeAiCredentialStore;
 import com.c301.plugin.utils.CommUtil;
 import com.intellij.icons.AllIcons;
@@ -39,10 +42,12 @@ final class AiPreferencesConfigurable {
     private JComboBox<AiProviderType> providerType;
     private JTextField apiUrl;
     private JTextField model;
+    private JComboBox<LanguageDomain> generationLanguage;
     private JLabel protocolLabel;
     private JLabel providerLabel;
     private JLabel apiUrlLabel;
     private JLabel modelLabel;
+    private JLabel generationLanguageLabel;
     private JLabel excludePatternsLabel;
     private JLabel temperatureLabel;
     private JLabel maxTokensLabel;
@@ -243,6 +248,11 @@ final class AiPreferencesConfigurable {
             model = new JTextField();
             modelLabel = addLabeled(bundle.getString("plugin.ai.model"), model, constraints);
 
+            generationLanguage = new JComboBox<>();
+            Constant.LANGUAGES.forEach(generationLanguage::addItem);
+            generationLanguage.setRenderer(new LanguageListCellRendererRender());
+            generationLanguageLabel = addLabeled(bundle.getString("plugin.ai.generationLanguage"), generationLanguage, constraints);
+
             JPanel credentials = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
             credentialStatus = new JLabel();
             saveKey = new JButton(bundle.getString("plugin.ai.saveApiKey"));
@@ -314,6 +324,7 @@ final class AiPreferencesConfigurable {
         providerLabel.setText(bundle.getString("plugin.ai.providerType"));
         apiUrlLabel.setText(bundle.getString("plugin.ai.apiUrl"));
         modelLabel.setText(bundle.getString("plugin.ai.model"));
+        generationLanguageLabel.setText(bundle.getString("plugin.ai.generationLanguage"));
         excludePatternsLabel.setText(bundle.getString("plugin.ai.excludePatterns"));
         enabled.setText(bundle.getString("plugin.ai.enabled"));
         checkDiffBeforeSending.setText(bundle.getString("plugin.ai.checkDiffBeforeSending"));
@@ -373,6 +384,7 @@ final class AiPreferencesConfigurable {
                 || selectedProvider() != state.getProviderType()
                 || !apiUrl.getText().trim().equals(state.getApiUrl())
                 || !model.getText().trim().equals(state.getModel())
+                || !Objects.equals(generationLanguage.getSelectedItem(), state.getGenerationLanguage())
                 || Double.compare((Double) temperature.getValue(), state.getTemperature()) != 0
                 || !maxTokens.getValue().equals(state.getMaxTokens())
                 || !qwenOptionsFromEditor().equals(state.getQwenGenerationOptions())
@@ -394,6 +406,7 @@ final class AiPreferencesConfigurable {
         state.setProviderType(selectedProvider());
         state.setApiUrl(apiUrl.getText().trim());
         state.setModel(model.getText().trim());
+        state.setGenerationLanguage((LanguageDomain) generationLanguage.getSelectedItem());
         state.setTemperature((Double) temperature.getValue());
         state.setMaxTokens((Integer) maxTokens.getValue());
         state.setQwenGenerationOptions(qwenOptionsFromEditor());
@@ -419,6 +432,7 @@ final class AiPreferencesConfigurable {
         providerType.setSelectedItem(state.getProviderType());
         resetting = false;
         model.setText(state.getModel());
+        generationLanguage.setSelectedItem(state.getGenerationLanguage());
         temperature.setValue(state.getTemperature());
         maxTokens.setValue(state.getMaxTokens());
         resetQwenOptions(state.getQwenGenerationOptions());

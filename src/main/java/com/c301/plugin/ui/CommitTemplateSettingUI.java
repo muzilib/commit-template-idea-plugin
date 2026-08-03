@@ -10,7 +10,6 @@ import com.c301.plugin.ui.render.CustomTableCellRenderer;
 import com.c301.plugin.ui.render.JBCommitTypeTable;
 import com.c301.plugin.ui.render.LanguageListCellRendererRender;
 import com.c301.plugin.utils.CommUtil;
-import com.intellij.notification.NotificationType;
 import com.intellij.ui.DoubleClickListener;
 import com.intellij.ui.ToolbarDecorator;
 import com.intellij.uiDesigner.core.GridConstraints;
@@ -57,6 +56,7 @@ public class CommitTemplateSettingUI {
     private JLabel labelGitmoji;
     private JLabel labelGitmojiWebsite;
     private JButton buttonCopy;
+    private Timer copyFeedbackTimer;
     private JLabel labelBuildVersion;
     private JLabel labelPlatformVersion;
     private JLabel labelJavaVersion;
@@ -205,11 +205,9 @@ public class CommitTemplateSettingUI {
                     .replace("{platformVersion}", platformVersion);
             try {
                 Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(information), null);
-                PluginNotifications.notify(null, CommUtil.i18nResourceBundle(null).getString("plugin.about.copySuccess"),
-                        NotificationType.INFORMATION);
+                showCopyFeedback("plugin.about.copyButtonSuccess");
             } catch (IllegalStateException | HeadlessException ex) {
-                PluginNotifications.notify(null, CommUtil.i18nResourceBundle(null).getString("plugin.about.copyFailure"),
-                        NotificationType.WARNING);
+                showCopyFeedback("plugin.about.copyButtonFailure");
             }
         });
 
@@ -292,6 +290,19 @@ public class CommitTemplateSettingUI {
         handleDisplayLanguageEvent(cache.getLanguage());
     }
 
+    private void showCopyFeedback(String messageKey) {
+        buttonCopy.setEnabled(false);
+        buttonCopy.setText(CommUtil.i18nResourceBundle(null).getString(messageKey));
+        if (copyFeedbackTimer == null) {
+            copyFeedbackTimer = new Timer(2_000, event -> {
+                buttonCopy.setText(CommUtil.i18nResourceBundle(null).getString("plugin.setting.label.copy"));
+                buttonCopy.setEnabled(true);
+            });
+            copyFeedbackTimer.setRepeats(false);
+        }
+        copyFeedbackTimer.restart();
+    }
+
     /**
      * 处理语言显示事件
      *
@@ -316,6 +327,10 @@ public class CommitTemplateSettingUI {
         labelLanguage.setText(resourceBundle.getString("plugin.setting.label.language"));
         labelCommitType.setText(resourceBundle.getString("plugin.setting.label.customTemplate"));
         labelGitmojiWebsite.setText(resourceBundle.getString("plugin.setting.label.gitmoji.website"));
+        if (copyFeedbackTimer != null) {
+            copyFeedbackTimer.stop();
+        }
+        buttonCopy.setEnabled(true);
         buttonCopy.setText(resourceBundle.getString("plugin.setting.label.copy"));
 
         //自定义提交模板描述信息

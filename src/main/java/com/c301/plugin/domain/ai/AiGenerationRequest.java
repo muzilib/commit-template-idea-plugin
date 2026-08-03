@@ -20,7 +20,7 @@ public record AiGenerationRequest(
         QwenGenerationOptions qwenGenerationOptions,
         DeepSeekGenerationOptions deepSeekGenerationOptions,
         OpenAiGenerationOptions openAiGenerationOptions,
-        LanguageDomain contentLanguage,
+        LanguageDomain generationLanguage,
         List<CommitTypeDomain> allowedCommitTypes,
         CommitMessageRules rules,
         String commitTemplateContext,

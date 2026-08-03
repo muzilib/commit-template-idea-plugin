@@ -2,6 +2,7 @@ package com.c301.plugin.infrastructure.ai;
 
 import com.c301.plugin.config.EffectiveCommitTemplateSettings;
 import com.c301.plugin.model.CommitTypeDomain;
+import com.c301.plugin.model.LanguageDomain;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -13,9 +14,11 @@ public final class AiCommitTemplateContextRenderer {
     private AiCommitTemplateContextRenderer() {
     }
 
-    public static String render(EffectiveCommitTemplateSettings settings, List<CommitTypeDomain> allowedTypes) {
+    public static String render(EffectiveCommitTemplateSettings settings, LanguageDomain generationLanguage,
+                                List<CommitTypeDomain> allowedTypes) {
         String types = allowedTypes.stream().map(CommitTypeDomain::getType).collect(Collectors.joining(", "));
-        return "提交内容语言：" + settings.language().getLabel() + "（" + settings.language().getKey() + "）"
+        return "提交模板语言：" + settings.language().getLabel() + "（" + settings.language().getKey() + "）"
+                + "\nAI 输出语言：" + generationLanguage.getLabel() + "（" + generationLanguage.getKey() + "）"
                 + "\n允许的提交类型：" + types
                 + "\n变更范围 Scope：" + (settings.commitMessageRules().requireScope() ? "必填" : "可选")
                 + "\n标题长度限制：" + (settings.commitMessageRules().subjectLengthLimitEnabled()

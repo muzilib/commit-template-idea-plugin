@@ -27,8 +27,8 @@ public final class AiPromptRenderer {
             throw new IllegalArgumentException("未配置 AI 系统提示词。");
         }
         String renderedTemplate = template
-                .replace("{languageLabel}", request.contentLanguage().getLabel())
-                .replace("{languageKey}", request.contentLanguage().getKey())
+                .replace("{languageLabel}", request.generationLanguage().getLabel())
+                .replace("{languageKey}", request.generationLanguage().getKey())
                 .replace("{allowedTypes}", types)
                 .replace("{subjectMaxLength}", request.rules().subjectLengthLimitEnabled()
                         ? String.valueOf(request.rules().subjectMaxLength()) : "未启用")

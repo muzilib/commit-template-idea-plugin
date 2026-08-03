@@ -3,6 +3,7 @@ package com.c301.plugin.config;
 import com.c301.plugin.domain.ai.*;
 import com.c301.plugin.infrastructure.ai.AiEndpointValidator;
 import com.c301.plugin.infrastructure.credentials.PasswordSafeAiCredentialStore;
+import com.c301.plugin.model.LanguageDomain;
 import com.c301.plugin.ui.PluginNotifications;
 import com.c301.plugin.utils.CommUtil;
 import com.intellij.notification.NotificationType;
@@ -12,7 +13,6 @@ import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
 import com.intellij.util.xmlb.XmlSerializerUtil;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -26,7 +26,6 @@ import java.util.Map;
  * API Key 只允许由 Password Safe 保存，不能添加到此状态对象或任何项目级配置中。
  */
 @Data
-@NoArgsConstructor
 @State(name = "CommitTemplateAiPreferences", storages = @Storage("commit-template-ai.xml"))
 public class AiPreferencesState implements PersistentStateComponent<AiPreferencesState> {
 
@@ -40,6 +39,10 @@ public class AiPreferencesState implements PersistentStateComponent<AiPreference
     private AiProviderType providerType = AiProviderType.QWEN;
     private String apiUrl = AiProviderType.QWEN.apiUrl();
     private String model = "qwen3.7-max";
+    /**
+     * AI 生成提交内容使用的明确语言，默认采用当前全局提交内容语言。
+     */
+    private LanguageDomain generationLanguage;
     /**
      * 兼容旧版配置，升级后会将 endpoint 与 apiPath 合并为 apiUrl。
      */
@@ -63,8 +66,17 @@ public class AiPreferencesState implements PersistentStateComponent<AiPreference
             "node_modules/", "build/", "out/", "target/", "dist/"
     ));
 
+    public AiPreferencesState() {
+        generationLanguage = defaultGenerationLanguage();
+    }
+
     public static AiPreferencesState getInstance() {
         return ApplicationManager.getApplication().getService(AiPreferencesState.class);
+    }
+
+    private static LanguageDomain defaultGenerationLanguage() {
+        LanguageDomain language = StoreCommitTemplateState.getInstance().getLanguage();
+        return language == null ? LanguageDomain.EN_US : language;
     }
 
     private static String joinLegacyApiUrl(String legacyEndpoint, String legacyApiPath) {
@@ -197,6 +209,9 @@ public class AiPreferencesState implements PersistentStateComponent<AiPreference
         }
         if (providerType == null) {
             providerType = AiProviderType.QWEN;
+        }
+        if (generationLanguage == null) {
+            generationLanguage = defaultGenerationLanguage();
         }
         if (customSystemPrompts == null) {
             customSystemPrompts = new LinkedHashMap<>();

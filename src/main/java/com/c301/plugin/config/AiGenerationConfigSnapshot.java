@@ -9,6 +9,7 @@ import com.c301.plugin.infrastructure.ai.AiCommitTemplateContextRenderer;
 import com.c301.plugin.infrastructure.ai.AiSystemPromptTemplates;
 import com.c301.plugin.model.CommitTypeDomain;
 import com.c301.plugin.model.GitmojiDomain;
+import com.c301.plugin.model.LanguageDomain;
 import com.c301.plugin.utils.CommUtil;
 
 import java.util.ArrayList;
@@ -29,6 +30,7 @@ public final class AiGenerationConfigSnapshot {
     private final DeepSeekGenerationOptions deepSeekGenerationOptions;
     private final OpenAiGenerationOptions openAiGenerationOptions;
     private final EffectiveCommitTemplateSettings effectiveSettings;
+    private final LanguageDomain generationLanguage;
     private final List<CommitTypeDomain> allowedTypes;
     private final String commitTemplateContext;
     private final boolean checkDiffBeforeSending;
@@ -37,7 +39,7 @@ public final class AiGenerationConfigSnapshot {
                                        double temperature, int maxTokens, QwenGenerationOptions qwenGenerationOptions,
                                        DeepSeekGenerationOptions deepSeekGenerationOptions,
                                        OpenAiGenerationOptions openAiGenerationOptions,
-                                       EffectiveCommitTemplateSettings effectiveSettings,
+                                       EffectiveCommitTemplateSettings effectiveSettings, LanguageDomain generationLanguage,
                                        List<CommitTypeDomain> allowedTypes, String commitTemplateContext,
                                        boolean checkDiffBeforeSending) {
         this.providerType = providerType;
@@ -50,6 +52,7 @@ public final class AiGenerationConfigSnapshot {
         this.deepSeekGenerationOptions = deepSeekGenerationOptions;
         this.openAiGenerationOptions = openAiGenerationOptions;
         this.effectiveSettings = effectiveSettings;
+        this.generationLanguage = generationLanguage;
         this.allowedTypes = allowedTypes;
         this.commitTemplateContext = commitTemplateContext;
         this.checkDiffBeforeSending = checkDiffBeforeSending;
@@ -65,6 +68,7 @@ public final class AiGenerationConfigSnapshot {
         EffectiveCommitTemplateSettings copiedSettings = new EffectiveCommitTemplateSettings(
                 settings.language(), settings.customEnable(), settings.emojiEnable(), settings.emojiLocation(),
                 allowedTypes, settings.commitMessageRules(), settings.previewEnabled());
+        LanguageDomain generationLanguage = preferences.getGenerationLanguage();
         String prompt = preferences.getCustomSystemPrompts().get(providerType);
         if (prompt == null || prompt.isBlank()) {
             prompt = AiSystemPromptTemplates.forProvider(providerType);
@@ -73,15 +77,15 @@ public final class AiGenerationConfigSnapshot {
                 preferences.getTemperature(), preferences.getMaxTokens(),
                 copyQwenOptions(preferences.getQwenGenerationOptions()),
                 copyDeepSeekOptions(preferences.getDeepSeekGenerationOptions()),
-                copyOpenAiOptions(preferences.getOpenAiGenerationOptions()), copiedSettings, allowedTypes,
-                AiCommitTemplateContextRenderer.render(copiedSettings, allowedTypes),
+                copyOpenAiOptions(preferences.getOpenAiGenerationOptions()), copiedSettings, generationLanguage, allowedTypes,
+                AiCommitTemplateContextRenderer.render(copiedSettings, generationLanguage, allowedTypes),
                 preferences.isCheckDiffBeforeSending());
     }
 
     public AiGenerationRequest createRequest(String sanitizedDiff) {
         return new AiGenerationRequest(apiUrl, model, systemPrompt, temperature, maxTokens,
                 qwenGenerationOptions, deepSeekGenerationOptions, openAiGenerationOptions,
-                effectiveSettings.language(), allowedTypes, effectiveSettings.commitMessageRules(),
+                generationLanguage, allowedTypes, effectiveSettings.commitMessageRules(),
                 commitTemplateContext, sanitizedDiff);
     }
 
