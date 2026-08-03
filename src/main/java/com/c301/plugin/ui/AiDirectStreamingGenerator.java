@@ -1,6 +1,7 @@
 package com.c301.plugin.ui;
 
 import com.c301.plugin.application.ai.AiSuggestionValidator;
+import com.c301.plugin.config.AiGenerationConfigSnapshot;
 import com.c301.plugin.config.AiPreferencesState;
 import com.c301.plugin.config.CommitTemplateSettingsResolver;
 import com.c301.plugin.config.EffectiveCommitTemplateSettings;
@@ -8,10 +9,8 @@ import com.c301.plugin.domain.ai.AiCredentials;
 import com.c301.plugin.domain.ai.AiGenerationError;
 import com.c301.plugin.domain.ai.AiGenerationRequest;
 import com.c301.plugin.domain.ai.AiStreamingListener;
-import com.c301.plugin.infrastructure.ai.AiCommitTemplateContextRenderer;
 import com.c301.plugin.infrastructure.ai.AiProviderFactory;
 import com.c301.plugin.infrastructure.ai.AiSuggestionParser;
-import com.c301.plugin.infrastructure.ai.AiSystemPromptTemplates;
 import com.c301.plugin.infrastructure.credentials.PasswordSafeAiCredentialStore;
 import com.c301.plugin.platform.vcs.AiIncludedChangesCollector;
 import com.c301.plugin.utils.CommUtil;
@@ -39,8 +38,13 @@ public final class AiDirectStreamingGenerator {
     private final String previousMessage;
     private final StringBuilder response = new StringBuilder();
     private final AtomicBoolean completed = new AtomicBoolean();
+    private final AtomicBoolean userTookOver = new AtomicBoolean();
+    private final AtomicBoolean interruptionNotified = new AtomicBoolean();
 
+    private volatile ProgressIndicator generationIndicator;
+    private volatile String lastAiDraft;
     private EffectiveCommitTemplateSettings effectiveSettings;
+    private AiGenerationConfigSnapshot generationConfig;
     private AiGenerationRequest request;
 
     public AiDirectStreamingGenerator(Project project, CommitMessageI commitMessage,
@@ -49,6 +53,7 @@ public final class AiDirectStreamingGenerator {
         this.commitMessage = commitMessage;
         this.changes = changes;
         this.previousMessage = commitMessage instanceof CheckinProjectPanel panel ? panel.getCommitMessage() : "";
+        this.lastAiDraft = previousMessage;
     }
 
     private static String text(String key) {
@@ -57,6 +62,8 @@ public final class AiDirectStreamingGenerator {
 
     public void generate() {
         effectiveSettings = CommitTemplateSettingsResolver.getInstance(project).resolve();
+        generationConfig = AiGenerationConfigSnapshot.capture(preferences, effectiveSettings);
+        effectiveSettings = generationConfig.effectiveSettings();
         com.intellij.openapi.progress.ProgressManager.getInstance().run(new Task.Backgroundable(project,
                 text("plugin.ai.generationTaskTitle"), true) {
             @Override
@@ -80,34 +87,33 @@ public final class AiDirectStreamingGenerator {
         if (!AiDataTransferConsentDialog.ensureAccepted(project)) {
             return;
         }
-        String prompt = preferences.getCustomSystemPrompts().get(preferences.getProviderType());
-        if (prompt == null || prompt.isBlank()) {
-            prompt = AiSystemPromptTemplates.forProvider(preferences.getProviderType());
+        if (!canAiReplaceCommitMessage()) {
+            return;
         }
-        request = new AiGenerationRequest(preferences.getApiUrl(), preferences.getModel(), prompt,
-                preferences.getTemperature(), preferences.getMaxTokens(), preferences.getQwenGenerationOptions(),
-                preferences.getDeepSeekGenerationOptions(), preferences.getOpenAiGenerationOptions(),
-                effectiveSettings.language(), allowedTypes(), effectiveSettings.commitMessageRules(),
-                AiCommitTemplateContextRenderer.render(effectiveSettings, allowedTypes()), result.diff());
+        request = generationConfig.createRequest(result.diff());
         com.intellij.openapi.progress.ProgressManager.getInstance().run(new Task.Backgroundable(project,
                 text("plugin.ai.generationTaskTitle"), true) {
             @Override
             public void run(@NotNull ProgressIndicator indicator) {
-                String apiKey = new PasswordSafeAiCredentialStore().readApiKey(preferences.getProviderType());
+                generationIndicator = indicator;
+                if (userTookOver.get()) {
+                    indicator.cancel();
+                    return;
+                }
+                String apiKey = new PasswordSafeAiCredentialStore().readApiKey(generationConfig.providerType());
                 if (apiKey == null || apiKey.isBlank()) {
                     ApplicationManager.getApplication().invokeLater(() -> AiDirectStreamingGenerator.this.notify(
                             text("plugin.ai.apiKeyMissingHint"), NotificationType.ERROR));
                     return;
                 }
-                AiProviderFactory.create(preferences.getProviderType()).generate(request, new AiCredentials(apiKey), indicator,
+                AiProviderFactory.create(generationConfig.providerType()).generate(request, new AiCredentials(apiKey), indicator,
                         new StreamingListener());
             }
         });
     }
 
     private List<com.c301.plugin.model.CommitTypeDomain> allowedTypes() {
-        return effectiveSettings.customEnable() ? effectiveSettings.customCommitTypeList()
-                : CommUtil.getDefaultCommitTypeList(effectiveSettings.language().getKey());
+        return generationConfig.allowedTypes();
     }
 
     private void updateDraft() {
@@ -116,9 +122,11 @@ public final class AiDirectStreamingGenerator {
             return;
         }
         ApplicationManager.getApplication().invokeLater(() -> {
-            if (!project.isDisposed() && !completed.get()) {
-                commitMessage.setCommitMessage(draft);
+            if (project.isDisposed() || completed.get() || !canAiReplaceCommitMessage()) {
+                return;
             }
+            lastAiDraft = draft;
+            commitMessage.setCommitMessage(draft);
         });
     }
 
@@ -127,15 +135,17 @@ public final class AiDirectStreamingGenerator {
             return;
         }
         ApplicationManager.getApplication().invokeLater(() -> {
-            if (project.isDisposed()) {
+            if (project.isDisposed() || !canAiReplaceCommitMessage()) {
                 return;
             }
             try {
                 var suggestion = AiSuggestionParser.parse(response.toString());
                 var commit = AiSuggestionValidator.validateAndConvert(suggestion, effectiveSettings, allowedTypes());
-                commitMessage.setCommitMessage(com.c301.plugin.domain.commit.CommitMessageFormatter.format(
+                String formattedCommit = com.c301.plugin.domain.commit.CommitMessageFormatter.format(
                         commit, effectiveSettings.emojiEnable() ? effectiveSettings.emojiLocation() : null,
-                        effectiveSettings.commitMessageRules()));
+                        effectiveSettings.commitMessageRules());
+                lastAiDraft = formattedCommit;
+                commitMessage.setCommitMessage(formattedCommit);
                 notify(text("plugin.ai.directGenerationSuccess"), NotificationType.INFORMATION);
             } catch (Exception exception) {
                 restorePreviousMessage(text("plugin.ai.directGenerationInvalid"));
@@ -148,15 +158,43 @@ public final class AiDirectStreamingGenerator {
             return;
         }
         ApplicationManager.getApplication().invokeLater(() -> {
-            if (!project.isDisposed()) {
+            if (!project.isDisposed() && canAiReplaceCommitMessage()) {
                 restorePreviousMessage(error.message());
             }
         });
     }
 
     private void restorePreviousMessage(String message) {
+        lastAiDraft = previousMessage;
         commitMessage.setCommitMessage(previousMessage);
         notify(message, NotificationType.ERROR);
+    }
+
+    /**
+     * 只允许覆盖仍由本次 AI 生成写入的文本；用户手动编辑后立即让出控制权。
+     */
+    private boolean canAiReplaceCommitMessage() {
+        if (userTookOver.get()) {
+            return false;
+        }
+        String currentMessage = currentCommitMessage();
+        if (currentMessage == null || lastAiDraft == null || lastAiDraft.equals(currentMessage)) {
+            return true;
+        }
+        if (userTookOver.compareAndSet(false, true)) {
+            ProgressIndicator indicator = generationIndicator;
+            if (indicator != null) {
+                indicator.cancel();
+            }
+            if (interruptionNotified.compareAndSet(false, true)) {
+                notify(text("plugin.ai.directGenerationStoppedByUser"), NotificationType.INFORMATION);
+            }
+        }
+        return false;
+    }
+
+    private String currentCommitMessage() {
+        return commitMessage instanceof CheckinProjectPanel panel ? panel.getCommitMessage() : null;
     }
 
     private void notify(String message, NotificationType type) {

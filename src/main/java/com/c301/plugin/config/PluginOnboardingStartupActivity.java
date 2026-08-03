@@ -5,13 +5,15 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ModalityState;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.startup.StartupActivity;
+import com.intellij.openapi.startup.ProjectActivity;
+import kotlin.Unit;
+import kotlin.coroutines.Continuation;
 import org.jetbrains.annotations.NotNull;
 
 /**
  * 项目打开后展示当前版本的一次性公告。
  */
-public final class PluginOnboardingStartupActivity implements StartupActivity {
+public final class PluginOnboardingStartupActivity implements ProjectActivity {
     private static final Logger LOG = Logger.getInstance(PluginOnboardingStartupActivity.class);
 
     /**
@@ -40,7 +42,8 @@ public final class PluginOnboardingStartupActivity implements StartupActivity {
     }
 
     @Override
-    public void runActivity(@NotNull Project project) {
+    public Object execute(@NotNull Project project, @NotNull Continuation<? super Unit> continuation) {
         showAnnouncementIfNeeded(project);
+        return Unit.INSTANCE;
     }
 }

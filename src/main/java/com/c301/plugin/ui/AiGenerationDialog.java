@@ -1,6 +1,7 @@
 package com.c301.plugin.ui;
 
 import com.c301.plugin.application.ai.AiSuggestionValidator;
+import com.c301.plugin.config.AiGenerationConfigSnapshot;
 import com.c301.plugin.config.AiPreferencesState;
 import com.c301.plugin.config.CommitTemplateSettingsResolver;
 import com.c301.plugin.config.EffectiveCommitTemplateSettings;
@@ -46,6 +47,7 @@ public final class AiGenerationDialog extends JDialog {
     private volatile boolean disposed;
 
     private EffectiveCommitTemplateSettings effectiveSettings;
+    private AiGenerationConfigSnapshot generationConfig;
     private AiGenerationRequest request;
     private String requestPreview;
 
@@ -141,6 +143,8 @@ public final class AiGenerationDialog extends JDialog {
             return;
         }
         effectiveSettings = CommitTemplateSettingsResolver.getInstance(project).resolve();
+        generationConfig = AiGenerationConfigSnapshot.capture(preferences, effectiveSettings);
+        effectiveSettings = generationConfig.effectiveSettings();
         com.intellij.openapi.progress.ProgressManager.getInstance().run(new Task.Backgroundable(project,
                 text("plugin.ai.generationTaskTitle"), true) {
             @Override
@@ -169,16 +173,7 @@ public final class AiGenerationDialog extends JDialog {
             dispose();
             return;
         }
-        String prompt = preferences.getCustomSystemPrompts().get(preferences.getProviderType());
-        if (prompt == null || prompt.isBlank()) {
-            prompt = AiSystemPromptTemplates.forProvider(preferences.getProviderType());
-        }
-        request = new AiGenerationRequest(preferences.getApiUrl(), preferences.getModel(), prompt,
-                preferences.getTemperature(), preferences.getMaxTokens(), preferences.getQwenGenerationOptions(),
-                preferences.getDeepSeekGenerationOptions(), preferences.getOpenAiGenerationOptions(),
-                effectiveSettings.language(), allowedTypes(),
-                effectiveSettings.commitMessageRules(), AiCommitTemplateContextRenderer.render(effectiveSettings, allowedTypes()),
-                result.diff());
+        request = generationConfig.createRequest(result.diff());
         try {
             requestPreview = renderRequestPreview(result);
         } catch (Exception exception) {
@@ -186,7 +181,7 @@ public final class AiGenerationDialog extends JDialog {
             return;
         }
         preview.setText(requestPreview);
-        if (preferences.isCheckDiffBeforeSending()) {
+        if (generationConfig.checkDiffBeforeSending()) {
             reviewHint.setVisible(true);
             generate.setEnabled(true);
             return;
@@ -197,16 +192,15 @@ public final class AiGenerationDialog extends JDialog {
 
     private String renderRequestPreview(AiIncludedChangesCollector.DiffCollectionResult result) throws Exception {
         StringBuilder value = new StringBuilder();
-        var provider = AiProviderFactory.create(preferences.getProviderType());
-        boolean openAiResponses = preferences.getProviderType() == com.c301.plugin.domain.ai.AiProviderType.CHATGPT;
+        var provider = AiProviderFactory.create(generationConfig.providerType());
+        boolean openAiResponses = generationConfig.providerType() == com.c301.plugin.domain.ai.AiProviderType.CHATGPT;
         value.append("POST ").append(openAiResponses ? OpenAiResponsesRequestRenderer.resolveUrl(request)
                         : OpenAiCompatibleRequestRenderer.resolveUrl(request))
                 .append("\n\nRequest headers\n")
                 .append("Accept: text/event-stream\n")
                 .append("Content-Type: application/json\n")
                 .append("Authorization: Bearer [configured; hidden]\n");
-        if (preferences.getProviderType() == com.c301.plugin.domain.ai.AiProviderType.QWEN
-                && preferences.getQwenGenerationOptions().isDataInspectionEnabled()) {
+        if (generationConfig.isQwenDataInspectionEnabled()) {
             value.append("X-DashScope-DataInspection: {\"input\":\"cip\",\"output\":\"cip\"}\n");
         }
         value.append("\nRequest body\n")
@@ -237,7 +231,7 @@ public final class AiGenerationDialog extends JDialog {
                 text("plugin.ai.generationTaskTitle"), true) {
             @Override
             public void run(@NotNull ProgressIndicator indicator) {
-                String apiKey = new PasswordSafeAiCredentialStore().readApiKey(preferences.getProviderType());
+                String apiKey = new PasswordSafeAiCredentialStore().readApiKey(generationConfig.providerType());
                 if (apiKey == null || apiKey.isBlank()) {
                     ApplicationManager.getApplication().invokeLater(() -> {
                         if (!isUiActive()) {
@@ -249,7 +243,7 @@ public final class AiGenerationDialog extends JDialog {
                     });
                     return;
                 }
-                AiProviderFactory.create(preferences.getProviderType()).generate(request, new AiCredentials(apiKey), indicator,
+                AiProviderFactory.create(generationConfig.providerType()).generate(request, new AiCredentials(apiKey), indicator,
                         new Listener());
             }
         });
@@ -284,8 +278,7 @@ public final class AiGenerationDialog extends JDialog {
     }
 
     private java.util.List<com.c301.plugin.model.CommitTypeDomain> allowedTypes() {
-        return effectiveSettings.customEnable() ? effectiveSettings.customCommitTypeList()
-                : CommUtil.getDefaultCommitTypeList(effectiveSettings.language().getKey());
+        return generationConfig.allowedTypes();
     }
 
     private final class Listener implements AiStreamingListener {
