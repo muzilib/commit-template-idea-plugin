@@ -3,6 +3,8 @@ package com.c301.plugin.config;
 import com.c301.plugin.domain.ai.AiDataTransferConsent;
 import com.c301.plugin.domain.ai.AiProviderType;
 import com.c301.plugin.domain.ai.QwenGenerationOptions;
+import com.c301.plugin.domain.ai.DeepSeekGenerationOptions;
+import com.c301.plugin.domain.ai.OpenAiGenerationOptions;
 import com.c301.plugin.infrastructure.credentials.PasswordSafeAiCredentialStore;
 import com.c301.plugin.ui.PluginNotifications;
 import com.c301.plugin.utils.CommUtil;
@@ -32,7 +34,8 @@ import java.util.Map;
 public class AiPreferencesState implements PersistentStateComponent<AiPreferencesState> {
 
 
-    private static final int CURRENT_MIGRATION_VERSION = 1;
+    private static final int CURRENT_MIGRATION_VERSION = 2;
+    private static final String LEGACY_OPENAI_CHAT_COMPLETIONS_URL = "https://api.openai.com/v1/chat/completions";
 
     private boolean enabled;
     private int migrationVersion;
@@ -51,6 +54,8 @@ public class AiPreferencesState implements PersistentStateComponent<AiPreference
     private double temperature = 0.7D;
     private int maxTokens = 1024;
     private QwenGenerationOptions qwenGenerationOptions = new QwenGenerationOptions();
+    private DeepSeekGenerationOptions deepSeekGenerationOptions = new DeepSeekGenerationOptions();
+    private OpenAiGenerationOptions openAiGenerationOptions = new OpenAiGenerationOptions();
 
     private AiDataTransferConsent dataTransferConsent = AiDataTransferConsent.UNDECIDED;
     private boolean checkDiffBeforeSending = false;
@@ -107,6 +112,9 @@ public class AiPreferencesState implements PersistentStateComponent<AiPreference
      * 仅清理可明确判定为无效的 AI 非敏感配置，避免升级时覆盖有效用户偏好。
      */
     private void sanitizePreferences() {
+        if (providerType == AiProviderType.CHATGPT && LEGACY_OPENAI_CHAT_COMPLETIONS_URL.equals(apiUrl)) {
+            apiUrl = AiProviderType.CHATGPT.apiUrl();
+        }
         if (!isSupportedApiUrl(apiUrl)) {
             apiUrl = providerType.usesPresetApiUrl() ? providerType.apiUrl() : "";
         } else {
@@ -133,7 +141,8 @@ public class AiPreferencesState implements PersistentStateComponent<AiPreference
         PasswordSafeAiCredentialStore credentialStore = new PasswordSafeAiCredentialStore();
         boolean migrated = true;
         migrated &= credentialStore.migrateLegacyApiKey(AiProviderType.QWEN, AiProviderType.QWEN.apiUrl());
-        migrated &= credentialStore.migrateLegacyApiKey(AiProviderType.CHATGPT, AiProviderType.CHATGPT.apiUrl());
+        migrated &= credentialStore.migrateLegacyApiKey(AiProviderType.CHATGPT, AiProviderType.CHATGPT.apiUrl(),
+                LEGACY_OPENAI_CHAT_COMPLETIONS_URL);
         migrated &= credentialStore.migrateLegacyApiKey(AiProviderType.DEEPSEEK, AiProviderType.DEEPSEEK.apiUrl());
         migrated &= credentialStore.migrateLegacyApiKey(provider, legacyApiUrl, configuredApiUrl);
         return migrated;
@@ -202,6 +211,12 @@ public class AiPreferencesState implements PersistentStateComponent<AiPreference
         }
         if (qwenGenerationOptions == null) {
             qwenGenerationOptions = new QwenGenerationOptions();
+        }
+        if (deepSeekGenerationOptions == null) {
+            deepSeekGenerationOptions = new DeepSeekGenerationOptions();
+        }
+        if (openAiGenerationOptions == null) {
+            openAiGenerationOptions = new OpenAiGenerationOptions();
         }
         if (dataTransferConsent == null) {
             dataTransferConsent = AiDataTransferConsent.UNDECIDED;

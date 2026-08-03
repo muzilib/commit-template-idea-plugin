@@ -5,13 +5,15 @@ package com.c301.plugin.domain.ai;
  */
 public enum AiProviderType {
     QWEN("https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions",
+            "qwen3.7-max",
             "qwen",
             "plugin.ai.provider.qwen",
             "plugin.ai.modelPlaceholder.qwen",
             "plugin.ai.provider.qwen.apiKeyHelp.message",
             "plugin.ai.provider.qwen.apiKeyHelp.link",
             "https://platform.qianwenai.com/home/api-keys"),
-    CHATGPT("https://api.openai.com/v1/chat/completions",
+    CHATGPT("https://api.openai.com/v1/responses",
+            "gpt-5.6",
             "chatgpt",
             "plugin.ai.provider.chatgpt",
             "plugin.ai.modelPlaceholder.chatgpt",
@@ -19,6 +21,7 @@ public enum AiProviderType {
             "plugin.ai.provider.chatgpt.apiKeyHelp.link",
             "https://platform.openai.com/api-keys"),
     DEEPSEEK("https://api.deepseek.com/chat/completions",
+            "deepseek-v4-flash",
             "deepseek",
             "plugin.ai.provider.deepseek",
             "plugin.ai.modelPlaceholder.deepseek",
@@ -26,6 +29,7 @@ public enum AiProviderType {
             "plugin.ai.provider.deepseek.apiKeyHelp.link",
             "https://platform.deepseek.com/api_keys"),
     CUSTOM("",
+            "",
             "common",
             "plugin.ai.provider.custom",
             "plugin.ai.modelPlaceholder.custom",
@@ -34,6 +38,7 @@ public enum AiProviderType {
             null);
 
     private final String apiUrl;
+    private final String defaultModel;
     private final String promptTemplate;
     private final String displayNameKey;
     private final String modelPlaceholderKey;
@@ -41,9 +46,11 @@ public enum AiProviderType {
     private final String apiKeyHelpLinkTextKey;
     private final String apiKeyHelpUrl;
 
-    AiProviderType(String apiUrl, String promptTemplate, String displayNameKey, String modelPlaceholderKey,
-                   String apiKeyHelpMessageKey, String apiKeyHelpLinkTextKey, String apiKeyHelpUrl) {
+    AiProviderType(String apiUrl, String defaultModel, String promptTemplate, String displayNameKey,
+                   String modelPlaceholderKey, String apiKeyHelpMessageKey, String apiKeyHelpLinkTextKey,
+                   String apiKeyHelpUrl) {
         this.apiUrl = apiUrl;
+        this.defaultModel = defaultModel;
         this.promptTemplate = promptTemplate;
         this.displayNameKey = displayNameKey;
         this.modelPlaceholderKey = modelPlaceholderKey;
@@ -54,6 +61,10 @@ public enum AiProviderType {
 
     public String apiUrl() {
         return apiUrl;
+    }
+
+    public String defaultModel() {
+        return defaultModel;
     }
 
     public String promptTemplate() {

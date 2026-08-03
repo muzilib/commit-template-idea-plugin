@@ -2,6 +2,8 @@ package com.c301.plugin.config;
 
 import com.c301.plugin.domain.ai.AiDataTransferConsent;
 import com.c301.plugin.domain.ai.AiProviderType;
+import com.c301.plugin.domain.ai.DeepSeekGenerationOptions;
+import com.c301.plugin.domain.ai.OpenAiGenerationOptions;
 import com.c301.plugin.domain.ai.QwenGenerationOptions;
 import com.c301.plugin.infrastructure.ai.AiSystemPromptTemplates;
 import com.c301.plugin.infrastructure.credentials.AiCredentialStore;
@@ -14,6 +16,7 @@ import com.intellij.openapi.ui.Messages;
 import com.intellij.util.ui.JBUI;
 
 import javax.swing.*;
+import javax.swing.border.TitledBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.awt.*;
@@ -40,6 +43,14 @@ final class AiPreferencesConfigurable {
     private JComboBox<AiProviderType> providerType;
     private JTextField apiUrl;
     private JTextField model;
+    private JLabel protocolLabel;
+    private JLabel providerLabel;
+    private JLabel apiUrlLabel;
+    private JLabel modelLabel;
+    private JLabel excludePatternsLabel;
+    private JLabel temperatureLabel;
+    private JLabel maxTokensLabel;
+    private JLabel systemPromptLabel;
     private JLabel providerHint;
     private JSpinner temperature;
     private JSpinner maxTokens;
@@ -53,6 +64,18 @@ final class AiPreferencesConfigurable {
     private javax.swing.Timer apiKeyHelpCloseTimer;
     private JButton restorePrompt;
     private JPanel qwenSettings;
+    private JLabel qwenSamplingLabel;
+    private JLabel qwenThinkingLabel;
+    private JLabel qwenSearchLabel;
+    private TitledBorder qwenSettingsBorder;
+    private JLabel qwenTopPLabel;
+    private JLabel qwenTopKLabel;
+    private JLabel qwenRepetitionPenaltyLabel;
+    private JLabel qwenPresencePenaltyLabel;
+    private JLabel qwenSeedLabel;
+    private JLabel qwenThinkingBudgetLabel;
+    private JLabel qwenReasoningEffortLabel;
+    private JLabel qwenSearchStrategyLabel;
     private JCheckBox qwenIncludeUsage;
     private JTextField qwenTopP;
     private JTextField qwenTopK;
@@ -66,7 +89,27 @@ final class AiPreferencesConfigurable {
     private JCheckBox qwenForceSearch;
     private JComboBox<String> qwenSearchStrategy;
     private JCheckBox qwenDataInspection;
+    private JPanel deepSeekSettings;
+    private JLabel deepSeekTopPLabel;
+    private JLabel deepSeekReasoningEffortLabel;
+    private TitledBorder deepSeekSettingsBorder;
+    private JCheckBox deepSeekIncludeUsage;
+    private JTextField deepSeekTopP;
+    private JCheckBox deepSeekEnableThinking;
+    private JComboBox<String> deepSeekReasoningEffort;
+    private JPanel openAiSettings;
+    private JLabel openAiReasoningEffortLabel;
+    private JLabel openAiVerbosityLabel;
+    private JLabel openAiTopPLabel;
+    private TitledBorder openAiSettingsBorder;
+    private JComboBox<String> openAiReasoningEffort;
+    private JComboBox<String> openAiVerbosity;
+    private JTextField openAiTopP;
+    private JCheckBox openAiStoreResponse;
     private AiProviderType displayedProvider;
+    private String customApiUrl = "";
+    private String customModel = "";
+    private boolean resetting;
     private Map<AiProviderType, String> draftSystemPrompts = new LinkedHashMap<>();
 
     private static ResourceBundle bundle() {
@@ -96,11 +139,13 @@ final class AiPreferencesConfigurable {
         return result;
     }
 
-    private static void addAdvancedLabeled(JPanel panel, String label, JComponent component, GridBagConstraints constraints) {
+    private static JLabel addAdvancedLabeled(JPanel panel, String label, JComponent component, GridBagConstraints constraints) {
         JPanel row = new JPanel(new BorderLayout(8, 0));
-        row.add(new JLabel(label), BorderLayout.WEST);
+        JLabel labelComponent = new JLabel(label);
+        row.add(labelComponent, BorderLayout.WEST);
         row.add(component, BorderLayout.CENTER);
         panel.add(row, constraints);
+        return labelComponent;
     }
 
     private static String formatOptional(Object value) {
@@ -185,21 +230,22 @@ final class AiPreferencesConfigurable {
             checkDiffBeforeSending = new JCheckBox(bundle.getString("plugin.ai.checkDiffBeforeSending"));
             panel.add(checkDiffBeforeSending, constraints);
             constraints.gridy++;
-            panel.add(new JLabel(bundle.getString("plugin.ai.protocol")), constraints);
+            protocolLabel = new JLabel(bundle.getString("plugin.ai.protocol"));
+            panel.add(protocolLabel, constraints);
 
             providerType = new JComboBox<>(AiProviderType.values());
             providerType.setRenderer(new ProviderRenderer());
-            addLabeled(bundle.getString("plugin.ai.providerType"), providerType, constraints);
+            providerLabel = addLabeled(bundle.getString("plugin.ai.providerType"), providerType, constraints);
 
             apiUrl = new JTextField();
-            addLabeled(bundle.getString("plugin.ai.apiUrl"), apiUrl, constraints);
+            apiUrlLabel = addLabeled(bundle.getString("plugin.ai.apiUrl"), apiUrl, constraints);
             providerHint = new JLabel();
             providerHint.setBorder(JBUI.Borders.emptyLeft(4));
             constraints.gridy++;
             panel.add(providerHint, constraints);
 
             model = new JTextField();
-            addLabeled(bundle.getString("plugin.ai.model"), model, constraints);
+            modelLabel = addLabeled(bundle.getString("plugin.ai.model"), model, constraints);
 
             JPanel credentials = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
             credentialStatus = new JLabel();
@@ -221,7 +267,8 @@ final class AiPreferencesConfigurable {
             panel.add(advancedSettings, constraints);
 
             constraints.gridy++;
-            panel.add(new JLabel(bundle.getString("plugin.ai.excludePatterns")), constraints);
+            excludePatternsLabel = new JLabel(bundle.getString("plugin.ai.excludePatterns"));
+            panel.add(excludePatternsLabel, constraints);
             constraints.gridy++;
             // 排除规则按行编辑，必须保留足够的可见高度，不能因父级 GridBagLayout 压缩为单行。
             excludePatterns = new JTextArea(8, 0);
@@ -237,12 +284,17 @@ final class AiPreferencesConfigurable {
 
             enabled.addActionListener(event -> updateOptionsVisibility());
             showAdvancedSettings.addActionListener(event -> updateAdvancedSettingsVisibility());
-            providerType.addActionListener(event -> switchProvider());
+            providerType.addActionListener(event -> {
+                if (!resetting) {
+                    switchProvider();
+                }
+            });
             saveKey.addActionListener(event -> saveApiKey());
             clearKey.addActionListener(event -> clearApiKey());
             restorePrompt.addActionListener(event -> restoreDefaultPrompt());
             qwenEnableThinking.addActionListener(event -> updateQwenDependentOptions());
             qwenEnableSearch.addActionListener(event -> updateQwenDependentOptions());
+            deepSeekEnableThinking.addActionListener(event -> updateDeepSeekDependentOptions());
             apiUrl.getDocument().addDocumentListener(new SimpleDocumentListener(this::refreshCredentialStatus));
 
             JPanel scrollContent = new JPanel(new BorderLayout());
@@ -257,6 +309,67 @@ final class AiPreferencesConfigurable {
         return scrollPane;
     }
 
+    void refreshLanguage() {
+        if (panel == null) {
+            return;
+        }
+        ResourceBundle bundle = bundle();
+        protocolLabel.setText(bundle.getString("plugin.ai.protocol"));
+        providerLabel.setText(bundle.getString("plugin.ai.providerType"));
+        apiUrlLabel.setText(bundle.getString("plugin.ai.apiUrl"));
+        modelLabel.setText(bundle.getString("plugin.ai.model"));
+        excludePatternsLabel.setText(bundle.getString("plugin.ai.excludePatterns"));
+        enabled.setText(bundle.getString("plugin.ai.enabled"));
+        checkDiffBeforeSending.setText(bundle.getString("plugin.ai.checkDiffBeforeSending"));
+        saveKey.setText(bundle.getString("plugin.ai.saveApiKey"));
+        clearKey.setText(bundle.getString("plugin.ai.clearApiKey"));
+        showAdvancedSettings.setText(bundle.getString("plugin.ai.moreSettings"));
+        apiKeyHelp.setToolTipText(bundle.getString("plugin.ai.apiKeyHelp.accessibleDescription"));
+        temperatureLabel.setText(bundle.getString("plugin.ai.temperature"));
+        maxTokensLabel.setText(bundle.getString("plugin.ai.maxTokens"));
+        systemPromptLabel.setText(bundle.getString("plugin.ai.systemPrompt"));
+        restorePrompt.setText(bundle.getString("plugin.ai.restoreDefaultPrompt"));
+        qwenSettingsBorder.setTitle(bundle.getString("plugin.ai.qwen.settings"));
+        qwenIncludeUsage.setText(bundle.getString("plugin.ai.qwen.includeUsage"));
+        qwenSamplingLabel.setText(bundle.getString("plugin.ai.qwen.sampling"));
+        qwenTopPLabel.setText(bundle.getString("plugin.ai.qwen.topP"));
+        qwenTopKLabel.setText(bundle.getString("plugin.ai.qwen.topK"));
+        qwenRepetitionPenaltyLabel.setText(bundle.getString("plugin.ai.qwen.repetitionPenalty"));
+        qwenPresencePenaltyLabel.setText(bundle.getString("plugin.ai.qwen.presencePenalty"));
+        qwenSeedLabel.setText(bundle.getString("plugin.ai.qwen.seed"));
+        qwenThinkingLabel.setText(bundle.getString("plugin.ai.qwen.thinking"));
+        qwenEnableThinking.setText(bundle.getString("plugin.ai.qwen.enableThinking"));
+        qwenThinkingBudgetLabel.setText(bundle.getString("plugin.ai.qwen.thinkingBudget"));
+        qwenReasoningEffortLabel.setText(bundle.getString("plugin.ai.qwen.reasoningEffort"));
+        qwenSearchLabel.setText(bundle.getString("plugin.ai.qwen.search"));
+        qwenEnableSearch.setText(bundle.getString("plugin.ai.qwen.enableSearch"));
+        qwenForceSearch.setText(bundle.getString("plugin.ai.qwen.forceSearch"));
+        qwenSearchStrategyLabel.setText(bundle.getString("plugin.ai.qwen.searchStrategy"));
+        qwenDataInspection.setText(bundle.getString("plugin.ai.qwen.dataInspection"));
+        qwenTopP.putClientProperty("JTextField.placeholderText", bundle.getString("plugin.ai.qwen.defaultOptional"));
+        qwenTopK.putClientProperty("JTextField.placeholderText", bundle.getString("plugin.ai.qwen.defaultOptional"));
+        qwenRepetitionPenalty.putClientProperty("JTextField.placeholderText", bundle.getString("plugin.ai.qwen.defaultOptional"));
+        qwenPresencePenalty.putClientProperty("JTextField.placeholderText", bundle.getString("plugin.ai.qwen.defaultOptional"));
+        qwenSeed.putClientProperty("JTextField.placeholderText", bundle.getString("plugin.ai.qwen.randomOptional"));
+        qwenThinkingBudget.putClientProperty("JTextField.placeholderText", bundle.getString("plugin.ai.qwen.defaultOptional"));
+        deepSeekSettingsBorder.setTitle(bundle.getString("plugin.ai.deepseek.settings"));
+        deepSeekIncludeUsage.setText(bundle.getString("plugin.ai.deepseek.includeUsage"));
+        deepSeekTopPLabel.setText(bundle.getString("plugin.ai.deepseek.topP"));
+        deepSeekEnableThinking.setText(bundle.getString("plugin.ai.deepseek.enableThinking"));
+        deepSeekReasoningEffortLabel.setText(bundle.getString("plugin.ai.deepseek.reasoningEffort"));
+        openAiSettingsBorder.setTitle(bundle.getString("plugin.ai.openai.settings"));
+        openAiReasoningEffortLabel.setText(bundle.getString("plugin.ai.openai.reasoningEffort"));
+        openAiVerbosityLabel.setText(bundle.getString("plugin.ai.openai.verbosity"));
+        openAiTopPLabel.setText(bundle.getString("plugin.ai.openai.topP"));
+        deepSeekTopP.putClientProperty("JTextField.placeholderText", bundle.getString("plugin.ai.qwen.defaultOptional"));
+        openAiTopP.putClientProperty("JTextField.placeholderText", bundle.getString("plugin.ai.qwen.defaultOptional"));
+        openAiStoreResponse.setText(bundle.getString("plugin.ai.openai.storeResponse"));
+        providerType.repaint();
+        panel.revalidate();
+        panel.repaint();
+        refreshProviderUi(selectedProvider());
+    }
+
     boolean isModified() {
         return panel != null && (enabled.isSelected() != state.isEnabled()
                 || checkDiffBeforeSending.isSelected() != state.isCheckDiffBeforeSending()
@@ -267,6 +380,8 @@ final class AiPreferencesConfigurable {
                 || Double.compare((Double) temperature.getValue(), state.getTemperature()) != 0
                 || !maxTokens.getValue().equals(state.getMaxTokens())
                 || !qwenOptionsFromEditor().equals(state.getQwenGenerationOptions())
+                || !deepSeekOptionsFromEditor().equals(state.getDeepSeekGenerationOptions())
+                || !openAiOptionsFromEditor().equals(state.getOpenAiGenerationOptions())
                 || !draftPromptsWithCurrentEditor().equals(normalizePrompts(state.getCustomSystemPrompts()))
                 || !patternsFromEditor().equals(state.getExcludePatterns()));
     }
@@ -286,6 +401,8 @@ final class AiPreferencesConfigurable {
         state.setTemperature((Double) temperature.getValue());
         state.setMaxTokens((Integer) maxTokens.getValue());
         state.setQwenGenerationOptions(qwenOptionsFromEditor());
+        state.setDeepSeekGenerationOptions(deepSeekOptionsFromEditor());
+        state.setOpenAiGenerationOptions(openAiOptionsFromEditor());
         savePromptFor(selectedProvider());
         state.setCustomSystemPrompts(normalizePrompts(draftSystemPrompts));
         state.setExcludePatterns(new ArrayList<>(patternsFromEditor()));
@@ -299,16 +416,24 @@ final class AiPreferencesConfigurable {
         checkDiffBeforeSending.setSelected(state.isCheckDiffBeforeSending());
         showAdvancedSettings.setSelected(state.isShowAdvancedSettings());
         displayedProvider = null;
+        customApiUrl = state.getProviderType() == AiProviderType.CUSTOM ? state.getApiUrl() : "";
+        customModel = state.getProviderType() == AiProviderType.CUSTOM ? state.getModel() : "";
         draftSystemPrompts = normalizePrompts(state.getCustomSystemPrompts());
+        resetting = true;
         providerType.setSelectedItem(state.getProviderType());
+        resetting = false;
         model.setText(state.getModel());
         temperature.setValue(state.getTemperature());
         maxTokens.setValue(state.getMaxTokens());
         resetQwenOptions(state.getQwenGenerationOptions());
+        resetDeepSeekOptions(state.getDeepSeekGenerationOptions());
+        resetOpenAiOptions(state.getOpenAiGenerationOptions());
         excludePatterns.setText(String.join("\n", state.getExcludePatterns()));
-        switchProvider();
-        // 重置时恢复用户保存的地址，不能被供应商预设的推荐地址覆盖。
+        // 重置时必须恢复当前供应商已保存的地址和模型，不能套用切换时的推荐默认值。
         apiUrl.setText(state.getApiUrl());
+        AiProviderType provider = selectedProvider();
+        displayedProvider = provider;
+        refreshProviderUi(provider);
         refreshCredentialStatus();
         updateAdvancedSettingsVisibility();
         updateOptionsVisibility();
@@ -319,22 +444,31 @@ final class AiPreferencesConfigurable {
             return;
         }
         savePromptFor(displayedProvider);
+        if (displayedProvider == AiProviderType.CUSTOM) {
+            customApiUrl = apiUrl.getText().trim();
+            customModel = model.getText().trim();
+        }
         AiProviderType provider = selectedProvider();
         displayedProvider = provider;
         if (provider.usesPresetApiUrl()) {
             apiUrl.setText(provider.apiUrl());
-            providerHint.setText(bundle().getString("plugin.ai.providerApiKeyHint"));
+            model.setText(provider.defaultModel());
         } else {
-            if (apiUrl.getText().equals(AiProviderType.QWEN.apiUrl()) || apiUrl.getText().equals(AiProviderType.CHATGPT.apiUrl())
-                    || apiUrl.getText().equals(AiProviderType.DEEPSEEK.apiUrl())) {
-                apiUrl.setText("");
-            }
-            providerHint.setText(bundle().getString("plugin.ai.customProviderHint"));
+            apiUrl.setText(customApiUrl);
+            model.setText(customModel);
         }
+        refreshProviderUi(provider);
+    }
+
+    private void refreshProviderUi(AiProviderType provider) {
+        providerHint.setText(bundle().getString(provider.usesPresetApiUrl()
+                ? "plugin.ai.providerApiKeyHint" : "plugin.ai.customProviderHint"));
         apiUrl.setEditable(true);
         model.putClientProperty("JTextField.placeholderText", bundle().getString(provider.modelPlaceholderKey()));
         systemPrompt.setText(promptFor(provider));
         updateQwenSettingsVisibility();
+        updateDeepSeekSettingsVisibility();
+        updateOpenAiSettingsVisibility();
         updateApiKeyHelpVisibility();
         refreshCredentialStatus();
     }
@@ -478,15 +612,22 @@ final class AiPreferencesConfigurable {
         GridBagConstraints constraints = constraints(0);
         constraints.insets = JBUI.insetsBottom(4);
         temperature = new JSpinner(new SpinnerNumberModel(0.2D, 0.0D, 2.0D, 0.1D));
-        addAdvancedLabeled(content, bundle.getString("plugin.ai.temperature"), temperature, constraints);
+        temperatureLabel = addAdvancedLabeled(content, bundle.getString("plugin.ai.temperature"), temperature, constraints);
         constraints.gridy++;
         maxTokens = new JSpinner(new SpinnerNumberModel(1024, 1, 16384, 1));
-        addAdvancedLabeled(content, bundle.getString("plugin.ai.maxTokens"), maxTokens, constraints);
+        maxTokensLabel = addAdvancedLabeled(content, bundle.getString("plugin.ai.maxTokens"), maxTokens, constraints);
         constraints.gridy++;
         qwenSettings = createQwenSettings(bundle);
         content.add(qwenSettings, constraints);
         constraints.gridy++;
-        content.add(new JLabel(bundle.getString("plugin.ai.systemPrompt")), constraints);
+        deepSeekSettings = createDeepSeekSettings(bundle);
+        content.add(deepSeekSettings, constraints);
+        constraints.gridy++;
+        openAiSettings = createOpenAiSettings(bundle);
+        content.add(openAiSettings, constraints);
+        constraints.gridy++;
+        systemPromptLabel = new JLabel(bundle.getString("plugin.ai.systemPrompt"));
+        content.add(systemPromptLabel, constraints);
         constraints.gridy++;
         systemPrompt = new JTextArea(10, 0);
         systemPrompt.setLineWrap(true);
@@ -509,41 +650,45 @@ final class AiPreferencesConfigurable {
 
     private JPanel createQwenSettings(ResourceBundle bundle) {
         JPanel content = new JPanel(new GridBagLayout());
-        content.setBorder(BorderFactory.createTitledBorder(bundle.getString("plugin.ai.qwen.settings")));
+        qwenSettingsBorder = BorderFactory.createTitledBorder(bundle.getString("plugin.ai.qwen.settings"));
+        content.setBorder(qwenSettingsBorder);
         GridBagConstraints constraints = constraints(0);
         constraints.insets = JBUI.insetsBottom(4);
         qwenIncludeUsage = new JCheckBox(bundle.getString("plugin.ai.qwen.includeUsage"));
         content.add(qwenIncludeUsage, constraints);
         constraints.gridy++;
-        content.add(new JLabel(bundle.getString("plugin.ai.qwen.sampling")), constraints);
+        qwenSamplingLabel = new JLabel(bundle.getString("plugin.ai.qwen.sampling"));
+        content.add(qwenSamplingLabel, constraints);
         constraints.gridy++;
         qwenTopP = optionalField(bundle, "plugin.ai.qwen.defaultOptional");
-        addAdvancedLabeled(content, bundle.getString("plugin.ai.qwen.topP"), qwenTopP, constraints);
+        qwenTopPLabel = addAdvancedLabeled(content, bundle.getString("plugin.ai.qwen.topP"), qwenTopP, constraints);
         constraints.gridy++;
         qwenTopK = optionalField(bundle, "plugin.ai.qwen.defaultOptional");
-        addAdvancedLabeled(content, bundle.getString("plugin.ai.qwen.topK"), qwenTopK, constraints);
+        qwenTopKLabel = addAdvancedLabeled(content, bundle.getString("plugin.ai.qwen.topK"), qwenTopK, constraints);
         constraints.gridy++;
         qwenRepetitionPenalty = optionalField(bundle, "plugin.ai.qwen.defaultOptional");
-        addAdvancedLabeled(content, bundle.getString("plugin.ai.qwen.repetitionPenalty"), qwenRepetitionPenalty, constraints);
+        qwenRepetitionPenaltyLabel = addAdvancedLabeled(content, bundle.getString("plugin.ai.qwen.repetitionPenalty"), qwenRepetitionPenalty, constraints);
         constraints.gridy++;
         qwenPresencePenalty = optionalField(bundle, "plugin.ai.qwen.defaultOptional");
-        addAdvancedLabeled(content, bundle.getString("plugin.ai.qwen.presencePenalty"), qwenPresencePenalty, constraints);
+        qwenPresencePenaltyLabel = addAdvancedLabeled(content, bundle.getString("plugin.ai.qwen.presencePenalty"), qwenPresencePenalty, constraints);
         constraints.gridy++;
         qwenSeed = optionalField(bundle, "plugin.ai.qwen.randomOptional");
-        addAdvancedLabeled(content, bundle.getString("plugin.ai.qwen.seed"), qwenSeed, constraints);
+        qwenSeedLabel = addAdvancedLabeled(content, bundle.getString("plugin.ai.qwen.seed"), qwenSeed, constraints);
         constraints.gridy++;
-        content.add(new JLabel(bundle.getString("plugin.ai.qwen.thinking")), constraints);
+        qwenThinkingLabel = new JLabel(bundle.getString("plugin.ai.qwen.thinking"));
+        content.add(qwenThinkingLabel, constraints);
         constraints.gridy++;
         qwenEnableThinking = new JCheckBox(bundle.getString("plugin.ai.qwen.enableThinking"));
         content.add(qwenEnableThinking, constraints);
         constraints.gridy++;
         qwenThinkingBudget = optionalField(bundle, "plugin.ai.qwen.defaultOptional");
-        addAdvancedLabeled(content, bundle.getString("plugin.ai.qwen.thinkingBudget"), qwenThinkingBudget, constraints);
+        qwenThinkingBudgetLabel = addAdvancedLabeled(content, bundle.getString("plugin.ai.qwen.thinkingBudget"), qwenThinkingBudget, constraints);
         constraints.gridy++;
         qwenReasoningEffort = new JComboBox<>(new String[]{"", "low", "medium", "high", "xhigh", "max"});
-        addAdvancedLabeled(content, bundle.getString("plugin.ai.qwen.reasoningEffort"), qwenReasoningEffort, constraints);
+        qwenReasoningEffortLabel = addAdvancedLabeled(content, bundle.getString("plugin.ai.qwen.reasoningEffort"), qwenReasoningEffort, constraints);
         constraints.gridy++;
-        content.add(new JLabel(bundle.getString("plugin.ai.qwen.search")), constraints);
+        qwenSearchLabel = new JLabel(bundle.getString("plugin.ai.qwen.search"));
+        content.add(qwenSearchLabel, constraints);
         constraints.gridy++;
         qwenEnableSearch = new JCheckBox(bundle.getString("plugin.ai.qwen.enableSearch"));
         content.add(qwenEnableSearch, constraints);
@@ -552,7 +697,7 @@ final class AiPreferencesConfigurable {
         content.add(qwenForceSearch, constraints);
         constraints.gridy++;
         qwenSearchStrategy = new JComboBox<>(new String[]{"turbo", "max", "agent", "agent_max"});
-        addAdvancedLabeled(content, bundle.getString("plugin.ai.qwen.searchStrategy"), qwenSearchStrategy, constraints);
+        qwenSearchStrategyLabel = addAdvancedLabeled(content, bundle.getString("plugin.ai.qwen.searchStrategy"), qwenSearchStrategy, constraints);
         constraints.gridy++;
         qwenDataInspection = new JCheckBox(bundle.getString("plugin.ai.qwen.dataInspection"));
         content.add(qwenDataInspection, constraints);
@@ -621,12 +766,109 @@ final class AiPreferencesConfigurable {
         return options;
     }
 
+    private JPanel createDeepSeekSettings(ResourceBundle bundle) {
+        JPanel content = new JPanel(new GridBagLayout());
+        deepSeekSettingsBorder = BorderFactory.createTitledBorder(bundle.getString("plugin.ai.deepseek.settings"));
+        content.setBorder(deepSeekSettingsBorder);
+        GridBagConstraints constraints = constraints(0);
+        constraints.insets = JBUI.insetsBottom(4);
+        deepSeekIncludeUsage = new JCheckBox(bundle.getString("plugin.ai.deepseek.includeUsage"));
+        content.add(deepSeekIncludeUsage, constraints);
+        constraints.gridy++;
+        deepSeekTopP = optionalField(bundle, "plugin.ai.qwen.defaultOptional");
+        deepSeekTopPLabel = addAdvancedLabeled(content, bundle.getString("plugin.ai.deepseek.topP"), deepSeekTopP, constraints);
+        constraints.gridy++;
+        deepSeekEnableThinking = new JCheckBox(bundle.getString("plugin.ai.deepseek.enableThinking"));
+        content.add(deepSeekEnableThinking, constraints);
+        constraints.gridy++;
+        deepSeekReasoningEffort = new JComboBox<>(new String[]{"low", "high", "max"});
+        deepSeekReasoningEffortLabel = addAdvancedLabeled(content, bundle.getString("plugin.ai.deepseek.reasoningEffort"), deepSeekReasoningEffort, constraints);
+        return content;
+    }
+
+    private void updateDeepSeekSettingsVisibility() {
+        if (deepSeekSettings == null) {
+            return;
+        }
+        deepSeekSettings.setVisible(showAdvancedSettings.isSelected() && selectedProvider() == AiProviderType.DEEPSEEK);
+        updateDeepSeekDependentOptions();
+    }
+
+    private void updateDeepSeekDependentOptions() {
+        if (deepSeekEnableThinking != null) {
+            deepSeekReasoningEffort.setEnabled(deepSeekEnableThinking.isSelected());
+        }
+    }
+
+    private void resetDeepSeekOptions(DeepSeekGenerationOptions options) {
+        DeepSeekGenerationOptions value = options == null ? new DeepSeekGenerationOptions() : options;
+        deepSeekIncludeUsage.setSelected(value.isIncludeUsage());
+        deepSeekTopP.setText(formatOptional(value.getTopP()));
+        deepSeekEnableThinking.setSelected(value.isEnableThinking());
+        deepSeekReasoningEffort.setSelectedItem(value.getReasoningEffort() == null ? "high" : value.getReasoningEffort());
+        updateDeepSeekDependentOptions();
+    }
+
+    private DeepSeekGenerationOptions deepSeekOptionsFromEditor() {
+        DeepSeekGenerationOptions options = new DeepSeekGenerationOptions();
+        options.setIncludeUsage(deepSeekIncludeUsage.isSelected());
+        options.setTopP(optionalDouble(deepSeekTopP));
+        options.setEnableThinking(deepSeekEnableThinking.isSelected());
+        options.setReasoningEffort((String) deepSeekReasoningEffort.getSelectedItem());
+        return options;
+    }
+
+    private JPanel createOpenAiSettings(ResourceBundle bundle) {
+        JPanel content = new JPanel(new GridBagLayout());
+        openAiSettingsBorder = BorderFactory.createTitledBorder(bundle.getString("plugin.ai.openai.settings"));
+        content.setBorder(openAiSettingsBorder);
+        GridBagConstraints constraints = constraints(0);
+        constraints.insets = JBUI.insetsBottom(4);
+        openAiReasoningEffort = new JComboBox<>(new String[]{"none", "minimal", "low", "medium", "high", "xhigh", "max"});
+        openAiReasoningEffortLabel = addAdvancedLabeled(content, bundle.getString("plugin.ai.openai.reasoningEffort"), openAiReasoningEffort, constraints);
+        constraints.gridy++;
+        openAiVerbosity = new JComboBox<>(new String[]{"low", "medium", "high"});
+        openAiVerbosityLabel = addAdvancedLabeled(content, bundle.getString("plugin.ai.openai.verbosity"), openAiVerbosity, constraints);
+        constraints.gridy++;
+        openAiTopP = optionalField(bundle, "plugin.ai.qwen.defaultOptional");
+        openAiTopPLabel = addAdvancedLabeled(content, bundle.getString("plugin.ai.openai.topP"), openAiTopP, constraints);
+        constraints.gridy++;
+        openAiStoreResponse = new JCheckBox(bundle.getString("plugin.ai.openai.storeResponse"));
+        content.add(openAiStoreResponse, constraints);
+        return content;
+    }
+
+    private void updateOpenAiSettingsVisibility() {
+        if (openAiSettings != null) {
+            openAiSettings.setVisible(showAdvancedSettings.isSelected() && selectedProvider() == AiProviderType.CHATGPT);
+        }
+    }
+
+    private void resetOpenAiOptions(OpenAiGenerationOptions options) {
+        OpenAiGenerationOptions value = options == null ? new OpenAiGenerationOptions() : options;
+        openAiReasoningEffort.setSelectedItem(value.getReasoningEffort() == null ? "low" : value.getReasoningEffort());
+        openAiVerbosity.setSelectedItem(value.getVerbosity() == null ? "low" : value.getVerbosity());
+        openAiTopP.setText(formatOptional(value.getTopP()));
+        openAiStoreResponse.setSelected(value.isStoreResponse());
+    }
+
+    private OpenAiGenerationOptions openAiOptionsFromEditor() {
+        OpenAiGenerationOptions options = new OpenAiGenerationOptions();
+        options.setReasoningEffort((String) openAiReasoningEffort.getSelectedItem());
+        options.setVerbosity((String) openAiVerbosity.getSelectedItem());
+        options.setTopP(optionalDouble(openAiTopP));
+        options.setStoreResponse(openAiStoreResponse.isSelected());
+        return options;
+    }
+
     private void updateAdvancedSettingsVisibility() {
         if (advancedSettings == null) {
             return;
         }
         advancedSettings.setVisible(showAdvancedSettings.isSelected());
         updateQwenSettingsVisibility();
+        updateDeepSeekSettingsVisibility();
+        updateOpenAiSettingsVisibility();
         panel.revalidate();
         panel.repaint();
     }
@@ -659,6 +901,38 @@ final class AiPreferencesConfigurable {
             throw new ConfigurationException(bundle().getString("plugin.ai.error.systemPromptRequired"));
         }
         validateQwenOptions();
+        validateDeepSeekOptions();
+        validateOpenAiOptions();
+    }
+
+    private void validateOpenAiOptions() throws ConfigurationException {
+        if (selectedProvider() != AiProviderType.CHATGPT) {
+            return;
+        }
+        Double topP;
+        try {
+            topP = requiredOptionalDouble(openAiTopP);
+        } catch (ConfigurationException exception) {
+            throw new ConfigurationException(bundle().getString("plugin.ai.openai.error.invalidOption"));
+        }
+        if (topP != null && (topP <= 0D || topP > 1D)) {
+            throw new ConfigurationException(bundle().getString("plugin.ai.openai.error.invalidOption"));
+        }
+    }
+
+    private void validateDeepSeekOptions() throws ConfigurationException {
+        if (selectedProvider() != AiProviderType.DEEPSEEK) {
+            return;
+        }
+        Double topP;
+        try {
+            topP = requiredOptionalDouble(deepSeekTopP);
+        } catch (ConfigurationException exception) {
+            throw new ConfigurationException(bundle().getString("plugin.ai.deepseek.error.invalidOption"));
+        }
+        if (topP != null && (topP <= 0D || topP > 1D)) {
+            throw new ConfigurationException(bundle().getString("plugin.ai.deepseek.error.invalidOption"));
+        }
     }
 
     private void validateQwenOptions() throws ConfigurationException {
@@ -763,12 +1037,14 @@ final class AiPreferencesConfigurable {
                 .toList();
     }
 
-    private void addLabeled(String label, JComponent component, GridBagConstraints constraints) {
+    private JLabel addLabeled(String label, JComponent component, GridBagConstraints constraints) {
         constraints.gridy++;
         JPanel row = new JPanel(new BorderLayout(8, 0));
-        row.add(new JLabel(label), BorderLayout.WEST);
+        JLabel labelComponent = new JLabel(label);
+        row.add(labelComponent, BorderLayout.WEST);
         row.add(component, BorderLayout.CENTER);
         panel.add(row, constraints);
+        return labelComponent;
     }
 
     private record SimpleDocumentListener(Runnable action) implements DocumentListener {

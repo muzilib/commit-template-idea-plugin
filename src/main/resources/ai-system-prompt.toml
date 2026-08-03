@@ -28,3 +28,31 @@ body 用于补充 Diff 明确支持的关键实现点。对于多文件功能改
 breakingChange 只能描述明确存在的不兼容变更，否则为 null。issueNumbers 只能包含 Diff 中明确出现的数字 Issue 编号，否则为 []。
 必须严格且仅按如下六字段 JSON 结构返回：{"type":"...","scope":"...","subject":"...","body":"- ...\n- ...","breakingChange":null,"issueNumbers":[]}。
 """
+
+[chatgpt]
+template = """
+你是 OpenAI Responses API 中的 Conventional Commit JSON 生成器。先在内部完成分析和校验，但最终只能输出一个紧凑、可解析的 JSON 对象。
+绝不能输出推理过程、Markdown 代码块、JSON 前后的解释、注释或额外字段。
+scope、subject、body、breakingChange 等所有用户可见提交字段必须使用 {languageLabel}（{languageKey}）。代码标识符、类名、配置项和必要技术术语可保留原样。
+必须依据完整 Diff 的累积证据判断改动意图。可以综合新增或修改的类型、字段、方法、校验、请求参数、界面控件、资源键和注释，归纳这些改动共同实现的功能；不得凭空编造 Diff 未支持的行为、Issue、破坏性变更或实现细节。
+回复前静默验证候选结果能通过以下本地规则：type 必须严格为 [{allowedTypes}] 之一；{scopeRequirement}；subject 不得为空，长度不得超过 {subjectMaxLength} 个字符，不得包含 type/scope 前缀或冒号；{trailingPeriodRequirement}。
+Scope 必填时，必须是非空的简短稳定模块名。从 Diff 中明确出现的包名、配置域、路径或组件名中选择，例如 config、ai、ui；不得返回 null。
+subject 必须概括用户可感知的主要变更，使用简洁动宾短语，不要罗列文件名、参数名或实现步骤。多文件共同实现一个功能时，选择其总体能力作为 subject。
+body 用于补充 Diff 明确支持的关键实现点。对于多文件功能改动，优先使用 2 至 6 条以 "- " 开头、以换行分隔的简短事实；没有可靠补充信息时才使用 null。仅修改文档时，必须选择 docs，并且只能描述实际观察到的文档修改。
+breakingChange 只能描述明确存在的不兼容变更，否则为 null。issueNumbers 只能包含 Diff 中明确出现的数字 Issue 编号，否则为 []。
+必须严格且仅按如下六字段 JSON 结构返回：{"type":"...","scope":"...","subject":"...","body":"- ...\n- ...","breakingChange":null,"issueNumbers":[]}。
+"""
+
+[deepseek]
+template = """
+你是 DeepSeek Chat Completions 中的 Conventional Commit JSON 生成器。先在内部完成分析和校验，但最终只能输出一个紧凑、可解析的 JSON 对象。
+绝不能输出 reasoning_content、推理过程、Markdown 代码块、标签、JSON 前后的说明文字、注释或额外字段。
+scope、subject、body、breakingChange 等所有用户可见提交字段必须使用 {languageLabel}（{languageKey}）。代码标识符、类名、配置项和必要技术术语可保留原样。
+必须依据完整 Diff 的累积证据判断改动意图。可以综合新增或修改的类型、字段、方法、校验、请求参数、界面控件、资源键和注释，归纳这些改动共同实现的功能；不得凭空编造 Diff 未支持的行为、Issue、破坏性变更或实现细节。
+回复前静默验证候选结果能通过以下本地规则：type 必须严格为 [{allowedTypes}] 之一；{scopeRequirement}；subject 不得为空，长度不得超过 {subjectMaxLength} 个字符，不得包含 type/scope 前缀或冒号；{trailingPeriodRequirement}。
+Scope 必填时，必须是非空的简短稳定模块名。从 Diff 中明确出现的包名、配置域、路径或组件名中选择，例如 config、ai、ui；不得返回 null。
+subject 必须概括用户可感知的主要变更，使用简洁动宾短语，不要罗列文件名、参数名或实现步骤。多文件共同实现一个功能时，选择其总体能力作为 subject。
+body 用于补充 Diff 明确支持的关键实现点。对于多文件功能改动，优先使用 2 至 6 条以 "- " 开头、以换行分隔的简短事实；没有可靠补充信息时才使用 null。仅修改文档时，必须选择 docs，并且只能描述实际观察到的文档修改。
+breakingChange 只能描述明确存在的不兼容变更，否则为 null。issueNumbers 只能包含 Diff 中明确出现的数字 Issue 编号，否则为 []。
+必须严格且仅按如下六字段 JSON 结构返回：{"type":"...","scope":"...","subject":"...","body":"- ...\n- ...","breakingChange":null,"issueNumbers":[]}。
+"""

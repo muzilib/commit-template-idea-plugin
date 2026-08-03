@@ -16,6 +16,8 @@ public record AiGenerationRequest(
         double temperature,
         int maxTokens,
         QwenGenerationOptions qwenGenerationOptions,
+        DeepSeekGenerationOptions deepSeekGenerationOptions,
+        OpenAiGenerationOptions openAiGenerationOptions,
         LanguageDomain contentLanguage,
         List<CommitTypeDomain> allowedCommitTypes,
         CommitMessageRules rules,

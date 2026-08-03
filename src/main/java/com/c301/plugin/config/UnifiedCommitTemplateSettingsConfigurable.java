@@ -118,6 +118,7 @@ public class UnifiedCommitTemplateSettingsConfigurable implements SearchableConf
         projectConfigurable.reset();
         rulesConfigurable.refreshLanguage();
         preferencesConfigurable.refreshLanguage();
+        aiConfigurable.refreshLanguage();
         resetTabTitles();
         tabs.revalidate();
         tabs.repaint();

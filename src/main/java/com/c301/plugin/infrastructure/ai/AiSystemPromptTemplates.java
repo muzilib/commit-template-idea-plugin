@@ -27,7 +27,10 @@ public final class AiSystemPromptTemplates {
     private static String template(String provider) {
         String template = TEMPLATES.get(provider);
         if (template == null || template.isBlank()) {
-            throw new IllegalStateException("AI 系统提示词资源缺少 " + provider + " 模板。");
+            template = TEMPLATES.get(AiProviderType.CUSTOM.promptTemplate());
+        }
+        if (template == null || template.isBlank()) {
+            throw new IllegalStateException("AI 系统提示词资源缺少 common 模板。");
         }
         return template;
     }

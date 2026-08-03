@@ -169,7 +169,8 @@ public final class AiGenerationDialog extends JDialog {
         }
         request = new AiGenerationRequest(preferences.getApiUrl(), preferences.getModel(), prompt,
                 preferences.getTemperature(), preferences.getMaxTokens(), preferences.getQwenGenerationOptions(),
-                effectiveSettings.language(), allowedTypes(),
+                preferences.getDeepSeekGenerationOptions(), preferences.getOpenAiGenerationOptions(),
+                                effectiveSettings.language(), allowedTypes(),
                 effectiveSettings.commitMessageRules(), AiCommitTemplateContextRenderer.render(effectiveSettings, allowedTypes()),
                 result.diff());
         try {
@@ -191,7 +192,9 @@ public final class AiGenerationDialog extends JDialog {
     private String renderRequestPreview(AiIncludedChangesCollector.DiffCollectionResult result) throws Exception {
         StringBuilder value = new StringBuilder();
         var provider = AiProviderFactory.create(preferences.getProviderType());
-        value.append("POST ").append(OpenAiCompatibleRequestRenderer.resolveUrl(request))
+        boolean openAiResponses = preferences.getProviderType() == com.c301.plugin.domain.ai.AiProviderType.CHATGPT;
+        value.append("POST ").append(openAiResponses ? OpenAiResponsesRequestRenderer.resolveUrl(request)
+                        : OpenAiCompatibleRequestRenderer.resolveUrl(request))
                 .append("\n\nRequest headers\n")
                 .append("Accept: text/event-stream\n")
                 .append("Content-Type: application/json\n")
@@ -201,7 +204,8 @@ public final class AiGenerationDialog extends JDialog {
             value.append("X-DashScope-DataInspection: {\"input\":\"cip\",\"output\":\"cip\"}\n");
         }
         value.append("\nRequest body\n")
-                .append(OpenAiCompatibleRequestRenderer.formattedRequestBody(request, provider))
+                .append(openAiResponses ? OpenAiResponsesRequestRenderer.formattedRequestBody(request)
+                        : OpenAiCompatibleRequestRenderer.formattedRequestBody(request, provider))
                 .append("\n\nLocal filtering result\n")
                 .append("Included files: ").append(result.includedFileCount()).append("\n")
                 .append("Diff characters: ").append(result.characterCount()).append("\n")
