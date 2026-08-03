@@ -1,10 +1,6 @@
 package com.c301.plugin.ui;
 
-import com.c301.plugin.config.CommitTemplateSettingsResolver;
-import com.c301.plugin.config.EffectiveCommitTemplateSettings;
-import com.c301.plugin.config.PluginUiLanguageSettings;
-import com.c301.plugin.config.StoreCommitTemplateState;
-import com.c301.plugin.config.UnifiedCommitTemplateSettingsConfigurable;
+import com.c301.plugin.config.*;
 import com.c301.plugin.constant.Constant;
 import com.c301.plugin.domain.commit.CommitMessageFormatter;
 import com.c301.plugin.domain.commit.CommitMessageValidator;
