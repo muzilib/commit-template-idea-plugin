@@ -26,7 +26,7 @@ public class UnifiedCommitTemplateSettingsConfigurable implements SearchableConf
 
     private static final int COMMIT_TEMPLATE_TAB_INDEX = 0;
     private static final int AI_MODEL_TAB_INDEX = 4;
-    private static volatile Integer requestedTabIndex;
+
     private final Project project;
     private final GitCommitSettingConfigurable globalConfigurable = new GitCommitSettingConfigurable();
     private final ProjectGitCommitSettingConfigurable projectConfigurable;
@@ -61,39 +61,24 @@ public class UnifiedCommitTemplateSettingsConfigurable implements SearchableConf
     }
 
     /**
-     * 请求下一次打开设置时直接定位到提交模板标签页。
-     */
-    public static void requestCommitTemplateTabOnOpen() {
-        requestedTabIndex = COMMIT_TEMPLATE_TAB_INDEX;
-    }
-
-    /**
-     * 请求下一次打开设置时直接定位到 AI 模型标签页。
-     */
-    public static void requestAiModelTabOnOpen() {
-        requestedTabIndex = AI_MODEL_TAB_INDEX;
-    }
-
-    /**
-     * 打开插件的统一设置项，使 IDEA 左侧设置树选中 Tools 下的插件节点。
+     * 打开插件的统一设置项，并默认选中提交模板标签页。
      */
     public static void openCommitTemplateSettings(Project project) {
-        requestCommitTemplateTabOnOpen();
-        openSettings(project);
+        openSettings(project, COMMIT_TEMPLATE_TAB_INDEX);
     }
 
     /**
-     * 打开插件的统一设置项，并定位到 AI 模型标签页。
+     * 打开插件的统一设置项，并默认选中 AI 模型标签页。
      */
     public static void openAiModelSettings(Project project) {
-        requestAiModelTabOnOpen();
-        openSettings(project);
+        openSettings(project, AI_MODEL_TAB_INDEX);
     }
 
-    private static void openSettings(Project project) {
+    private static void openSettings(Project project, int tabIndex) {
         ApplicationManager.getApplication().invokeLater(() ->
-                com.intellij.openapi.options.ShowSettingsUtil.getInstance().showSettingsDialog(project,
-                        "plugins.muzilib.commit.template"));
+                com.intellij.openapi.options.ShowSettingsUtil.getInstance().showSettingsDialog(
+                        project, UnifiedCommitTemplateSettingsConfigurable.class,
+                        configurable -> configurable.selectTab(tabIndex)));
     }
 
     @Override
@@ -106,11 +91,12 @@ public class UnifiedCommitTemplateSettingsConfigurable implements SearchableConf
         return CommUtil.i18nResourceBundle(null).getString("plugin.setting.displayName");
     }
 
-    private void selectRequestedTab() {
-        Integer tabIndex = requestedTabIndex;
-        if (tabIndex != null && tabs != null && tabIndex >= 0 && tabIndex < tabs.getTabCount()) {
+    private void selectTab(int tabIndex) {
+        if (tabs == null) {
+            createComponent();
+        }
+        if (tabs != null && tabIndex >= 0 && tabIndex < tabs.getTabCount()) {
             tabs.setSelectedIndex(tabIndex);
-            requestedTabIndex = null;
         }
     }
 
@@ -130,7 +116,6 @@ public class UnifiedCommitTemplateSettingsConfigurable implements SearchableConf
             tabs.addTab("", responsiveTab(globalUI.detachAboutPanel()));
         }
         resetTabTitles();
-        selectRequestedTab();
         return tabs;
     }
 
@@ -165,7 +150,6 @@ public class UnifiedCommitTemplateSettingsConfigurable implements SearchableConf
         preferencesConfigurable.reset();
         aiConfigurable.reset();
         resetTabTitles();
-        selectRequestedTab();
     }
 
     private void resetAllConfiguration() {
