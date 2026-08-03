@@ -1,10 +1,6 @@
 package com.c301.plugin.config;
 
-import com.c301.plugin.domain.ai.AiDataTransferConsent;
-import com.c301.plugin.domain.ai.AiProviderType;
-import com.c301.plugin.domain.ai.DeepSeekGenerationOptions;
-import com.c301.plugin.domain.ai.OpenAiGenerationOptions;
-import com.c301.plugin.domain.ai.QwenGenerationOptions;
+import com.c301.plugin.domain.ai.*;
 import com.c301.plugin.infrastructure.ai.AiSystemPromptTemplates;
 import com.c301.plugin.infrastructure.credentials.AiCredentialStore;
 import com.c301.plugin.infrastructure.credentials.PasswordSafeAiCredentialStore;

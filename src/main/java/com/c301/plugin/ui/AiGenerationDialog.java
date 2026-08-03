@@ -170,7 +170,7 @@ public final class AiGenerationDialog extends JDialog {
         request = new AiGenerationRequest(preferences.getApiUrl(), preferences.getModel(), prompt,
                 preferences.getTemperature(), preferences.getMaxTokens(), preferences.getQwenGenerationOptions(),
                 preferences.getDeepSeekGenerationOptions(), preferences.getOpenAiGenerationOptions(),
-                                effectiveSettings.language(), allowedTypes(),
+                effectiveSettings.language(), allowedTypes(),
                 effectiveSettings.commitMessageRules(), AiCommitTemplateContextRenderer.render(effectiveSettings, allowedTypes()),
                 result.diff());
         try {

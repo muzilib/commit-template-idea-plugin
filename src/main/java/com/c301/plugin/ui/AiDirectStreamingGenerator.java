@@ -82,7 +82,7 @@ public final class AiDirectStreamingGenerator {
         request = new AiGenerationRequest(preferences.getApiUrl(), preferences.getModel(), prompt,
                 preferences.getTemperature(), preferences.getMaxTokens(), preferences.getQwenGenerationOptions(),
                 preferences.getDeepSeekGenerationOptions(), preferences.getOpenAiGenerationOptions(),
-                                effectiveSettings.language(), allowedTypes(), effectiveSettings.commitMessageRules(),
+                effectiveSettings.language(), allowedTypes(), effectiveSettings.commitMessageRules(),
                 AiCommitTemplateContextRenderer.render(effectiveSettings, allowedTypes()), result.diff());
         com.intellij.openapi.progress.ProgressManager.getInstance().run(new Task.Backgroundable(project,
                 text("plugin.ai.generationTaskTitle"), true) {
