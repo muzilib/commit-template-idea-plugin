@@ -37,8 +37,13 @@ public final class PasswordSafeAiCredentialStore implements AiCredentialStore {
     }
 
     private String read(CredentialAttributes attributes) {
-        Credentials credentials = PasswordSafe.getInstance().get(attributes);
-        return credentials == null ? null : credentials.getPasswordAsString();
+        try {
+            Credentials credentials = PasswordSafe.getInstance().get(attributes);
+            return credentials == null ? null : credentials.getPasswordAsString();
+        } catch (RuntimeException ignored) {
+            // macOS Keychain 暂时不可用或条目异常时，不能阻断设置页和 AI 功能的正常交互。
+            return null;
+        }
     }
 
     @Override
