@@ -163,6 +163,8 @@ Open **Settings / Preferences → Tools → Commit Template Idea Plugin → AI M
 
 API keys are stored through IntelliJ Platform **Password Safe**, not in normal plugin configuration files. Each provider (Qwen, ChatGPT, DeepSeek, and Custom) has one independent key; changing the API URL or model within a provider continues to use that provider's key.
 
+The **AI output language** is configured independently below the model name. It controls the language of the generated commit message and does not follow the commit-template language at runtime. When the setting is created for the first time, or an older configuration does not contain it, the current commit-content language is used as the initial value. After **Apply** or **OK**, the selected explicit language is persisted with the plugin's AI settings and can later be changed independently to Chinese, English, Japanese, and other supported languages.
+
 ### 4.4 System prompts
 
 The plugin includes independent default system prompts for Qwen, ChatGPT, DeepSeek, and custom services. They instruct the model to return structured JSON that can be validated locally.
@@ -209,8 +211,10 @@ Collect and filter Included Changes
 
 The progressive text is only a visual draft. Final strict JSON parsing and local-rule validation happen once the stream completes:
 
-- On success, the final formatted Commit Message is kept.
+- On success, the final formatted Commit Message is kept without a success balloon notification.
 - For invalid JSON, rule failures, network errors, or cancellation, the previous Commit Message is restored and a notification is shown.
+
+The About-page copy action reports success or failure in the button text only. The button is temporarily disabled and returns to “Copy” after about two seconds.
 
 ## 5. Privacy and data transfer
 
@@ -299,7 +303,11 @@ src/main/java/com/c301/plugin/
 ├── platform/          # IntelliJ Platform and VCS adapters
 ├── ui/                # Dialogs, streaming drafts, notifications
 └── utils/             # Utilities and i18n helpers
+```
 
+Non-sensitive AI settings are persisted by `AiPreferencesState` in `commit-template-ai.xml`; API keys remain managed only by Password Safe. At generation start, `generationLanguage` is copied into `AiGenerationConfigSnapshot`, so changes made during an active request do not affect that request.
+
+```text
 src/main/resources/
 ├── META-INF/plugin.xml
 ├── i18n/
@@ -332,7 +340,7 @@ src/main/resources/
 
 ### 9.1 Request model
 
-`AiGenerationRequest` represents data approved by local security policy for a Provider request: API URL, model, final prompt, generation settings, Qwen options, language, allowed types, commit rules, template context, and sanitized Diff. API keys are intentionally excluded from this model and must not be persisted or logged.
+`AiGenerationRequest` represents data approved by local security policy for a Provider request: API URL, model, final prompt, generation settings, Qwen options, AI output language, allowed types, commit rules, template language and context, and sanitized Diff. API keys are intentionally excluded from this model and must not be persisted or logged.
 
 ### 9.2 Flow
 
