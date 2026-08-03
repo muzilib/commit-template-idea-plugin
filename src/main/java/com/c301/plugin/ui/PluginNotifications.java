@@ -32,12 +32,32 @@ public final class PluginNotifications {
     }
 
     public static void notify(Project project, String content, NotificationType type) {
+        notify(project, content, type, null, null);
+    }
+
+    public static void notifyOpenCommitRules(Project project, String content, NotificationType type) {
+        var bundle = CommUtil.i18nResourceBundle(null);
+        notify(project, content, type, bundle.getString("plugin.ai.openCommitRulesSettings"),
+                () -> UnifiedCommitTemplateSettingsConfigurable.openCommitRulesSettings(project));
+    }
+
+    public static void notifyOpenAiModelSettings(Project project, String content, NotificationType type) {
+        var bundle = CommUtil.i18nResourceBundle(null);
+        notify(project, content, type, bundle.getString("plugin.ai.openAiModelSettings"),
+                () -> UnifiedCommitTemplateSettingsConfigurable.openAiModelSettings(project));
+    }
+
+    private static void notify(Project project, String content, NotificationType type,
+                               String actionText, Runnable action) {
         NotificationGroup notificationGroup = getNotificationGroup(DEFAULT_NOTIFICATION_GROUP_ID);
         if (notificationGroup == null) {
             return;
         }
         var notification = notificationGroup.createNotification(
                 CommUtil.i18nResourceBundle(null).getString("plugin.setting.displayName"), content, type);
+        if (actionText != null && action != null) {
+            notification.addAction(NotificationAction.createSimpleExpiring(actionText, action));
+        }
         notification.setIcon(PLUGIN_ICON);
         notification.notify(project);
     }

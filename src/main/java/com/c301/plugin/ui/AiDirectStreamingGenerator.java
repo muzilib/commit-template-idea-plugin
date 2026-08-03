@@ -122,8 +122,8 @@ public final class AiDirectStreamingGenerator {
                 }
                 String apiKey = new PasswordSafeAiCredentialStore().readApiKey(generationConfig.providerType());
                 if (apiKey == null || apiKey.isBlank()) {
-                    ApplicationManager.getApplication().invokeLater(() -> AiDirectStreamingGenerator.this.notify(
-                            text("plugin.ai.apiKeyMissingHint"), NotificationType.ERROR));
+                    ApplicationManager.getApplication().invokeLater(() -> PluginNotifications.notifyOpenAiModelSettings(
+                            project, text("plugin.ai.apiKeyMissingHint"), NotificationType.ERROR));
                     releaseGeneration();
                     return;
                 }
@@ -151,7 +151,7 @@ public final class AiDirectStreamingGenerator {
                     if (draft.isBlank()) {
                         return;
                     }
-                    commitMessage.setCommitMessage(draft);
+                    AiCommitMessageSelectionSupport.setCommitMessage(commitMessage, draft);
                     lastAiDraft = currentCommitMessageOr(draft);
                 }), STREAM_UPDATE_INTERVAL_MILLIS, TimeUnit.MILLISECONDS);
     }
@@ -183,16 +183,20 @@ public final class AiDirectStreamingGenerator {
                 String formattedCommit = com.c301.plugin.domain.commit.CommitMessageFormatter.format(
                         commit, effectiveSettings.emojiEnable() ? effectiveSettings.emojiLocation() : null,
                         effectiveSettings.commitMessageRules());
-                commitMessage.setCommitMessage(formattedCommit);
+                AiCommitMessageSelectionSupport.setCommitMessage(commitMessage, formattedCommit);
                 lastAiDraft = currentCommitMessageOr(formattedCommit);
-                notify(text("plugin.ai.directGenerationSuccess"), NotificationType.INFORMATION);
+
             } catch (Exception exception) {
                 String reason = exception.getMessage();
                 String message = text("plugin.ai.directGenerationInvalid");
                 if (reason != null && !reason.isBlank()) {
                     message += " " + reason;
                 }
-                restorePreviousMessage(message);
+                if (exception instanceof AiSuggestionValidator.SubjectLengthLimitExceededException) {
+                    restorePreviousMessageWithRulesAction(message);
+                } else {
+                    restorePreviousMessage(message);
+                }
             } finally {
                 releaseGeneration();
             }
@@ -213,8 +217,14 @@ public final class AiDirectStreamingGenerator {
 
     private void restorePreviousMessage(String message) {
         lastAiDraft = previousMessage;
-        commitMessage.setCommitMessage(previousMessage);
+        AiCommitMessageSelectionSupport.setCommitMessage(commitMessage, previousMessage);
         notify(message, NotificationType.ERROR);
+    }
+
+    private void restorePreviousMessageWithRulesAction(String message) {
+        lastAiDraft = previousMessage;
+        AiCommitMessageSelectionSupport.setCommitMessage(commitMessage, previousMessage);
+        PluginNotifications.notifyOpenCommitRules(project, message, NotificationType.ERROR);
     }
 
     /**

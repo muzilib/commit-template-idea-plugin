@@ -18,7 +18,8 @@ public final class CommitMessageValidator {
         if (StrUtil.isBlank(shortDescription)) {
             return ValidationResult.MISSING_SHORT_DESCRIPTION;
         }
-        if (shortDescription.trim().length() > rules.subjectMaxLength()) {
+        if (rules.subjectLengthLimitEnabled() && rules.subjectMaxLength() > 0
+                && shortDescription.trim().length() > rules.subjectMaxLength()) {
             return ValidationResult.SUBJECT_TOO_LONG;
         }
         if (rules.forbidSubjectTrailingPeriod() && shortDescription.trim().endsWith(".")) {

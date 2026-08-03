@@ -262,7 +262,7 @@ public final class AiGenerationDialog extends JDialog {
                         }
                         String message = text("plugin.ai.apiKeyMissingHint");
                         Messages.showWarningDialog(AiGenerationDialog.this, message, text("plugin.ai.apiKeyMissingTitle"));
-                        AiGenerationDialog.notify(project, message, NotificationType.ERROR);
+                        PluginNotifications.notifyOpenAiModelSettings(project, message, NotificationType.ERROR);
                     });
                     return;
                 }
@@ -276,9 +276,10 @@ public final class AiGenerationDialog extends JDialog {
         try {
             var suggestion = AiSuggestionParser.parse(responseSnapshot());
             var commit = AiSuggestionValidator.validateAndConvert(suggestion, effectiveSettings, allowedTypes());
-            commitMessage.setCommitMessage(com.c301.plugin.domain.commit.CommitMessageFormatter.format(
-                    commit, effectiveSettings.emojiEnable() ? effectiveSettings.emojiLocation() : null,
-                    effectiveSettings.commitMessageRules()));
+            AiCommitMessageSelectionSupport.setCommitMessage(commitMessage,
+                    com.c301.plugin.domain.commit.CommitMessageFormatter.format(
+                            commit, effectiveSettings.emojiEnable() ? effectiveSettings.emojiLocation() : null,
+                            effectiveSettings.commitMessageRules()));
             dispose();
         } catch (Exception exception) {
             Messages.showErrorDialog(this, exception.getMessage(), text("plugin.ai.applyErrorTitle"));
@@ -396,6 +397,9 @@ public final class AiGenerationDialog extends JDialog {
                             .replace("{target}", text("plugin.ai.target.commitMessage")));
                 } catch (Exception exception) {
                     preview.append("\n\n" + text("plugin.ai.invalidSuggestion"));
+                    if (exception instanceof AiSuggestionValidator.SubjectLengthLimitExceededException) {
+                        PluginNotifications.notifyOpenCommitRules(project, exception.getMessage(), NotificationType.WARNING);
+                    }
                 }
             });
         }

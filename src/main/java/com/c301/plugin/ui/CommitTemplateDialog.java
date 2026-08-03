@@ -167,7 +167,7 @@ public class CommitTemplateDialog extends JDialog {
                 return;
             }
 
-            commitMessageI.setCommitMessage(formatCommit(gitCommit));
+            AiCommitMessageSelectionSupport.setCommitMessage(commitMessageI, formatCommit(gitCommit));
         }
 
         handleCancelEvent();
@@ -256,7 +256,11 @@ public class CommitTemplateDialog extends JDialog {
         inputClosedIssues.setText(gitCommit.getClosedIssuesNumbers());
         inputBreakingChanges.setText(gitCommit.getBreakingChanges());
         checkBoxSkipCI.setSelected(gitCommit.isSkipCI());
-        checkBoxWrapText.setSelected(gitCommit.isWrapText());
+        checkBoxWrapText.setSelected(gitCommit.isWrapText()
+                || effectiveSettings.commitMessageRules().wrapTextByDefault());
+        checkBoxWrapText.setText(CommUtil.i18nResourceBundle(null)
+                .getString("plugin.checkbox.wrapAt72Characters")
+                .replace("{length}", String.valueOf(effectiveSettings.commitMessageRules().bodyWrapLength())));
         refreshPreview();
     }
 
@@ -311,7 +315,8 @@ public class CommitTemplateDialog extends JDialog {
         labelPreview.setText(resourceBundle.getString("plugin.label.preview"));
 
         //复选框信息
-        checkBoxWrapText.setText(resourceBundle.getString("plugin.checkbox.wrapAt72Characters"));
+        checkBoxWrapText.setText(resourceBundle.getString("plugin.checkbox.wrapAt72Characters")
+                .replace("{length}", String.valueOf(effectiveSettings.commitMessageRules().bodyWrapLength())));
         checkBoxSkipCI.setText(resourceBundle.getString("plugin.checkbox.skipCI"));
 
         //提示信息

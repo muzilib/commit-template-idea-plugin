@@ -28,6 +28,7 @@ public class UnifiedCommitTemplateSettingsConfigurable implements SearchableConf
 
 
     private static final int COMMIT_TEMPLATE_TAB_INDEX = 0;
+    private static final int COMMIT_RULES_TAB_INDEX = 2;
     private static final int AI_MODEL_TAB_INDEX = 4;
     private static final String SETTINGS_DISPLAY_NAME = "Commit Template Idea Plugin";
     /**
@@ -82,6 +83,11 @@ public class UnifiedCommitTemplateSettingsConfigurable implements SearchableConf
      */
     public static void openAiModelSettings(Project project) {
         openSettings(project, AI_MODEL_TAB_INDEX);
+    }
+
+    /** 打开提交规则页，供 AI 校验失败通知提供快捷调整入口。 */
+    public static void openCommitRulesSettings(Project project) {
+        openSettings(project, COMMIT_RULES_TAB_INDEX);
     }
 
     private static void openSettings(Project project, int tabIndex) {

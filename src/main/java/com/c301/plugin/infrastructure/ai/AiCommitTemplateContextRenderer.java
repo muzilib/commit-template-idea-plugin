@@ -18,7 +18,9 @@ public final class AiCommitTemplateContextRenderer {
         return "提交内容语言：" + settings.language().getLabel() + "（" + settings.language().getKey() + "）"
                 + "\n允许的提交类型：" + types
                 + "\n变更范围 Scope：" + (settings.commitMessageRules().requireScope() ? "必填" : "可选")
-                + "\n标题最大长度：" + settings.commitMessageRules().subjectMaxLength()
+                + "\n标题长度限制：" + (settings.commitMessageRules().subjectLengthLimitEnabled()
+                && settings.commitMessageRules().subjectMaxLength() > 0
+                ? "启用，最大 " + settings.commitMessageRules().subjectMaxLength() : "未启用")
                 + "\n标题末尾句号：" + (settings.commitMessageRules().forbidSubjectTrailingPeriod() ? "不允许" : "允许")
                 + "\nGitmoji：由本地格式化器决定，模型不得生成"
                 + "\n最终格式、footer 和换行：由本地提交规则校验并格式化";

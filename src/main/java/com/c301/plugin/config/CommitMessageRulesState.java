@@ -16,6 +16,8 @@ public class CommitMessageRulesState {
     private int bodyWrapLength = CommitMessageRules.DEFAULT_BODY_WRAP_LENGTH;
     private String issueFooterKeyword = CommitMessageRules.DEFAULT_ISSUE_FOOTER_KEYWORD;
     private boolean forbidSubjectTrailingPeriod = false;
+    private boolean subjectLengthLimitEnabled = false;
+    private boolean wrapTextByDefault = false;
 
     public static CommitMessageRulesState fromDomain(CommitMessageRules rules) {
         var state = new CommitMessageRulesState();
@@ -25,11 +27,14 @@ public class CommitMessageRulesState {
         state.setBodyWrapLength(rules.bodyWrapLength());
         state.setIssueFooterKeyword(rules.issueFooterKeyword());
         state.setForbidSubjectTrailingPeriod(rules.forbidSubjectTrailingPeriod());
+        state.setSubjectLengthLimitEnabled(rules.subjectLengthLimitEnabled());
+        state.setWrapTextByDefault(rules.wrapTextByDefault());
         return state;
     }
 
     public CommitMessageRules toDomain() {
         return new CommitMessageRules(requireCommitType, requireScope, subjectMaxLength,
-                bodyWrapLength, issueFooterKeyword, forbidSubjectTrailingPeriod);
+                bodyWrapLength, issueFooterKeyword, forbidSubjectTrailingPeriod, subjectLengthLimitEnabled,
+                wrapTextByDefault);
     }
 }

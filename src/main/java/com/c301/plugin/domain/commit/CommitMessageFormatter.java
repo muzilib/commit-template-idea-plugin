@@ -83,7 +83,7 @@ public final class CommitMessageFormatter {
         }
 
         var value = breakingChange ? "BREAKING CHANGE: " + content.trim() : content.trim();
-        if (wrapText) {
+        if (wrapText && wrapLength > 0) {
             value = StrUtil.wrap(value, wrapLength);
         }
 

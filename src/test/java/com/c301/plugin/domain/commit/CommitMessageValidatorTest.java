@@ -26,7 +26,7 @@ class CommitMessageValidatorTest {
 
     @Test
     void rejectsSubjectLongerThanConfiguredLimit() {
-        var rules = CommitMessageRules.defaults();
+        var rules = new CommitMessageRules(true, false, 50, 72, "Closes", false, true);
         assertEquals(CommitMessageValidator.ValidationResult.SUBJECT_TOO_LONG,
                 CommitMessageValidator.validate(new CommitTypeDomain(), "", "a".repeat(51), rules));
     }

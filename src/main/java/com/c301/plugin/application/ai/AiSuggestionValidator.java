@@ -28,8 +28,15 @@ public final class AiSuggestionValidator {
         }
         CommitMessageValidator.ValidationResult validation = CommitMessageValidator.validate(type, suggestion.scope(),
                 suggestion.subject(), settings.commitMessageRules());
-        if (!validation.isValid()) {
-            throw new IllegalArgumentException(validationMessage(validation));
+        if (validation == CommitMessageValidator.ValidationResult.SUBJECT_TOO_LONG) {
+            int configuredLimit = settings.commitMessageRules().subjectMaxLength();
+            int acceptedAiLimit = (int) Math.ceil(configuredLimit * 1.5D);
+            int actualLength = suggestion.subject().trim().length();
+            if (configuredLimit > 0 && actualLength > acceptedAiLimit) {
+                throw new SubjectLengthLimitExceededException(actualLength, configuredLimit, acceptedAiLimit);
+            }
+        } else if (!validation.isValid()) {
+            throw new IllegalArgumentException(validationMessage(validation, suggestion, settings));
         }
         GitCommitDomain commit = new GitCommitDomain();
         commit.setCommitType(type);
@@ -41,7 +48,9 @@ public final class AiSuggestionValidator {
         return commit;
     }
 
-    private static String validationMessage(CommitMessageValidator.ValidationResult result) {
+    private static String validationMessage(CommitMessageValidator.ValidationResult result,
+                                            AiCommitSuggestion suggestion,
+                                            EffectiveCommitTemplateSettings settings) {
         return switch (result) {
             case MISSING_COMMIT_TYPE -> "AI 返回内容缺少提交类型。";
             case MISSING_SCOPE -> "AI 返回内容缺少必填的 Scope。";
@@ -50,5 +59,34 @@ public final class AiSuggestionValidator {
             case SUBJECT_TRAILING_PERIOD -> "AI 返回的提交标题末尾不符合当前规则。";
             case VALID -> "AI 返回内容未通过本地提交规则校验。";
         };
+    }
+
+    /**
+     * AI 标题超过用户配置上限的 1.5 倍时，调用方可提供调整规则的快捷入口。
+     */
+    public static final class SubjectLengthLimitExceededException extends IllegalArgumentException {
+        private final int actualLength;
+        private final int configuredLimit;
+        private final int acceptedAiLimit;
+
+        public SubjectLengthLimitExceededException(int actualLength, int configuredLimit, int acceptedAiLimit) {
+            super("AI 返回的提交标题过长（实际 " + actualLength + "，当前配置 " + configuredLimit
+                    + "，AI 可接受上限 " + acceptedAiLimit + "）。");
+            this.actualLength = actualLength;
+            this.configuredLimit = configuredLimit;
+            this.acceptedAiLimit = acceptedAiLimit;
+        }
+
+        public int actualLength() {
+            return actualLength;
+        }
+
+        public int configuredLimit() {
+            return configuredLimit;
+        }
+
+        public int acceptedAiLimit() {
+            return acceptedAiLimit;
+        }
     }
 }
