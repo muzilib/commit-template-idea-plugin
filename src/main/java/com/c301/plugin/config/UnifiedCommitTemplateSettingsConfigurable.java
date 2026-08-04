@@ -85,7 +85,9 @@ public class UnifiedCommitTemplateSettingsConfigurable implements SearchableConf
         openSettings(project, AI_MODEL_TAB_INDEX);
     }
 
-    /** 打开提交规则页，供 AI 校验失败通知提供快捷调整入口。 */
+    /**
+     * 打开提交规则页，供 AI 校验失败通知提供快捷调整入口。
+     */
     public static void openCommitRulesSettings(Project project) {
         openSettings(project, COMMIT_RULES_TAB_INDEX);
     }

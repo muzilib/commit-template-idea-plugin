@@ -5,8 +5,8 @@ import com.intellij.openapi.vcs.CommitMessageI;
 import com.intellij.openapi.vcs.VcsConfiguration;
 import com.intellij.ui.EditorTextField;
 
-import javax.swing.SwingUtilities;
-import java.awt.Component;
+import javax.swing.*;
+import java.awt.*;
 
 /**
  * 直接更新 IDEA 提交消息编辑器，避免平台适配器写入后自动全选文本。

@@ -1,10 +1,6 @@
 package com.c301.plugin.config;
 
-import com.c301.plugin.domain.ai.AiGenerationRequest;
-import com.c301.plugin.domain.ai.AiProviderType;
-import com.c301.plugin.domain.ai.DeepSeekGenerationOptions;
-import com.c301.plugin.domain.ai.OpenAiGenerationOptions;
-import com.c301.plugin.domain.ai.QwenGenerationOptions;
+import com.c301.plugin.domain.ai.*;
 import com.c301.plugin.infrastructure.ai.AiCommitTemplateContextRenderer;
 import com.c301.plugin.infrastructure.ai.AiSystemPromptTemplates;
 import com.c301.plugin.model.CommitTypeDomain;
@@ -82,33 +78,6 @@ public final class AiGenerationConfigSnapshot {
                 preferences.isCheckDiffBeforeSending());
     }
 
-    public AiGenerationRequest createRequest(String sanitizedDiff) {
-        return new AiGenerationRequest(apiUrl, model, systemPrompt, temperature, maxTokens,
-                qwenGenerationOptions, deepSeekGenerationOptions, openAiGenerationOptions,
-                generationLanguage, allowedTypes, effectiveSettings.commitMessageRules(),
-                commitTemplateContext, sanitizedDiff);
-    }
-
-    public AiProviderType providerType() {
-        return providerType;
-    }
-
-    public EffectiveCommitTemplateSettings effectiveSettings() {
-        return effectiveSettings;
-    }
-
-    public List<CommitTypeDomain> allowedTypes() {
-        return allowedTypes;
-    }
-
-    public boolean checkDiffBeforeSending() {
-        return checkDiffBeforeSending;
-    }
-
-    public boolean isQwenDataInspectionEnabled() {
-        return providerType == AiProviderType.QWEN && qwenGenerationOptions.isDataInspectionEnabled();
-    }
-
     private static List<CommitTypeDomain> copyCommitTypes(List<CommitTypeDomain> source) {
         List<CommitTypeDomain> copied = new ArrayList<>();
         if (source != null) {
@@ -169,5 +138,32 @@ public final class AiGenerationConfigSnapshot {
         copied.setTopP(source.getTopP());
         copied.setStoreResponse(source.isStoreResponse());
         return copied;
+    }
+
+    public AiGenerationRequest createRequest(String sanitizedDiff) {
+        return new AiGenerationRequest(apiUrl, model, systemPrompt, temperature, maxTokens,
+                qwenGenerationOptions, deepSeekGenerationOptions, openAiGenerationOptions,
+                generationLanguage, allowedTypes, effectiveSettings.commitMessageRules(),
+                commitTemplateContext, sanitizedDiff);
+    }
+
+    public AiProviderType providerType() {
+        return providerType;
+    }
+
+    public EffectiveCommitTemplateSettings effectiveSettings() {
+        return effectiveSettings;
+    }
+
+    public List<CommitTypeDomain> allowedTypes() {
+        return allowedTypes;
+    }
+
+    public boolean checkDiffBeforeSending() {
+        return checkDiffBeforeSending;
+    }
+
+    public boolean isQwenDataInspectionEnabled() {
+        return providerType == AiProviderType.QWEN && qwenGenerationOptions.isDataInspectionEnabled();
     }
 }

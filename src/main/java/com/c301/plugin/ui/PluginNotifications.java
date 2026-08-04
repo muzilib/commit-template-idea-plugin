@@ -13,7 +13,6 @@ import com.intellij.openapi.diagnostic.Logger;
 
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.IconLoader;
-import com.intellij.util.ui.JBUI;
 
 import javax.swing.*;
 import java.awt.*;
@@ -25,8 +24,9 @@ public final class PluginNotifications {
     private static final Logger LOG = Logger.getInstance(PluginNotifications.class);
     private static final String DEFAULT_NOTIFICATION_GROUP_ID = "commit-template-notify";
     private static final String ANNOUNCEMENT_NOTIFICATION_GROUP_ID = "commit-template-announcement";
+    private static final int NOTIFICATION_ICON_SIZE = 16;
     private static final Icon PLUGIN_ICON = scaledIcon(
-            IconLoader.getIcon("/META-INF/pluginIcon.svg", PluginNotifications.class), JBUI.scale(32));
+            IconLoader.getIcon("/META-INF/pluginIcon.svg", PluginNotifications.class), NOTIFICATION_ICON_SIZE);
 
     private PluginNotifications() {
     }
@@ -115,7 +115,7 @@ public final class PluginNotifications {
     }
 
     /**
-     * 插件图标源文件为 480px 画布，通知中必须使用固定尺寸，避免撑大 IDEA 原生通知气泡。
+     * 通知图标使用 IDEA 的标准 16px 逻辑尺寸，避免高 DPI 环境放大通知左侧图标区域。
      */
     private static Icon scaledIcon(Icon source, int size) {
         return new Icon() {

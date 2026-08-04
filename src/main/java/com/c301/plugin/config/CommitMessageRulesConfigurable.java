@@ -6,10 +6,10 @@ import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.util.ui.JBUI;
 
 import javax.swing.*;
-import javax.swing.text.AbstractDocument;
-import javax.swing.text.DocumentFilter;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.text.AbstractDocument;
+import javax.swing.text.DocumentFilter;
 import java.awt.*;
 
 /**
@@ -123,9 +123,17 @@ final class CommitMessageRulesConfigurable {
             wrapLength.setMaximumSize(JBUI.size(120, wrapLength.getPreferredSize().height));
             panel.add(wrapLength, constraints);
             wrapLength.getDocument().addDocumentListener(new DocumentListener() {
-                public void insertUpdate(DocumentEvent event) { refreshWrapTextLabel(); }
-                public void removeUpdate(DocumentEvent event) { refreshWrapTextLabel(); }
-                public void changedUpdate(DocumentEvent event) { refreshWrapTextLabel(); }
+                public void insertUpdate(DocumentEvent event) {
+                    refreshWrapTextLabel();
+                }
+
+                public void removeUpdate(DocumentEvent event) {
+                    refreshWrapTextLabel();
+                }
+
+                public void changedUpdate(DocumentEvent event) {
+                    refreshWrapTextLabel();
+                }
             });
             constraints.gridy++;
             issueKeywordLabel = new JLabel(text("plugin.rules.issueFooterKeyword"));
@@ -217,9 +225,17 @@ final class CommitMessageRulesConfigurable {
         subjectLengthLabel.setEnabled(enabled);
         subjectLength.setEnabled(enabled);
         wrapLength.getDocument().addDocumentListener(new DocumentListener() {
-            public void insertUpdate(DocumentEvent event) { refreshWrapTextLabel(); }
-            public void removeUpdate(DocumentEvent event) { refreshWrapTextLabel(); }
-            public void changedUpdate(DocumentEvent event) { refreshWrapTextLabel(); }
+            public void insertUpdate(DocumentEvent event) {
+                refreshWrapTextLabel();
+            }
+
+            public void removeUpdate(DocumentEvent event) {
+                refreshWrapTextLabel();
+            }
+
+            public void changedUpdate(DocumentEvent event) {
+                refreshWrapTextLabel();
+            }
         });
     }
 

@@ -71,6 +71,21 @@ public final class AiDirectStreamingGenerator {
         return CommUtil.i18nResourceBundle(null).getString(key);
     }
 
+    private static String normalizeMessage(String message) {
+        if (message == null) {
+            return null;
+        }
+        String[] lines = message.replace("\r\n", "\n").replace('\r', '\n').split("\\n", -1);
+        StringBuilder normalized = new StringBuilder();
+        for (int index = 0; index < lines.length; index++) {
+            if (index > 0) {
+                normalized.append('\n');
+            }
+            normalized.append(lines[index].stripTrailing());
+        }
+        return normalized.toString().stripTrailing();
+    }
+
     public void generate() {
         synchronized (ACTIVE_GENERATIONS) {
             if (ACTIVE_GENERATIONS.putIfAbsent(commitMessage, Boolean.TRUE) != null) {
@@ -255,26 +270,10 @@ public final class AiDirectStreamingGenerator {
         return commitMessage instanceof CheckinProjectPanel panel ? panel.getCommitMessage() : null;
     }
 
-    private static String normalizeMessage(String message) {
-        if (message == null) {
-            return null;
-        }
-        String[] lines = message.replace("\r\n", "\n").replace('\r', '\n').split("\\n", -1);
-        StringBuilder normalized = new StringBuilder();
-        for (int index = 0; index < lines.length; index++) {
-            if (index > 0) {
-                normalized.append('\n');
-            }
-            normalized.append(lines[index].stripTrailing());
-        }
-        return normalized.toString().stripTrailing();
-    }
-
     private String currentCommitMessageOr(String fallback) {
         String current = currentCommitMessage();
         return current == null ? fallback : current;
     }
-
 
 
     private void releaseGeneration() {

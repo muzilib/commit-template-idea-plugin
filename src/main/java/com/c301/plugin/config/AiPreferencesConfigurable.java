@@ -1,12 +1,12 @@
 package com.c301.plugin.config;
 
-import com.c301.plugin.domain.ai.*;
 import com.c301.plugin.constant.Constant;
+import com.c301.plugin.domain.ai.*;
 import com.c301.plugin.infrastructure.ai.AiSystemPromptTemplates;
 import com.c301.plugin.infrastructure.credentials.AiCredentialStore;
+import com.c301.plugin.infrastructure.credentials.PasswordSafeAiCredentialStore;
 import com.c301.plugin.model.LanguageDomain;
 import com.c301.plugin.ui.render.LanguageListCellRendererRender;
-import com.c301.plugin.infrastructure.credentials.PasswordSafeAiCredentialStore;
 import com.c301.plugin.utils.CommUtil;
 import com.intellij.icons.AllIcons;
 import com.intellij.openapi.application.ApplicationManager;

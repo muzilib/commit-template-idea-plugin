@@ -1,16 +1,15 @@
 package com.c301.plugin.ui;
 
 import com.c301.plugin.application.ai.AiSuggestionValidator;
-import com.c301.plugin.config.AiGenerationConfigSnapshot;
-import com.c301.plugin.config.AiPreferencesState;
-import com.c301.plugin.config.CommitTemplateSettingsResolver;
-import com.c301.plugin.config.EffectiveCommitTemplateSettings;
-import com.c301.plugin.config.UnifiedCommitTemplateSettingsConfigurable;
+import com.c301.plugin.config.*;
 import com.c301.plugin.domain.ai.AiCredentials;
 import com.c301.plugin.domain.ai.AiGenerationError;
 import com.c301.plugin.domain.ai.AiGenerationRequest;
 import com.c301.plugin.domain.ai.AiStreamingListener;
-import com.c301.plugin.infrastructure.ai.*;
+import com.c301.plugin.infrastructure.ai.AiProviderFactory;
+import com.c301.plugin.infrastructure.ai.AiSuggestionParser;
+import com.c301.plugin.infrastructure.ai.OpenAiCompatibleRequestRenderer;
+import com.c301.plugin.infrastructure.ai.OpenAiResponsesRequestRenderer;
 import com.c301.plugin.infrastructure.credentials.PasswordSafeAiCredentialStore;
 import com.c301.plugin.platform.vcs.AiIncludedChangesCollector;
 import com.c301.plugin.utils.CommUtil;
