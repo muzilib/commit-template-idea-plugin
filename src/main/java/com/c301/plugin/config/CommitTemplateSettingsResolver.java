@@ -44,7 +44,7 @@ public final class CommitTemplateSettingsResolver {
         LanguageDomain language = override.getLanguage() != null ? override.getLanguage() : global.getLanguage();
         boolean projectTypeListConfigured = Boolean.TRUE.equals(override.getCustomCommitTypeListConfigured());
         // 项目提交类型列表一旦被显式配置，就表示该项目明确要求使用自定义类型。
-        // 不能仅因为独立的模板开关继承了 false 而忽略该列表。
+        // 否则严格依赖全局或项目的“使用自定义模板”开关，不根据列表内容自动启用。
         boolean customEnable = projectTypeListConfigured
                 || (override.getCustomEnable() != null ? override.getCustomEnable() : global.isCustomEnable());
         boolean emojiEnable = global.isEmojiEnable();

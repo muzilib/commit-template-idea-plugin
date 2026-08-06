@@ -10,7 +10,7 @@ import java.util.Properties;
  * 按插件版本维护首次安装与升级提示。发布新版本时在此处新增对应条目和国际化文案。
  */
 public enum PluginVersionAnnouncement {
-    v1_1_1("1.1.1", "plugin.announcement.v1_0_9"),
+    V1_1_1("1.1.1", "plugin.announcement.v1_0_9"),
     V1_0_9("1.0.9", "plugin.announcement.v1_0_9");
 
     private static final String BUILD_INFO_RESOURCE = "/version.properties";

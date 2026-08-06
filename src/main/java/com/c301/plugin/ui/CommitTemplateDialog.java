@@ -235,6 +235,8 @@ public class CommitTemplateDialog extends JDialog {
      * 重置弹窗信息
      */
     public void resetUIFrom(GitCommitDomain gitCommit) {
+        handleDisplayLanguageEvent(PluginUiLanguageSettings.resolve(store));
+
         //提交类型回显
         if (gitCommit.getCommitType() != null) {
             for (JRadioButton button : commitTypeButtons()) {
@@ -244,8 +246,6 @@ public class CommitTemplateDialog extends JDialog {
                 }
             }
         }
-
-        handleDisplayLanguageEvent(PluginUiLanguageSettings.resolve(store));
 
         //文本内容回显
         optionScopeChange.setSelectedItem(gitCommit.getChangeScope());
@@ -322,11 +322,13 @@ public class CommitTemplateDialog extends JDialog {
         labelCommitTypeSetting.setText(resourceBundle.getString("plugin.setting.label.tipsGoSetting"));
 
         //渲染提交类型按钮组信息
-        var commitTypeList = CommUtil.getDefaultCommitTypeList(effectiveSettings.language().getKey());
-        if (effectiveSettings.customEnable()) commitTypeList = effectiveSettings.customCommitTypeList();
+        var commitTypeList = effectiveSettings.customEnable()
+                ? effectiveSettings.customCommitTypeList()
+                : CommUtil.getDefaultCommitTypeList(effectiveSettings.language().getKey());
         var buttons = commitTypeButtons();
         if (commitTypeList.isEmpty()) {
             for (JRadioButton button : buttons) {
+                button.setSelected(false);
                 button.setVisible(false);
             }
 

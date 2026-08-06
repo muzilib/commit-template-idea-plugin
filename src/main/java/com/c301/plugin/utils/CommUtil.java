@@ -135,7 +135,9 @@ public class CommUtil {
      */
     public static List<CommitTypeDomain> getDefaultCommitTypeList() {
         var store = StoreCommitTemplateState.getInstance();
-        if (store.isCustomEnable()) return store.getCustomCommitTypeList();
+        if (store.isCustomEnable()) {
+            return store.getCustomCommitTypeList();
+        }
 
         //默认提交类型列表
         return getDefaultCommitTypeList(null);
