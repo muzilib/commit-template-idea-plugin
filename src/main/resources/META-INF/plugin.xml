@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>commit-template-plugin</id>
     <name>Git Commit Template</name>
-    <version>1.0.9</version>
+    <version>1.1.1</version>
     <vendor email="muzi@muzilib.com" url="https://github.com/muzilib">Chenbing</vendor>
 
     <description><![CDATA[Git Commit Template helps IntelliJ IDEA users create, format, and validate structured Git commit messages directly in the Commit tool window.
@@ -52,8 +52,11 @@
     <change-notes>
         <![CDATA[
         <p>
-            <h4>Version 1.0.9-FX1</h4>
-            <p>1. Fixed the commit type editor so changes to the configured type list are correctly reflected in the commit template dialog. <a href="https://github.com/muzilib/commit-template-idea-plugin/issues/21">Issue #21</a></p>
+            <h4>Version 1.1.1</h4>
+            <p>
+                1. Fixed the commit type editor so changes to the configured type list are correctly reflected in the commit template dialog.
+                <a href="https://github.com/muzilib/commit-template-idea-plugin/issues/21">Issue #21</a>
+            </p>
         </p>
         <p>
             <h4>Version 1.0.9</h4>
