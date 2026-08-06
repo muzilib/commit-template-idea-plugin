@@ -22,7 +22,7 @@
         <p>本项目持续维护和扩展原始插件，欢迎使用和反馈。</p>
         <p><a href="https://github.com/muzilib/commit-template-idea-plugin">当前项目地址</a><br/>
         <a href="https://github.com/MobileTribe/commit-template-idea-plugin">原始项目地址</a><br/>
-        <a href="https://plugins.jetbrains.com/plugin/23641-git-commit-template/faq">常见问题（FAQ）</a><br/>
+        <a href="https://github.com/muzilib/commit-template-idea-plugin/blob/main/docs/%E6%8F%92%E4%BB%B6%E8%AF%B4%E6%98%8E%E6%96%87%E6%A1%A3.md">常见问题（FAQ）</a><br/>
         <a href="https://github.com/muzilib/commit-template-idea-plugin/issues">提交 Issue / 反馈问题</a><br/>
         <a href="https://github.com/muzilib/commit-template-idea-plugin/blob/main/docs/%E6%8F%92%E4%BB%B6%E8%AF%B4%E6%98%8E%E6%96%87%E6%A1%A3.md">中文文档</a></p>
         <hr/>
@@ -44,13 +44,17 @@
         <p>This project continues maintenance and development of the original plugin. Feedback and contributions are welcome.</p>
         <p><a href="https://github.com/muzilib/commit-template-idea-plugin">Current project</a><br/>
         <a href="https://github.com/MobileTribe/commit-template-idea-plugin">Original project</a><br/>
-        <a href="https://plugins.jetbrains.com/plugin/23641-git-commit-template/faq">FAQ</a><br/>
+        <a href="https://github.com/muzilib/commit-template-idea-plugin/blob/main/docs/%E6%8F%92%E4%BB%B6%E8%AF%B4%E6%98%8E%E6%96%87%E6%A1%A3.md">FAQ</a><br/>
         <a href="https://github.com/muzilib/commit-template-idea-plugin/issues">Submit an issue</a><br/>
         <a href="https://github.com/muzilib/commit-template-idea-plugin/blob/main/docs/Plugin-Documentation.md">English documentation</a></p>
     ]]></description>
 
     <change-notes>
         <![CDATA[
+        <p>
+            <h4>Version 1.0.9-FX1</h4>
+            <p>1. Fixed the commit type editor so changes to the configured type list are correctly reflected in the commit template dialog. <a href="https://github.com/muzilib/commit-template-idea-plugin/issues/21">Issue #21</a></p>
+        </p>
         <p>
             <h4>Version 1.0.9</h4>
             <p>1. Added AI-powered commit-message suggestions with request review, direct streaming drafts, and local output validation.</p>

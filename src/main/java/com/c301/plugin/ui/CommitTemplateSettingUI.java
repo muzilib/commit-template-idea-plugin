@@ -359,7 +359,7 @@ public class CommitTemplateSettingUI {
             return value;
         }
         return switch (key) {
-            case "pluginVersion" -> "1.0.9";
+            case "pluginVersion" -> "1.0.9-FX1";
             case "javaVersion" -> "17";
             case "platformVersion" -> "2023.3";
             case "platformType" -> "IC";

@@ -237,9 +237,7 @@ public class CommitTemplateDialog extends JDialog {
     public void resetUIFrom(GitCommitDomain gitCommit) {
         //提交类型回显
         if (gitCommit.getCommitType() != null) {
-            var buttonElements = typeChangeGroup.getElements();
-            while (buttonElements.hasMoreElements()) {
-                var button = buttonElements.nextElement();
+            for (JRadioButton button : commitTypeButtons()) {
                 if (button.getActionCommand().equalsIgnoreCase(gitCommit.getCommitType().getType())) {
                     button.setSelected(true);
                     break;
@@ -326,10 +324,9 @@ public class CommitTemplateDialog extends JDialog {
         //渲染提交类型按钮组信息
         var commitTypeList = CommUtil.getDefaultCommitTypeList(effectiveSettings.language().getKey());
         if (effectiveSettings.customEnable()) commitTypeList = effectiveSettings.customCommitTypeList();
-        var buttonElements = typeChangeGroup.getElements();
+        var buttons = commitTypeButtons();
         if (commitTypeList.isEmpty()) {
-            while (buttonElements.hasMoreElements()) {
-                var button = buttonElements.nextElement();
+            for (JRadioButton button : buttons) {
                 button.setVisible(false);
             }
 
@@ -346,22 +343,21 @@ public class CommitTemplateDialog extends JDialog {
         } else {
             labelCommitTypeNoData.setVisible(false);
             labelCommitTypeSetting.setVisible(false);
-            var index = 0;
-            while (buttonElements.hasMoreElements()) {
-                var button = buttonElements.nextElement();
+            for (int index = 0; index < buttons.length; index++) {
+                JRadioButton button = buttons[index];
                 button.setSelected(false);
-                button.setVisible(false);
-                if (index >= commitTypeList.size()) continue;
-
-                button.setVisible(true);
-                button.setFont(Constant.EMOJI_FONT);
-                var commitType = commitTypeList.get(index++);
-                button.setActionCommand(commitType.getType());
-                if (button instanceof JRadioButton radioButton) {
-                    setCommitTypeButtonText(radioButton, commitType.toString(effectiveSettings.emojiEnable()));
+                button.setVisible(index < commitTypeList.size());
+                if (index >= commitTypeList.size()) {
+                    continue;
                 }
+
+                button.setFont(Constant.EMOJI_FONT);
+                var commitType = commitTypeList.get(index);
+                button.setActionCommand(commitType.getType());
+                setCommitTypeButtonText(button, commitType.toString(effectiveSettings.emojiEnable()));
             }
         }
+        resetCommitTypeListViewport();
 
         // 恢复用户上次保存的尺寸，同时保留统一的可用最小值。较长的本地化提交类型描述
         // 在独立的可滚动列表中换行，而不是继续撑大弹窗。
@@ -448,6 +444,16 @@ public class CommitTemplateDialog extends JDialog {
     private JRadioButton[] commitTypeButtons() {
         return new JRadioButton[]{radioButton1, radioButton2, radioButton3, radioButton4, radioButton5,
                 radioButton6, radioButton7, radioButton8, radioButton9, radioButton10, radioButton11};
+    }
+
+    /**
+     * 每次打开或刷新提交类型后都从首项开始展示，避免旧视口位置隐藏 feat。
+     */
+    private void resetCommitTypeListViewport() {
+        if (commitTypeListScrollPane == null) {
+            return;
+        }
+        SwingUtilities.invokeLater(() -> commitTypeListScrollPane.getViewport().setViewPosition(new Point(0, 0)));
     }
 
     /**
@@ -609,9 +615,7 @@ public class CommitTemplateDialog extends JDialog {
     }
 
     private CommitTypeDomain selectedCommitType() {
-        var buttons = typeChangeGroup.getElements();
-        while (buttons.hasMoreElements()) {
-            var button = buttons.nextElement();
+        for (JRadioButton button : commitTypeButtons()) {
             if (!button.isSelected()) {
                 continue;
             }
@@ -861,7 +865,6 @@ public class CommitTemplateDialog extends JDialog {
         optionLanguage = new JComboBox();
         panel3.add(optionLanguage, new GridConstraints(0, 1, 1, 2, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         typeChangeGroup = new ButtonGroup();
-        typeChangeGroup.add(radioButton1);
         typeChangeGroup.add(radioButton1);
         typeChangeGroup.add(radioButton2);
         typeChangeGroup.add(radioButton3);
