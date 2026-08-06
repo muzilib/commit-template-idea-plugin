@@ -57,7 +57,11 @@ def buildTime = new Date().format('yyyyMMddHHmm')
 def generatedResourcesDir = layout.buildDirectory.dir('generated-resources/main')
 
 tasks.register('generateBuildInfo') {
-    outputs.file(generatedResourcesDir.map { it.file('version.properties') })
+    def generatedBuildInfo = generatedResourcesDir.map { it.file('version.properties') }
+    def sourceBuildInfo = layout.projectDirectory.file('src/main/resources/version.properties')
+    inputs.property('buildChannel', buildChannel)
+    inputs.property('buildTime', buildTime)
+    outputs.files(generatedBuildInfo, sourceBuildInfo)
 
     doLast {
         def properties = new Properties()
@@ -68,9 +72,11 @@ tasks.register('generateBuildInfo') {
         properties.setProperty('channelCode', buildChannel)
         properties.setProperty('builderTime', buildTime)
 
-        def output = generatedResourcesDir.get().file('version.properties').asFile
-        output.parentFile.mkdirs()
-        output.withOutputStream { properties.store(it, null) }
+        // 构建产物使用生成资源；同时回写源码文件，确保 IDE 直接运行时也能展示本次构建信息。
+        [generatedBuildInfo.get().asFile, sourceBuildInfo.asFile].each { output ->
+            output.parentFile.mkdirs()
+            output.withOutputStream { properties.store(it, null) }
+        }
     }
 }
 
